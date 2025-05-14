@@ -23,6 +23,7 @@ public class UserPrincipal implements UserDetails {
     @JsonIgnore
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
+    private User user;
 
     public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities = user.getRoles().stream()
@@ -35,6 +36,7 @@ public class UserPrincipal implements UserDetails {
                 .email(user.getEmail())
                 .password(user.getPassword())
                 .authorities(authorities)
+                .user(user)
                 .build();
     }
 

@@ -48,8 +48,14 @@ public class SecurityConfig {
             .cors(cors -> cors.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/public/**", "/error").permitAll()
+                .requestMatchers("/auth/**", "/error").permitAll()
                 .anyRequest().authenticated()
+            )
+            .headers(headers -> headers
+                .xssProtection(xss -> xss.disable())
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                .frameOptions(frame -> frame.sameOrigin())
+                .contentTypeOptions(content -> {})
             )
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

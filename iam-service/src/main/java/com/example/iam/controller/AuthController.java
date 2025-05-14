@@ -6,6 +6,7 @@ import com.example.iam.dto.TokenResponse;
 import com.example.iam.entity.User;
 import com.example.iam.security.JwtTokenProvider;
 import com.example.iam.service.AuthService;
+import com.example.iam.service.TokenService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
     private final AuthService authService;
+    private final TokenService tokenService;
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
@@ -52,5 +54,21 @@ public class AuthController {
         String token = refreshToken.substring(7); // Remove "Bearer "
         TokenResponse newTokens = authService.refreshToken(token);
         return ResponseEntity.ok(newTokens);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String token) {
+        String jwt = token.substring(7); // Remove "Bearer "
+        tokenService.revokeToken(jwt);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout-all")
+    public ResponseEntity<Void> logoutAll(@RequestHeader("Authorization") String token) {
+        String jwt = token.substring(7); // Remove "Bearer "
+        String username = tokenProvider.getUsernameFromJWT(jwt);
+        User user = authService.getUserByUsername(username);
+        tokenService.revokeAllUserTokens(user);
+        return ResponseEntity.ok().build();
     }
 } 
