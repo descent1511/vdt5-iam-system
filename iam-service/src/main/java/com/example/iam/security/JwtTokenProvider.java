@@ -88,11 +88,11 @@ public class JwtTokenProvider {
 
     public Long getUserIdFromJWT(String token) {
         Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody();
 
-        return Long.parseLong(claims.getSubject());
+        return claims.get("userId", Long.class);
     }
+
 } 
