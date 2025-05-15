@@ -7,8 +7,8 @@ import com.example.iam.entity.User;
 import com.example.iam.repository.OrganizationRepository;
 import com.example.iam.repository.UserRepository;
 import com.example.iam.security.JwtTokenProvider;
+import com.example.iam.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,8 +22,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
+    private final TokenService tokenService;
 
     @Transactional
     public User registerUser(SignupRequest signupRequest) {
@@ -54,12 +54,19 @@ public class AuthService {
             throw new RuntimeException("Invalid refresh token");
         }
 
-        Long userId = tokenProvider.getUserIdFromJWT(refreshToken);
-        User user = userRepository.findById(userId)
+        String userName = tokenProvider.getUsernameFromJWT(refreshToken);
+        User user = userRepository.findByUsername(userName)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(), null)
+        // Revoke the old refresh token
+        tokenService.revokeToken(refreshToken);
+
+        // Create UserPrincipal and authentication
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            userPrincipal,
+            null,
+            userPrincipal.getAuthorities()
         );
 
         String newAccessToken = tokenProvider.generateAccessToken(authentication);

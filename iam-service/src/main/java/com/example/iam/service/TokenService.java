@@ -48,8 +48,17 @@ public class TokenService {
     }
 
     public boolean isTokenValid(String token) {
-        return tokenRepository.findByToken(token)
-                .map(t -> !t.isExpired() && !t.isRevoked())
-                .orElse(false);
+        Optional<Token> tokenOpt = tokenRepository.findByToken(token);
+        if (tokenOpt.isPresent()) {
+            Token tokenEntity = tokenOpt.get();
+            // Check if token is expired
+            if (LocalDateTime.now().isAfter(tokenEntity.getExpiresAt())) {
+                tokenEntity.setExpired(true);
+                tokenRepository.save(tokenEntity);
+                return false;
+            }
+            return !tokenEntity.isExpired() && !tokenEntity.isRevoked();
+        }
+        return false;
     }
 } 
