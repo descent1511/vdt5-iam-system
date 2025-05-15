@@ -1,8 +1,12 @@
 package com.example.iam.security;
 
+import com.example.iam.entity.Token;
+import com.example.iam.entity.User;
+import com.example.iam.service.TokenService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -10,10 +14,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtTokenProvider {
 
     @Value("${app.jwt.secret}")
@@ -25,6 +32,7 @@ public class JwtTokenProvider {
     @Value("${app.jwt.refresh-token.expiration}")
     private int refreshExpirationInMs;
 
+    private final TokenService tokenService;
     private Key key;
 
     @PostConstruct
@@ -37,12 +45,21 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key)
                 .compact();
+
+        // Save token to database
+        if (userDetails instanceof UserPrincipal) {
+            User user = ((UserPrincipal) userDetails).getUser();
+            tokenService.saveToken(token, user, Token.TokenType.ACCESS, 
+                LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));
+        }
+
+        return token;
     }
 
     public String generateRefreshToken(Authentication authentication) {
@@ -50,12 +67,21 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshExpirationInMs);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key)
                 .compact();
+
+        // Save token to database
+        if (userDetails instanceof UserPrincipal) {
+            User user = ((UserPrincipal) userDetails).getUser();
+            tokenService.saveToken(token, user, Token.TokenType.REFRESH,
+                LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));
+        }
+
+        return token;
     }
 
     public String getUsernameFromJWT(String token) {
@@ -71,7 +97,8 @@ public class JwtTokenProvider {
     public boolean validateToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
-            return true;
+            // Check if token is blacklisted
+            return tokenService.isTokenValid(authToken);
         } catch (SecurityException ex) {
             log.error("Invalid JWT signature");
         } catch (MalformedJwtException ex) {
@@ -87,12 +114,12 @@ public class JwtTokenProvider {
     }
 
     public Long getUserIdFromJWT(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(jwtSecret)
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
 
         return claims.get("userId", Long.class);
     }
-
 } 
