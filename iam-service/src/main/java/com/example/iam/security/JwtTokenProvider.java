@@ -113,13 +113,4 @@ public class JwtTokenProvider {
         return false;
     }
 
-    public Long getUserIdFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.get("userId", Long.class);
-    }
 } 
