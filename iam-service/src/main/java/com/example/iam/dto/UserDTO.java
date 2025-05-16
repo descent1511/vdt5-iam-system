@@ -1,5 +1,7 @@
 package com.example.iam.dto;
 
+import com.example.iam.entity.Role;
+import com.example.iam.entity.Scope;
 import com.example.iam.entity.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,53 +15,44 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class UserDTO {
     private Long id;
-    private Long organizationId;
+    private Long organization_id;
     private String username;
     private String email;
-    private String password;
     private String fullName;
-    private Set<Long> roleIds;
-    private Set<Long> scopeIds;
+    private Set<Long> role_ids;
+    private Set<Long> scope_ids;
 
     public static UserDTO fromEntity(User user) {
         if (user == null) {
             return null;
         }
-        
+
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setFullName(user.getFullName());
-        
-        try {
-            if (user.getOrganization() != null) {
-                dto.setOrganizationId(user.getOrganization().getId());
-            }
-        } catch (Exception e) {
-            // Ignore lazy loading exception for organization
+
+        if (user.getOrganization() != null) {
+            dto.setOrganization_id(user.getOrganization().getId());
         }
-        
-        try {
-            if (user.getRoles() != null) {
-                dto.setRoleIds(user.getRoles().stream()
-                    .map(role -> role.getId())
-                    .collect(Collectors.toSet()));
-            }
-        } catch (Exception e) {
-            // Ignore lazy loading exception for roles
+
+        if (user.getRoles() != null) {
+            dto.setRole_ids(
+                user.getRoles().stream()
+                    .map(Role::getId)
+                    .collect(Collectors.toSet())
+            );
         }
-        
-        try {
-            if (user.getScopes() != null) {
-                dto.setScopeIds(user.getScopes().stream()
-                    .map(scope -> scope.getId())
-                    .collect(Collectors.toSet()));
-            }
-        } catch (Exception e) {
-            // Ignore lazy loading exception for scopes
+
+        if (user.getScopes() != null) {
+            dto.setScope_ids(
+                user.getScopes().stream()
+                    .map(Scope::getId)
+                    .collect(Collectors.toSet())
+            );
         }
-        
+
         return dto;
     }
-} 
+}

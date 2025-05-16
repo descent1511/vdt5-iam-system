@@ -24,6 +24,7 @@ public class UserService {
     private final ScopeRepository scopeRepository;
     private final PasswordEncoder passwordEncoder;
 
+    
     public List<User> findAll() {
         return userRepository.findAll();
     }
@@ -36,25 +37,66 @@ public class UserService {
     @Transactional
     public User createUser(UserDTO userDTO) {
         User user = new User();
-        updateUserFromDTO(user, userDTO);
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        user.setUsername(userDTO.getUsername());
+        user.setEmail(userDTO.getEmail());
+        user.setFullName(userDTO.getFullName());
+        
+        // Set roles if provided
+        if (userDTO.getRole_ids() != null) {
+            Set<Role> roles = userDTO.getRole_ids().stream()
+                .map(roleId -> roleRepository.findById(roleId)
+                    .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId)))
+                .collect(java.util.stream.Collectors.toSet());
+            user.setRoles(roles);
+        }
+        
+        // Set scopes if provided
+        if (userDTO.getScope_ids() != null) {
+            Set<Scope> scopes = userDTO.getScope_ids().stream()
+                .map(scopeId -> scopeRepository.findById(scopeId)
+                    .orElseThrow(() -> new RuntimeException("Scope not found with id: " + scopeId)))
+                .collect(java.util.stream.Collectors.toSet());
+            user.setScopes(scopes);
+        }
+        
         return userRepository.save(user);
     }
 
     @Transactional
     public User updateUser(Long id, UserDTO userDTO) {
         User existingUser = findById(id);
-        updateUserFromDTO(existingUser, userDTO);
-        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        
+        if (userDTO.getUsername() != null) {
+            existingUser.setUsername(userDTO.getUsername());
         }
+        
+        if (userDTO.getEmail() != null) {
+            existingUser.setEmail(userDTO.getEmail());
+        }
+        
+        if (userDTO.getFullName() != null) {
+            existingUser.setFullName(userDTO.getFullName());
+        }
+        
+        // Update roles if provided
+        if (userDTO.getRole_ids() != null) {
+            Set<Role> roles = userDTO.getRole_ids().stream()
+                .map(roleId -> roleRepository.findById(roleId)
+                    .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId)))
+                .collect(java.util.stream.Collectors.toSet());
+            existingUser.setRoles(roles);
+        }
+        
+        // Update scopes if provided
+        if (userDTO.getScope_ids() != null) {
+            Set<Scope> scopes = userDTO.getScope_ids().stream()
+                .map(scopeId -> scopeRepository.findById(scopeId)
+                    .orElseThrow(() -> new RuntimeException("Scope not found with id: " + scopeId)))
+                .collect(java.util.stream.Collectors.toSet());
+            existingUser.setScopes(scopes);
+        }
+        
         return userRepository.save(existingUser);
-    }
-
-    private void updateUserFromDTO(User user, UserDTO userDTO) {
-        user.setUsername(userDTO.getUsername());
-        user.setEmail(userDTO.getEmail());
-        user.setFullName(userDTO.getFullName());
     }
 
     @Transactional

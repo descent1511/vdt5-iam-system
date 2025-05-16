@@ -14,6 +14,7 @@ public class EntityMapper {
         return UserDTO.fromEntity(user);
     }
     
+    
     public List<UserDTO> toUserDTOList(List<User> users) {
         return users.stream()
                 .map(this::toUserDTO)
@@ -37,16 +38,6 @@ public class EntityMapper {
     public List<OrganizationDTO> toOrganizationDTOList(List<Organization> organizations) {
         return organizations.stream()
                 .map(this::toOrganizationDTO)
-                .collect(Collectors.toList());
-    }
-    
-    public PermissionDTO toPermissionDTO(Permission permission) {
-        return PermissionDTO.fromEntity(permission);
-    }
-    
-    public List<PermissionDTO> toPermissionDTOList(List<Permission> permissions) {
-        return permissions.stream()
-                .map(this::toPermissionDTO)
                 .collect(Collectors.toList());
     }
 
