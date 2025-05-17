@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +25,6 @@ public class UserService {
     private final ScopeRepository scopeRepository;
     private final PasswordEncoder passwordEncoder;
 
-    
     public List<User> findAll() {
         return userRepository.findAll();
     }
@@ -35,67 +35,35 @@ public class UserService {
     }
 
     @Transactional
-    public User createUser(UserDTO userDTO) {
-        User user = new User();
-        user.setUsername(userDTO.getUsername());
-        user.setEmail(userDTO.getEmail());
-        user.setFullName(userDTO.getFullName());
-        
-        // Set roles if provided
-        if (userDTO.getRole_ids() != null) {
-            Set<Role> roles = userDTO.getRole_ids().stream()
-                .map(roleId -> roleRepository.findById(roleId)
-                    .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId)))
-                .collect(java.util.stream.Collectors.toSet());
-            user.setRoles(roles);
-        }
-        
-        // Set scopes if provided
-        if (userDTO.getScope_ids() != null) {
-            Set<Scope> scopes = userDTO.getScope_ids().stream()
-                .map(scopeId -> scopeRepository.findById(scopeId)
-                    .orElseThrow(() -> new RuntimeException("Scope not found with id: " + scopeId)))
-                .collect(java.util.stream.Collectors.toSet());
-            user.setScopes(scopes);
-        }
-        
-        return userRepository.save(user);
-    }
-
-    @Transactional
     public User updateUser(Long id, UserDTO userDTO) {
         User existingUser = findById(id);
-        
+
         if (userDTO.getUsername() != null) {
             existingUser.setUsername(userDTO.getUsername());
         }
-        
         if (userDTO.getEmail() != null) {
             existingUser.setEmail(userDTO.getEmail());
         }
-        
         if (userDTO.getFullName() != null) {
             existingUser.setFullName(userDTO.getFullName());
         }
-        
-        // Update roles if provided
+
         if (userDTO.getRole_ids() != null) {
-            Set<Role> roles = userDTO.getRole_ids().stream()
-                .map(roleId -> roleRepository.findById(roleId)
-                    .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId)))
-                .collect(java.util.stream.Collectors.toSet());
+            Set<Role> roles = roleRepository.findAllById(userDTO.getRole_ids())
+                    .stream().collect(Collectors.toSet());
             existingUser.setRoles(roles);
         }
-        
-        // Update scopes if provided
+
+        if (userDTO.getPassword() != null) {
+            existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        }
+
         if (userDTO.getScope_ids() != null) {
-            Set<Scope> scopes = userDTO.getScope_ids().stream()
-                .map(scopeId -> scopeRepository.findById(scopeId)
-                    .orElseThrow(() -> new RuntimeException("Scope not found with id: " + scopeId)))
-                .collect(java.util.stream.Collectors.toSet());
+            Set<Scope> scopes = scopeRepository.findAllById(userDTO.getScope_ids())
+                    .stream().collect(Collectors.toSet());
             existingUser.setScopes(scopes);
         }
-        
+
         return userRepository.save(existingUser);
     }
 
@@ -105,8 +73,7 @@ public class UserService {
     }
 
     public Set<Role> getUserRoles(Long id) {
-        User user = findById(id);
-        return user.getRoles();
+        return findById(id).getRoles();
     }
 
     @Transactional
@@ -128,8 +95,7 @@ public class UserService {
     }
 
     public Set<Scope> getUserScopes(Long id) {
-        User user = findById(id);
-        return user.getScopes();
+        return findById(id).getScopes();
     }
 
     @Transactional
@@ -149,4 +115,4 @@ public class UserService {
         user.getScopes().remove(scope);
         return userRepository.save(user);
     }
-} 
+}
