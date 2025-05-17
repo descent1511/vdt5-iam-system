@@ -19,8 +19,6 @@ public class Resource {
     @Column(length = 1000)
     private String description;
 
-    @Column(nullable = false)
-    private String type;
 
     @Column(name = "http_method", nullable = false)
     @Enumerated(EnumType.STRING)
