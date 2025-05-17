@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -48,7 +49,17 @@ public class SecurityConfig {
             .cors(cors -> cors.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/error").permitAll()
+                .requestMatchers(
+                    new AntPathRequestMatcher("/auth/**"),
+                    new AntPathRequestMatcher("/error"),
+                    new AntPathRequestMatcher("/swagger-ui/**"),
+                    new AntPathRequestMatcher("/swagger-ui.html"),
+                    new AntPathRequestMatcher("/v3/api-docs/**"),
+                    new AntPathRequestMatcher("/v3/api-docs"),
+                    new AntPathRequestMatcher("/swagger-resources/**"),
+                    new AntPathRequestMatcher("/webjars/**"),
+                    new AntPathRequestMatcher("/actuator/**")
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers

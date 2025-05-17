@@ -15,12 +15,14 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    @Mapping(target = "organization_id", source = "organization.id")
-    @Mapping(target = "role_ids", source = "roles", qualifiedByName = "mapRoleIds")
-    @Mapping(target = "scope_ids", source = "scopes", qualifiedByName = "mapScopeIds")
+    @Mapping(source = "organization.id", target = "organization_id")
+    @Mapping(target = "role_ids", expression = "java(mapRoleIds(user.getRoles()))")
+    @Mapping(target = "scope_ids", expression = "java(mapScopeIds(user.getScopes()))")
     UserDTO toDTO(User user);
 
-    @Mapping(target = "organization.id", source = "organization_id")
+    @Mapping(target = "organization", ignore = true)
+    @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "scopes", ignore = true)
     User toEntity(UserDTO dto);
 
     List<UserDTO> toDTOList(List<User> users);

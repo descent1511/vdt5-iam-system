@@ -1,5 +1,7 @@
 package com.example.iam.entity;
 
+import java.util.Objects;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,5 +40,17 @@ public class Policy {
 
     public enum SubjectType {
         USER, ROLE
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Policy policy)) return false;
+        return Objects.equals(id, policy.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 } 

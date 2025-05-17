@@ -4,16 +4,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrganizationDTO {
+public class PolicyDTO {
     private Long id;
-    private String name;
+    private Long subjectId;
+    private String subjectType;
+    private Long resourceId;
+    private Long scopeId;
+    private String conditionJson;
     private String description;
-    private Set<Long> userIds;
-
-} 
+}
