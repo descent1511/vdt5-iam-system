@@ -4,20 +4,19 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-
+import lombok.Getter;
+import lombok.Setter;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "scopes")
-public class Scope {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "scope_id")
-    private Long id;
+public class Scope extends BaseEntity  {
+
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -37,4 +36,5 @@ public class Scope {
 
     @ManyToMany(mappedBy = "scopes")
     private Set<User> users = new HashSet<>();
+    
 } 

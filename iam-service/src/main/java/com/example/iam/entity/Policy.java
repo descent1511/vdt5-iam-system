@@ -12,11 +12,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "policies")
-public class Policy {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "policy_id")
-    private Long id;
+public class Policy extends BaseEntity  {
 
     @Column(name = "subject_id", nullable = false)
     private Long subjectId;
@@ -42,15 +38,4 @@ public class Policy {
         USER, ROLE
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Policy policy)) return false;
-        return Objects.equals(id, policy.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 } 

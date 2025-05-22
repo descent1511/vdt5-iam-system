@@ -1,22 +1,45 @@
 spring:
+  application:
+    name: iam-service
+
   datasource:
     url: jdbc:postgresql://localhost:5432/iam_db
     username: postgres
     password: 15112002
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   port: 8080
   servlet:
-    context-path: /api
+    context-path: /
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true
+    syntaxHighlight:
+      activated: true
+    disable-swagger-default-url: true
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
 app:
   jwt:
@@ -26,8 +49,16 @@ app:
     refresh-token:
       expiration: 604800000
 
-
 logging:
   level:
-    org.springframework.security: DEBUG
-    com.example.iam: DEBUG 
+    root: INFO
+    com.example.iam: DEBUG
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.hibernate: ERROR
+    org.springframework.orm: ERROR
+    org.springframework.transaction: ERROR
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"

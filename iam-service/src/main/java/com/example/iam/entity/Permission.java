@@ -13,11 +13,8 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "permissions")
-public class Permission {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "permission_id")
-    private Long id;
+public class Permission extends BaseEntity  {
+
 
     @Column(nullable = false, unique = true)
     private String name;

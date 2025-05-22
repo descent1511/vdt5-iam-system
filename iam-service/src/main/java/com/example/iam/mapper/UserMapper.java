@@ -21,8 +21,8 @@ public interface UserMapper {
     UserDTO toDTO(User user);
 
     @Mapping(target = "organization", ignore = true)
-    @Mapping(target = "roles", ignore = true)
-    @Mapping(target = "scopes", ignore = true)
+    @Mapping(target = "roles", ignore = true) 
+    @Mapping(target = "scopes", ignore = true) 
     User toEntity(UserDTO dto);
 
     List<UserDTO> toDTOList(List<User> users);

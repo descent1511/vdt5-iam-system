@@ -20,6 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(policyEnforcementInterceptor)
                 .excludePathPatterns(
                     "/auth/**",
+                    "/auth/refresh",
                     "/login",
                     "/error",
                     "/swagger-ui/**",
