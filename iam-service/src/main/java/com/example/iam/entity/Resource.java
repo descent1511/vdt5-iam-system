@@ -7,11 +7,8 @@ import lombok.Data;
 @Data
 @Entity
 @Table(name = "resources")
-public class Resource {
+public class Resource extends BaseEntity  {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -19,8 +16,6 @@ public class Resource {
     @Column(length = 1000)
     private String description;
 
-    @Column(nullable = false)
-    private String type;
 
     @Column(name = "http_method", nullable = false)
     @Enumerated(EnumType.STRING)

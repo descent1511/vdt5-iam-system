@@ -9,11 +9,8 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "organizations")
-public class Organization {
+public class Organization extends BaseEntity  {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;

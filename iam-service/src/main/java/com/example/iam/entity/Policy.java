@@ -1,5 +1,7 @@
 package com.example.iam.entity;
 
+import java.util.Objects;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,11 +12,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "policies")
-public class Policy {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "policy_id")
-    private Long id;
+public class Policy extends BaseEntity  {
 
     @Column(name = "subject_id", nullable = false)
     private Long subjectId;
@@ -39,4 +37,5 @@ public class Policy {
     public enum SubjectType {
         USER, ROLE
     }
+
 } 

@@ -4,20 +4,18 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-
 import java.util.HashSet;
+import lombok.Getter;
+import lombok.Setter;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long id;
+public class User extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id")
@@ -35,7 +33,7 @@ public class User {
     @Column(name = "full_name")
     private String fullName;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_role",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -43,11 +41,12 @@ public class User {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_scope",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "scope_id")
     )
     private Set<Scope> scopes = new HashSet<>();
-} 
+
+}
