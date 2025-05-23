@@ -33,6 +33,9 @@ public class User extends BaseEntity {
     @Column(name = "full_name")
     private String fullName;
 
+    @Column(name = "is_enabled")
+    private boolean enabled = true;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_role",

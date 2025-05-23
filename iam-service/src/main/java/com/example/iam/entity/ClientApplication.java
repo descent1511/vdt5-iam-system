@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,11 +11,14 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "resources")
-public class Resource extends BaseEntity {
+@Table(name = "client_applications")
+public class ClientApplication extends BaseEntity {
+    
+    @Column(name = "client_id", nullable = false, unique = true)
+    private String clientId;
 
-    @Column(nullable = false)
-    private String path;
+    @Column(name = "client_secret", nullable = false)
+    private String clientSecret;
 
     @Column(nullable = false)
     private String name;
@@ -25,17 +27,12 @@ public class Resource extends BaseEntity {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "resource_scopes",
-        joinColumns = @JoinColumn(name = "resource_id"),
+        name = "client_scope",
+        joinColumns = @JoinColumn(name = "client_id"),
         inverseJoinColumns = @JoinColumn(name = "scope_id")
     )
     private Set<Scope> scopes = new HashSet<>();
 
-    @Column(name = "http_method", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private HttpMethod method;
-
-    public enum HttpMethod {
-        GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
-    }
+    @Column(name = "is_active")
+    private boolean active = true;
 } 

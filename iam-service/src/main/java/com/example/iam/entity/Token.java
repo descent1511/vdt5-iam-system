@@ -4,10 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -19,8 +21,11 @@ public class Token {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
+
+    @Column(name = "client_id")
+    private String clientId;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String token;
@@ -28,6 +33,10 @@ public class Token {
     @Column(name = "token_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
+
+    @Column(name = "grant_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private GrantType grantType;
 
     private boolean expired;
 
@@ -41,5 +50,12 @@ public class Token {
 
     public enum TokenType {
         ACCESS, REFRESH
+    }
+
+    public enum GrantType {
+        CLIENT_CREDENTIALS,
+        PASSWORD,
+        REFRESH_TOKEN,
+        AUTHORIZATION_CODE
     }
 } 

@@ -28,133 +28,461 @@ import com.example.iam.repository.PolicyRepository;
 @RequiredArgsConstructor
 public class DataInitializer implements ApplicationRunner {
 
-    private final ScopeRepository scopeRepository;
-    private final RoleRepository roleRepository;
-    private final ResourceDiscoveryService resourceDiscoveryService;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final ScopeRepository scopeRepository;
     private final ResourceRepository resourceRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final ResourceDiscoveryService resourceDiscoveryService;
     private final PolicyRepository policyRepository;
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        // Create scopes first
-        createScopes();
-        
-        // Discover and register resources
-        discoverAndRegisterResources();
-        
-        // Create roles and assign scopes
-        createRolesAndAssignScopes();
-        
-        // Create policies for roles
-        createPolicies();
-        
-        // Create admin user if not exists
-        createAdminUser();
+        log.info("Initializing data...");
+
+        // Initialize scopes
+        initializeScopes();
+
+        // Initialize roles
+        initializeRoles();
+
+        // Initialize resources and their scope mappings
+        initializeResources();
+
+        // Initialize admin user
+        initializeAdminUser();
+
+        // Initialize policies
+        initializePolicies();
+
+        log.info("Data initialization completed.");
     }
 
-    private void createScopes() {
-        // User related scopes
-        createScopeIfNotExists("read:user", "Allows reading user info");
-        createScopeIfNotExists("write:user", "Allows creating and updating user info");
-        createScopeIfNotExists("delete:user", "Allows deleting a user");
-        createScopeIfNotExists("list:users", "Allows listing all users");
-        
-        // Role related scopes
-        createScopeIfNotExists("read:role", "Allows reading role info");
-        createScopeIfNotExists("create:role", "Allows creating new role");
-        createScopeIfNotExists("update:role", "Allows updating role info");
-        createScopeIfNotExists("delete:role", "Allows deleting a role");
-        createScopeIfNotExists("list:roles", "Allows listing all roles");
-        
-        // Scope related scopes
-        createScopeIfNotExists("read:scope", "Allows reading scope info");
-        createScopeIfNotExists("create:scope", "Allows creating new scope");
-        createScopeIfNotExists("update:scope", "Allows updating scope info");
-        createScopeIfNotExists("delete:scope", "Allows deleting a scope");
-        createScopeIfNotExists("list:scopes", "Allows listing all scopes");
-        
-        // Resource related scopes
-        createScopeIfNotExists("read:resource", "Read protected resources");
-        createScopeIfNotExists("write:resource", "Create and update protected resources");
-        createScopeIfNotExists("delete:resource", "Delete protected resources");
-        createScopeIfNotExists("list:resources", "List all protected resources");
-        
-        // Policy related scopes
-        createScopeIfNotExists("read:policy", "Read access policies");
-        createScopeIfNotExists("write:policy", "Create and update access policies");
-        createScopeIfNotExists("delete:policy", "Delete access policies");
-        createScopeIfNotExists("list:policies", "List all access policies");
-        
-        // System management scopes
-        createScopeIfNotExists("manage:system", "Full system management access");
-        createScopeIfNotExists("audit:logs", "Access to audit logs");
-        createScopeIfNotExists("monitor:system", "System monitoring access");
+    private void initializeScopes() {
+        log.info("Initializing scopes...");
+
+        // User management scopes
+        createScopeIfNotExists("read:users", "Read user information");
+        createScopeIfNotExists("write:users", "Create and update users");
+        createScopeIfNotExists("delete:users", "Delete users");
+        createScopeIfNotExists("list:users", "List all users");
+
+        // Role management scopes
+        createScopeIfNotExists("read:roles", "Read role information");
+        createScopeIfNotExists("write:roles", "Create and update roles");
+        createScopeIfNotExists("delete:roles", "Delete roles");
+        createScopeIfNotExists("list:roles", "List all roles");
+
+        // Policy management scopes
+        createScopeIfNotExists("read:policies", "Read policy information");
+        createScopeIfNotExists("write:policies", "Create and update policies");
+        createScopeIfNotExists("delete:policies", "Delete policies");
+        createScopeIfNotExists("list:policies", "List all policies");
+
+        // Client management scopes
+        createScopeIfNotExists("read:clients", "Read client information");
+        createScopeIfNotExists("write:clients", "Create and update clients");
+        createScopeIfNotExists("delete:clients", "Delete clients");
+        createScopeIfNotExists("list:clients", "List all clients");
+
+        // Resource management scopes
+        createScopeIfNotExists("read:resources", "Read resource information");
+        createScopeIfNotExists("write:resources", "Create and update resources");
+        createScopeIfNotExists("delete:resources", "Delete resources");
+        createScopeIfNotExists("list:resources", "List all resources");
+
+        // Scope management scopes
+        createScopeIfNotExists("read:scopes", "Read scope information");
+        createScopeIfNotExists("write:scopes", "Create and update scopes");
+        createScopeIfNotExists("delete:scopes", "Delete scopes");
+        createScopeIfNotExists("list:scopes", "List all scopes");
     }
-    
-    private void discoverAndRegisterResources() {
-        resourceDiscoveryService.discoverAndRegisterResources();
+
+    private void initializeRoles() {
+        log.info("Initializing roles...");
+
+        // Admin role with all scopes
+        Role adminRole = createRoleIfNotExists("ROLE_ADMIN", "Administrator with full access");
+        Set<Scope> allScopes = new HashSet<>(scopeRepository.findAll());
+        adminRole.setScopes(allScopes);
+        roleRepository.save(adminRole);
+
+        // User role with basic scopes
+        Role userRole = createRoleIfNotExists("ROLE_USER", "Regular user with basic access");
+        Set<Scope> userScopes = scopeRepository.findAll().stream()
+                .filter(scope -> scope.getName().startsWith("read:") || 
+                               scope.getName().startsWith("list:"))
+                .collect(Collectors.toSet());
+        userRole.setScopes(userScopes);
+        roleRepository.save(userRole);
+    }
+
+    private void initializeResources() {
+        log.info("Initializing resources...");
+
+        // Define base paths
+        String[] basePaths = {""};
+
+        // User management resources
+        for (String basePath : basePaths) {
+            // List users
+            createResourceWithScopes(
+                basePath + "/users",
+                "Users API",
+                "User management endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:users", "list:users")
+            );
+
+            // Get user by ID
+            createResourceWithScopes(
+                basePath + "/users/{id}",
+                "User Detail API",
+                "User detail endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:users")
+            );
+
+            // Create user
+            createResourceWithScopes(
+                basePath + "/users",
+                "Create User API",
+                "Create user endpoint",
+                Resource.HttpMethod.POST,
+                Set.of("write:users")
+            );
+
+            // Update user
+            createResourceWithScopes(
+                basePath + "/users/{id}",
+                "Update User API",
+                "Update user endpoint",
+                Resource.HttpMethod.PUT,
+                Set.of("write:users")
+            );
+
+            // Delete user
+            createResourceWithScopes(
+                basePath + "/users/{id}",
+                "Delete User API",
+                "Delete user endpoint",
+                Resource.HttpMethod.DELETE,
+                Set.of("delete:users")
+            );
+        }
+
+        // Role management resources
+        for (String basePath : basePaths) {
+            // List roles
+            createResourceWithScopes(
+                basePath + "/roles",
+                "Roles API",
+                "Role management endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:roles", "list:roles")
+            );
+
+            // Get role by ID
+            createResourceWithScopes(
+                basePath + "/roles/{id}",
+                "Role Detail API",
+                "Role detail endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:roles")
+            );
+
+            // Create role
+            createResourceWithScopes(
+                basePath + "/roles",
+                "Create Role API",
+                "Create role endpoint",
+                Resource.HttpMethod.POST,
+                Set.of("write:roles")
+            );
+
+            // Update role
+            createResourceWithScopes(
+                basePath + "/roles/{id}",
+                "Update Role API",
+                "Update role endpoint",
+                Resource.HttpMethod.PUT,
+                Set.of("write:roles")
+            );
+
+            // Delete role
+            createResourceWithScopes(
+                basePath + "/roles/{id}",
+                "Delete Role API",
+                "Delete role endpoint",
+                Resource.HttpMethod.DELETE,
+                Set.of("delete:roles")
+            );
+        }
+
+        // Policy management resources
+        for (String basePath : basePaths) {
+            // List policies
+            createResourceWithScopes(
+                basePath + "/policies",
+                "Policies API",
+                "Policy management endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:policies", "list:policies")
+            );
+
+            // Get policy by ID
+            createResourceWithScopes(
+                basePath + "/policies/{id}",
+                "Policy Detail API",
+                "Policy detail endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:policies")
+            );
+
+            // Create policy
+            createResourceWithScopes(
+                basePath + "/policies",
+                "Create Policy API",
+                "Create policy endpoint",
+                Resource.HttpMethod.POST,
+                Set.of("write:policies")
+            );
+
+            // Update policy
+            createResourceWithScopes(
+                basePath + "/policies/{id}",
+                "Update Policy API",
+                "Update policy endpoint",
+                Resource.HttpMethod.PUT,
+                Set.of("write:policies")
+            );
+
+            // Delete policy
+            createResourceWithScopes(
+                basePath + "/policies/{id}",
+                "Delete Policy API",
+                "Delete policy endpoint",
+                Resource.HttpMethod.DELETE,
+                Set.of("delete:policies")
+            );
+        }
+
+        // Client management resources
+        for (String basePath : basePaths) {
+            // List clients
+            createResourceWithScopes(
+                basePath + "/clients",
+                "Clients API",
+                "Client management endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:clients", "list:clients")
+            );
+
+            // Get client by ID
+            createResourceWithScopes(
+                basePath + "/clients/{id}",
+                "Client Detail API",
+                "Client detail endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:clients")
+            );
+
+            // Create client
+            createResourceWithScopes(
+                basePath + "/clients",
+                "Create Client API",
+                "Create client endpoint",
+                Resource.HttpMethod.POST,
+                Set.of("write:clients")
+            );
+
+            // Update client
+            createResourceWithScopes(
+                basePath + "/clients/{id}",
+                "Update Client API",
+                "Update client endpoint",
+                Resource.HttpMethod.PUT,
+                Set.of("write:clients")
+            );
+
+            // Delete client
+            createResourceWithScopes(
+                basePath + "/clients/{id}",
+                "Delete Client API",
+                "Delete client endpoint",
+                Resource.HttpMethod.DELETE,
+                Set.of("delete:clients")
+            );
+        }
+
+        // Resource management resources
+        for (String basePath : basePaths) {
+            // List resources
+            createResourceWithScopes(
+                basePath + "/resources",
+                "Resources API",
+                "Resource management endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:resources", "list:resources")
+            );
+
+            // Get resource by ID
+            createResourceWithScopes(
+                basePath + "/resources/{id}",
+                "Resource Detail API",
+                "Resource detail endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:resources")
+            );
+
+            // Create resource
+            createResourceWithScopes(
+                basePath + "/resources",
+                "Create Resource API",
+                "Create resource endpoint",
+                Resource.HttpMethod.POST,
+                Set.of("write:resources")
+            );
+
+            // Update resource
+            createResourceWithScopes(
+                basePath + "/resources/{id}",
+                "Update Resource API",
+                "Update resource endpoint",
+                Resource.HttpMethod.PUT,
+                Set.of("write:resources")
+            );
+
+            // Delete resource
+            createResourceWithScopes(
+                basePath + "/resources/{id}",
+                "Delete Resource API",
+                "Delete resource endpoint",
+                Resource.HttpMethod.DELETE,
+                Set.of("delete:resources")
+            );
+        }
+
+        // Scope management resources
+        for (String basePath : basePaths) {
+            // List scopes
+            createResourceWithScopes(
+                basePath + "/scopes",
+                "Scopes API",
+                "Scope management endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:scopes", "list:scopes")
+            );
+
+            // Get scope by ID
+            createResourceWithScopes(
+                basePath + "/scopes/{id}",
+                "Scope Detail API",
+                "Scope detail endpoints",
+                Resource.HttpMethod.GET,
+                Set.of("read:scopes")
+            );
+
+            // Create scope
+            createResourceWithScopes(
+                basePath + "/scopes",
+                "Create Scope API",
+                "Create scope endpoint",
+                Resource.HttpMethod.POST,
+                Set.of("write:scopes")
+            );
+
+            // Update scope
+            createResourceWithScopes(
+                basePath + "/scopes/{id}",
+                "Update Scope API",
+                "Update scope endpoint",
+                Resource.HttpMethod.PUT,
+                Set.of("write:scopes")
+            );
+
+            // Delete scope
+            createResourceWithScopes(
+                basePath + "/scopes/{id}",
+                "Delete Scope API",
+                "Delete scope endpoint",
+                Resource.HttpMethod.DELETE,
+                Set.of("delete:scopes")
+            );
+        }
+    }
+
+    private void initializeAdminUser() {
+        log.info("Initializing admin user...");
+
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setEmail("admin@example.com");
+            admin.setFullName("System Administrator");
+            admin.setEnabled(true);
+
+            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                    .orElseThrow(() -> new RuntimeException("Admin role not found"));
+            admin.setRoles(Set.of(adminRole));
+
+            userRepository.save(admin);
+            log.info("Admin user created successfully");
+        }
+    }
+
+    private void initializePolicies() {
+        log.info("Initializing policies...");
+
+        // Get admin user and role
+        User admin = userRepository.findByUsername("admin")
+                .orElseThrow(() -> new RuntimeException("Admin user not found"));
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new RuntimeException("Admin role not found"));
+
+        // Get all resources
+        List<Resource> allResources = resourceRepository.findAll();
+
+        // Create user-specific policies for admin
+        for (Resource resource : allResources) {
+            // Create policy for admin user
+            Policy userPolicy = new Policy();
+            userPolicy.setSubjectId(admin.getId());
+            userPolicy.setSubjectType(Policy.SubjectType.USER);
+            userPolicy.setResource(resource);
+            userPolicy.setScope(resource.getScopes().iterator().next()); // Use first scope
+            userPolicy.setDescription("Admin user policy for " + resource.getPath());
+            policyRepository.save(userPolicy);
+
+            // Create policy for admin role
+            Policy rolePolicy = new Policy();
+            rolePolicy.setSubjectId(adminRole.getId());
+            rolePolicy.setSubjectType(Policy.SubjectType.ROLE);
+            rolePolicy.setResource(resource);
+            rolePolicy.setScope(resource.getScopes().iterator().next()); // Use first scope
+            rolePolicy.setDescription("Admin role policy for " + resource.getPath());
+            policyRepository.save(rolePolicy);
+        }
+
+        log.info("Policies initialized successfully");
     }
 
     private void createScopeIfNotExists(String name, String description) {
-        if (!scopeRepository.existsByName(name)) {
+        if (scopeRepository.findByName(name).isEmpty()) {
             Scope scope = new Scope();
             scope.setName(name);
             scope.setDescription(description);
             scopeRepository.save(scope);
+            log.debug("Created scope: {}", name);
         }
     }
 
-    private void createRolesAndAssignScopes() {
-        // Create ADMIN role with all scopes
-        Role admin = createRoleIfNotExists("ADMIN", "Administrator with full access");
-        Set<Scope> allScopes = new HashSet<>(scopeRepository.findAll());
-        admin.setScopes(allScopes);
-        roleRepository.save(admin);
-
-        // Create USER role with limited scopes
-        Role user = createRoleIfNotExists("USER", "Normal user with limited access");
-        Set<Scope> userScopes = allScopes.stream()
-                .filter(s -> s.getName().startsWith("read:"))
-                .collect(Collectors.toSet());
-        user.setScopes(userScopes);
-        roleRepository.save(user);
-
-        // Create MANAGER role with more permissions
-        Role manager = createRoleIfNotExists("MANAGER", "Manager with elevated access");
-        Set<Scope> managerScopes = allScopes.stream()
-                .filter(s -> s.getName().startsWith("read:") || 
-                           s.getName().startsWith("write:") ||
-                           s.getName().startsWith("list:"))
-                .collect(Collectors.toSet());
-        manager.setScopes(managerScopes);
-        roleRepository.save(manager);
-
-        // Create EDITOR role for content management
-        Role editor = createRoleIfNotExists("EDITOR", "Content editor with write access");
-        Set<Scope> editorScopes = allScopes.stream()
-                .filter(s -> s.getName().startsWith("read:") || 
-                           s.getName().startsWith("write:") ||
-                           s.getName().equals("list:resources"))
-                .collect(Collectors.toSet());
-        editor.setScopes(editorScopes);
-        roleRepository.save(editor);
-
-        // Create VIEWER role for read-only access
-        Role viewer = createRoleIfNotExists("VIEWER", "Viewer with read-only access");
-        Set<Scope> viewerScopes = allScopes.stream()
-                .filter(s -> s.getName().startsWith("read:") || 
-                           s.getName().startsWith("list:"))
-                .collect(Collectors.toSet());
-        viewer.setScopes(viewerScopes);
-        roleRepository.save(viewer);
-    }
-
     private Role createRoleIfNotExists(String name, String description) {
-        return roleRepository.findByName(name).orElseGet(() -> {
+        return roleRepository.findByName(name)
+                .orElseGet(() -> {
             Role role = new Role();
             role.setName(name);
             role.setDescription(description);
@@ -162,94 +490,27 @@ public class DataInitializer implements ApplicationRunner {
         });
     }
 
-    private void createPolicies() {
-        // Get all resources
-        List<Resource> resources = resourceRepository.findAll();
-        
-        // Get roles
-        Role adminRole = roleRepository.findByName("ADMIN")
-                .orElseThrow(() -> new RuntimeException("Admin role not found"));
-        Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("User role not found"));
-        Role managerRole = roleRepository.findByName("MANAGER")
-                .orElseThrow(() -> new RuntimeException("Manager role not found"));
-        Role editorRole = roleRepository.findByName("EDITOR")
-                .orElseThrow(() -> new RuntimeException("Editor role not found"));
-        Role viewerRole = roleRepository.findByName("VIEWER")
-                .orElseThrow(() -> new RuntimeException("Viewer role not found"));
-
-        // Get scopes
-        Set<Scope> allScopes = new HashSet<>(scopeRepository.findAll());
-        Set<Scope> readScopes = allScopes.stream()
-                .filter(s -> s.getName().startsWith("read:"))
-                .collect(Collectors.toSet());
-        Set<Scope> writeScopes = allScopes.stream()
-                .filter(s -> s.getName().startsWith("write:"))
-                .collect(Collectors.toSet());
-        Set<Scope> listScopes = allScopes.stream()
-                .filter(s -> s.getName().startsWith("list:"))
-                .collect(Collectors.toSet());
-
-        // Create policies for each role
-        for (Resource resource : resources) {
-            // Admin has full access to all resources
-            createPolicyIfNotExists(adminRole, resource, allScopes, Policy.SubjectType.ROLE);
-
-            // Manager has read, write, and list access
-            Set<Scope> managerScopes = new HashSet<>();
-            managerScopes.addAll(readScopes);
-            managerScopes.addAll(writeScopes);
-            managerScopes.addAll(listScopes);
-            createPolicyIfNotExists(managerRole, resource, managerScopes, Policy.SubjectType.ROLE);
-
-            // Editor has read and write access
-            Set<Scope> editorScopes = new HashSet<>();
-            editorScopes.addAll(readScopes);
-            editorScopes.addAll(writeScopes);
-            createPolicyIfNotExists(editorRole, resource, editorScopes, Policy.SubjectType.ROLE);
-
-            // Viewer has read and list access
-            Set<Scope> viewerScopes = new HashSet<>();
-            viewerScopes.addAll(readScopes);
-            viewerScopes.addAll(listScopes);
-            createPolicyIfNotExists(viewerRole, resource, viewerScopes, Policy.SubjectType.ROLE);
-
-            // Regular user has only read access
-            createPolicyIfNotExists(userRole, resource, readScopes, Policy.SubjectType.ROLE);
+    private void createResourceWithScopes(String path, String name, String description,
+                                        Resource.HttpMethod method, Set<String> scopeNames) {
+        // Check if resource with same path and method already exists
+        if (resourceRepository.findByPathAndMethod(path, method).isPresent()) {
+            log.debug("Resource already exists: {} [{}]", path, method);
+            return;
         }
-    }
 
-    private void createPolicyIfNotExists(Role role, Resource resource, Set<Scope> scopes, Policy.SubjectType subjectType) {
-        for (Scope scope : scopes) {
-            Policy policy = new Policy();
-            policy.setSubjectId(role.getId());
-            policy.setSubjectType(subjectType);
-            policy.setResource(resource);
-            policy.setScope(scope);
-            policy.setDescription(String.format("Policy for %s to access %s with scope %s", 
-                role.getName(), resource.getName(), scope.getName()));
-            policyRepository.save(policy);
-        }
-    }
+        Resource resource = new Resource();
+        resource.setPath(path);
+        resource.setName(name);
+        resource.setDescription(description);
+        resource.setMethod(method);
 
-    private void createAdminUser() {
-        if (!userRepository.existsByUsername("admin")) {
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setEmail("admin@example.com");
-            admin.setPassword(passwordEncoder.encode("admin123")); // Change this in production
-            admin.setFullName("Administrator");
-            
-            // Get admin role
-            Role adminRole = roleRepository.findByName("ADMIN")
-                    .orElseThrow(() -> new RuntimeException("Admin role not found"));
-            
-            // Assign admin role
-            admin.setRoles(Set.of(adminRole));
-            
-            // Save admin user
-            userRepository.save(admin);
-            log.info("Created admin user with username: admin");
-        }
+        Set<Scope> scopes = scopeNames.stream()
+                .map(scopeName -> scopeRepository.findByName(scopeName)
+                        .orElseThrow(() -> new RuntimeException("Scope not found: " + scopeName)))
+                .collect(Collectors.toSet());
+        resource.setScopes(scopes);
+
+        resourceRepository.save(resource);
+        log.debug("Created resource: {} [{}] with scopes: {}", path, method, scopeNames);
     }
 }

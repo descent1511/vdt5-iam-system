@@ -35,7 +35,9 @@ public class Policy extends BaseEntity  {
     private String description;
 
     public enum SubjectType {
-        USER, ROLE
+        USER,    // For regular users
+        ROLE,    // For role-based access
+        CLIENT,  // For client applications
     }
 
-} 
+}
