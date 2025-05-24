@@ -1,10 +1,10 @@
 package com.example.iam.security;
 
-import com.example.iam.entity.Token;
-import com.example.iam.entity.User;
 import com.example.iam.entity.ClientApplication;
+import com.example.iam.entity.Token;
+import com.example.iam.entity.Scope;
+import com.example.iam.entity.User;
 import com.example.iam.service.TokenService;
-import com.example.iam.repository.ClientApplicationRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -12,14 +12,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
-
+import org.springframework.security.core.userdetails.UserDetails;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,55 +30,69 @@ public class JwtTokenProvider {
     private String jwtSecret;
 
     @Value("${app.jwt.access-token.expiration}")
-    private int jwtExpirationInMs;
+    private long jwtExpirationInMs;
 
     @Value("${app.jwt.refresh-token.expiration}")
-    private int refreshExpirationInMs;
+    private long refreshExpirationInMs;
 
     private final TokenService tokenService;
-    private final ClientApplicationRepository clientApplicationRepository;
+
     private Key key;
 
     @PostConstruct
     public void init() {
+        if (jwtSecret.length() < 32) {
+            throw new IllegalArgumentException("JWT secret must be at least 32 characters long for HS256");
+        }
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
     public String generateAccessToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "user");
+        claims.put("username", userDetails.getUsername());
 
         String token = Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(key)
-                .compact();
+            .setClaims(claims)
+            .setSubject(userDetails.getUsername())
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
 
-        // Save token to database
         if (userDetails instanceof UserPrincipal) {
             User user = ((UserPrincipal) userDetails).getUser();
-            tokenService.saveToken(token, user, Token.TokenType.ACCESS, 
-                LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));
+            tokenService.saveToken(token, user, Token.TokenType.ACCESS,
+                    LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));
         }
+        System.out.println("Generating token for user: " + userDetails.getUsername());
+        System.out.println("Authorities: " + userDetails.getAuthorities());
+        System.out.println("UserDetails class: " + userDetails.getClass().getName());
 
         return token;
     }
 
     public String generateRefreshToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + refreshExpirationInMs);
 
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "user");
+
         String token = Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setClaims(claims)
+                .setSubject(String.valueOf(userDetails.getUsername()))
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(key)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        // Save token to database
         if (userDetails instanceof UserPrincipal) {
             User user = ((UserPrincipal) userDetails).getUser();
             tokenService.saveToken(token, user, Token.TokenType.REFRESH,
@@ -89,103 +102,75 @@ public class JwtTokenProvider {
         return token;
     }
 
-    public String getUsernameFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.getSubject();
-    }
-
-    public boolean validateToken(String authToken) {
-        try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
-            // Check if token is blacklisted
-            return tokenService.isTokenValid(authToken);
-        } catch (SecurityException ex) {
-            log.error("Invalid JWT signature");
-        } catch (MalformedJwtException ex) {
-            log.error("Invalid JWT token");
-        } catch (ExpiredJwtException ex) {
-            log.error("Expired JWT token");
-        } catch (UnsupportedJwtException ex) {
-            log.error("Unsupported JWT token");
-        } catch (IllegalArgumentException ex) {
-            log.error("JWT claims string is empty");
-        }
-        return false;
-    }
-
     public String generateClientAccessToken(ClientApplication clientApp) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "client");
+        claims.put("client_id", clientApp.getClientId());
+
         String token = Jwts.builder()
                 .setSubject(clientApp.getClientId())
-                .claim("client_id", clientApp.getClientId())
+                .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key)
                 .compact();
 
-        // Save token to database
         tokenService.saveClientToken(token, clientApp.getClientId(), Token.TokenType.ACCESS,
             LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));
 
         return token;
     }
 
+    public String getSubjectFromJWT(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    public String getSubjectTypeFromJWT(String token) {
+        return getClaims(token).get("type", String.class);
+    }
+    public String getUsernameFromJWT(String token) {
+        return getClaims(token).get("username", String.class);
+    }
+
+
     public String getClientIdFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.get("client_id", String.class);
+        return getClaims(token).get("client_id", String.class);
     }
 
-    public Set<String> getScopesFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        String scopes = claims.get("scopes", String.class);
-        if (scopes != null && !scopes.isEmpty()) {
-            return Set.of(scopes.split(" "));
-        }
-        return Set.of();
-    }
-
-    public boolean validateClientToken(String authToken) {
+    public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
-            // Check if token is blacklisted
-            return tokenService.isTokenValid(authToken);
+            Claims claims = getClaims(token);
+            return tokenService.isTokenValid(token);
         } catch (SecurityException ex) {
-            log.error("Invalid JWT signature");
+            log.error("Invalid JWT signature: {}", ex.getMessage());
+            return false;
         } catch (MalformedJwtException ex) {
-            log.error("Invalid JWT token");
+            log.error("Invalid JWT token: {}", ex.getMessage());
+            return false;
         } catch (ExpiredJwtException ex) {
-            log.error("Expired JWT token");
+            log.error("Expired JWT token: {}", ex.getMessage());
+            return false;
         } catch (UnsupportedJwtException ex) {
-            log.error("Unsupported JWT token");
+            log.error("Unsupported JWT token: {}", ex.getMessage());
+            return false;
         } catch (IllegalArgumentException ex) {
-            log.error("JWT claims string is empty");
+            log.error("JWT claims string is empty: {}", ex.getMessage());
+            return false;
         }
-        return false;
     }
 
-    public Set<String> getClientScopes(String token) {
-        String clientId = getClientIdFromJWT(token);
-        return clientApplicationRepository.findByClientId(clientId)
-                .map(clientApp -> clientApp.getScopes().stream()
-                        .map(scope -> scope.getName())
-                        .collect(Collectors.toSet()))
-                .orElse(Set.of());
+    public boolean validateClientToken(String token) {
+        return validateToken(token);
     }
-} 
+
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+}

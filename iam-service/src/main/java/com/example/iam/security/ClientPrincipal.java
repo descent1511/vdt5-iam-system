@@ -1,7 +1,6 @@
 package com.example.iam.security;
 
 import com.example.iam.entity.ClientApplication;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,9 +23,10 @@ public class ClientPrincipal implements UserDetails {
 
     public static ClientPrincipal create(ClientApplication client) {
         List<GrantedAuthority> authorities = client.getScopes().stream()
-                .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope.getName()))
+                .flatMap(scope -> scope.getPermissions().stream())
+                .map(permission -> new SimpleGrantedAuthority(permission.getName()))
                 .collect(Collectors.toList());
-
+    
         return ClientPrincipal.builder()
                 .clientId(client.getClientId())
                 .clientSecret(client.getClientSecret())

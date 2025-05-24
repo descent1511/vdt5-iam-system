@@ -1,516 +1,278 @@
 package com.example.iam.config;
 
-import com.example.iam.entity.Resource;
-import com.example.iam.entity.Role;
-import com.example.iam.entity.Scope;
-import com.example.iam.repository.ResourceRepository;
-import com.example.iam.repository.RoleRepository;
-import com.example.iam.repository.ScopeRepository;
-import com.example.iam.service.ResourceDiscoveryService;
-import jakarta.transaction.Transactional;
+import com.example.iam.entity.*;
+import com.example.iam.repository.*;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import com.example.iam.entity.User;
-import com.example.iam.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.util.List;
-import com.example.iam.entity.Policy;
-import com.example.iam.repository.PolicyRepository;
 
 @Component
 @RequiredArgsConstructor
-public class DataInitializer implements ApplicationRunner {
+public class DataInitializer {
 
-    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
     private final ScopeRepository scopeRepository;
+    private final RoleRepository roleRepository;
     private final ResourceRepository resourceRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ResourceDiscoveryService resourceDiscoveryService;
-    private final PolicyRepository policyRepository;
 
-    @Override
+    @Value("${app.base-url:}")
+    private String baseUrl;
+
+    @Value("${app.admin.username:admin}")
+    private String adminUsername;
+
+    @Value("${app.admin.password:admin123}")
+    private String adminPassword;
+
+    @Value("${app.admin.email:admin@example.com}")
+    private String adminEmail;
+
+    @PostConstruct
     @Transactional
-    public void run(ApplicationArguments args) {
-        log.info("Initializing data...");
+    public void init() {
+        // Initialize Permissions
+        Set<Permission> permissions = createPermissions();
+        
+        // Initialize Scopes
+        Set<Scope> scopes = createScopes(permissions);
+        
+        // Initialize Resources with Permissions
+        createResources(permissions);
+        
+        // Initialize Roles
+        createRoles(permissions);
 
-        // Initialize scopes
-        initializeScopes();
-
-        // Initialize roles
-        initializeRoles();
-
-        // Initialize resources and their scope mappings
-        initializeResources();
-
-        // Initialize admin user
-        initializeAdminUser();
-
-        // Initialize policies
-        initializePolicies();
-
-        log.info("Data initialization completed.");
+        // Initialize Admin User
+        createAdminUser();
     }
 
-    private void initializeScopes() {
-        log.info("Initializing scopes...");
+    private void createAdminUser() {
+        userRepository.findByUsername(adminUsername)
+            .orElseGet(() -> {
+                User admin = new User();
+                admin.setUsername(adminUsername);
+                admin.setPassword(passwordEncoder.encode(adminPassword));
+                admin.setEmail(adminEmail);
+                admin.setEnabled(true);
+                admin.setFullName("System Administrator");
 
-        // User management scopes
-        createScopeIfNotExists("read:users", "Read user information");
-        createScopeIfNotExists("write:users", "Create and update users");
-        createScopeIfNotExists("delete:users", "Delete users");
-        createScopeIfNotExists("list:users", "List all users");
-
-        // Role management scopes
-        createScopeIfNotExists("read:roles", "Read role information");
-        createScopeIfNotExists("write:roles", "Create and update roles");
-        createScopeIfNotExists("delete:roles", "Delete roles");
-        createScopeIfNotExists("list:roles", "List all roles");
-
-        // Policy management scopes
-        createScopeIfNotExists("read:policies", "Read policy information");
-        createScopeIfNotExists("write:policies", "Create and update policies");
-        createScopeIfNotExists("delete:policies", "Delete policies");
-        createScopeIfNotExists("list:policies", "List all policies");
-
-        // Client management scopes
-        createScopeIfNotExists("read:clients", "Read client information");
-        createScopeIfNotExists("write:clients", "Create and update clients");
-        createScopeIfNotExists("delete:clients", "Delete clients");
-        createScopeIfNotExists("list:clients", "List all clients");
-
-        // Resource management scopes
-        createScopeIfNotExists("read:resources", "Read resource information");
-        createScopeIfNotExists("write:resources", "Create and update resources");
-        createScopeIfNotExists("delete:resources", "Delete resources");
-        createScopeIfNotExists("list:resources", "List all resources");
-
-        // Scope management scopes
-        createScopeIfNotExists("read:scopes", "Read scope information");
-        createScopeIfNotExists("write:scopes", "Create and update scopes");
-        createScopeIfNotExists("delete:scopes", "Delete scopes");
-        createScopeIfNotExists("list:scopes", "List all scopes");
-    }
-
-    private void initializeRoles() {
-        log.info("Initializing roles...");
-
-        // Admin role with all scopes
-        Role adminRole = createRoleIfNotExists("ROLE_ADMIN", "Administrator with full access");
-        Set<Scope> allScopes = new HashSet<>(scopeRepository.findAll());
-        adminRole.setScopes(allScopes);
-        roleRepository.save(adminRole);
-
-        // User role with basic scopes
-        Role userRole = createRoleIfNotExists("ROLE_USER", "Regular user with basic access");
-        Set<Scope> userScopes = scopeRepository.findAll().stream()
-                .filter(scope -> scope.getName().startsWith("read:") || 
-                               scope.getName().startsWith("list:"))
-                .collect(Collectors.toSet());
-        userRole.setScopes(userScopes);
-        roleRepository.save(userRole);
-    }
-
-    private void initializeResources() {
-        log.info("Initializing resources...");
-
-        // Define base paths
-        String[] basePaths = {""};
-
-        // User management resources
-        for (String basePath : basePaths) {
-            // List users
-            createResourceWithScopes(
-                basePath + "/users",
-                "Users API",
-                "User management endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:users", "list:users")
-            );
-
-            // Get user by ID
-            createResourceWithScopes(
-                basePath + "/users/{id}",
-                "User Detail API",
-                "User detail endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:users")
-            );
-
-            // Create user
-            createResourceWithScopes(
-                basePath + "/users",
-                "Create User API",
-                "Create user endpoint",
-                Resource.HttpMethod.POST,
-                Set.of("write:users")
-            );
-
-            // Update user
-            createResourceWithScopes(
-                basePath + "/users/{id}",
-                "Update User API",
-                "Update user endpoint",
-                Resource.HttpMethod.PUT,
-                Set.of("write:users")
-            );
-
-            // Delete user
-            createResourceWithScopes(
-                basePath + "/users/{id}",
-                "Delete User API",
-                "Delete user endpoint",
-                Resource.HttpMethod.DELETE,
-                Set.of("delete:users")
-            );
-        }
-
-        // Role management resources
-        for (String basePath : basePaths) {
-            // List roles
-            createResourceWithScopes(
-                basePath + "/roles",
-                "Roles API",
-                "Role management endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:roles", "list:roles")
-            );
-
-            // Get role by ID
-            createResourceWithScopes(
-                basePath + "/roles/{id}",
-                "Role Detail API",
-                "Role detail endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:roles")
-            );
-
-            // Create role
-            createResourceWithScopes(
-                basePath + "/roles",
-                "Create Role API",
-                "Create role endpoint",
-                Resource.HttpMethod.POST,
-                Set.of("write:roles")
-            );
-
-            // Update role
-            createResourceWithScopes(
-                basePath + "/roles/{id}",
-                "Update Role API",
-                "Update role endpoint",
-                Resource.HttpMethod.PUT,
-                Set.of("write:roles")
-            );
-
-            // Delete role
-            createResourceWithScopes(
-                basePath + "/roles/{id}",
-                "Delete Role API",
-                "Delete role endpoint",
-                Resource.HttpMethod.DELETE,
-                Set.of("delete:roles")
-            );
-        }
-
-        // Policy management resources
-        for (String basePath : basePaths) {
-            // List policies
-            createResourceWithScopes(
-                basePath + "/policies",
-                "Policies API",
-                "Policy management endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:policies", "list:policies")
-            );
-
-            // Get policy by ID
-            createResourceWithScopes(
-                basePath + "/policies/{id}",
-                "Policy Detail API",
-                "Policy detail endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:policies")
-            );
-
-            // Create policy
-            createResourceWithScopes(
-                basePath + "/policies",
-                "Create Policy API",
-                "Create policy endpoint",
-                Resource.HttpMethod.POST,
-                Set.of("write:policies")
-            );
-
-            // Update policy
-            createResourceWithScopes(
-                basePath + "/policies/{id}",
-                "Update Policy API",
-                "Update policy endpoint",
-                Resource.HttpMethod.PUT,
-                Set.of("write:policies")
-            );
-
-            // Delete policy
-            createResourceWithScopes(
-                basePath + "/policies/{id}",
-                "Delete Policy API",
-                "Delete policy endpoint",
-                Resource.HttpMethod.DELETE,
-                Set.of("delete:policies")
-            );
-        }
-
-        // Client management resources
-        for (String basePath : basePaths) {
-            // List clients
-            createResourceWithScopes(
-                basePath + "/clients",
-                "Clients API",
-                "Client management endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:clients", "list:clients")
-            );
-
-            // Get client by ID
-            createResourceWithScopes(
-                basePath + "/clients/{id}",
-                "Client Detail API",
-                "Client detail endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:clients")
-            );
-
-            // Create client
-            createResourceWithScopes(
-                basePath + "/clients",
-                "Create Client API",
-                "Create client endpoint",
-                Resource.HttpMethod.POST,
-                Set.of("write:clients")
-            );
-
-            // Update client
-            createResourceWithScopes(
-                basePath + "/clients/{id}",
-                "Update Client API",
-                "Update client endpoint",
-                Resource.HttpMethod.PUT,
-                Set.of("write:clients")
-            );
-
-            // Delete client
-            createResourceWithScopes(
-                basePath + "/clients/{id}",
-                "Delete Client API",
-                "Delete client endpoint",
-                Resource.HttpMethod.DELETE,
-                Set.of("delete:clients")
-            );
-        }
-
-        // Resource management resources
-        for (String basePath : basePaths) {
-            // List resources
-            createResourceWithScopes(
-                basePath + "/resources",
-                "Resources API",
-                "Resource management endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:resources", "list:resources")
-            );
-
-            // Get resource by ID
-            createResourceWithScopes(
-                basePath + "/resources/{id}",
-                "Resource Detail API",
-                "Resource detail endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:resources")
-            );
-
-            // Create resource
-            createResourceWithScopes(
-                basePath + "/resources",
-                "Create Resource API",
-                "Create resource endpoint",
-                Resource.HttpMethod.POST,
-                Set.of("write:resources")
-            );
-
-            // Update resource
-            createResourceWithScopes(
-                basePath + "/resources/{id}",
-                "Update Resource API",
-                "Update resource endpoint",
-                Resource.HttpMethod.PUT,
-                Set.of("write:resources")
-            );
-
-            // Delete resource
-            createResourceWithScopes(
-                basePath + "/resources/{id}",
-                "Delete Resource API",
-                "Delete resource endpoint",
-                Resource.HttpMethod.DELETE,
-                Set.of("delete:resources")
-            );
-        }
-
-        // Scope management resources
-        for (String basePath : basePaths) {
-            // List scopes
-            createResourceWithScopes(
-                basePath + "/scopes",
-                "Scopes API",
-                "Scope management endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:scopes", "list:scopes")
-            );
-
-            // Get scope by ID
-            createResourceWithScopes(
-                basePath + "/scopes/{id}",
-                "Scope Detail API",
-                "Scope detail endpoints",
-                Resource.HttpMethod.GET,
-                Set.of("read:scopes")
-            );
-
-            // Create scope
-            createResourceWithScopes(
-                basePath + "/scopes",
-                "Create Scope API",
-                "Create scope endpoint",
-                Resource.HttpMethod.POST,
-                Set.of("write:scopes")
-            );
-
-            // Update scope
-            createResourceWithScopes(
-                basePath + "/scopes/{id}",
-                "Update Scope API",
-                "Update scope endpoint",
-                Resource.HttpMethod.PUT,
-                Set.of("write:scopes")
-            );
-
-            // Delete scope
-            createResourceWithScopes(
-                basePath + "/scopes/{id}",
-                "Delete Scope API",
-                "Delete scope endpoint",
-                Resource.HttpMethod.DELETE,
-                Set.of("delete:scopes")
-            );
-        }
-    }
-
-    private void initializeAdminUser() {
-        log.info("Initializing admin user...");
-
-        if (userRepository.findByUsername("admin").isEmpty()) {
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setEmail("admin@example.com");
-            admin.setFullName("System Administrator");
-            admin.setEnabled(true);
-
-            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                // Set admin role
+                Role adminRole = roleRepository.findByName("ROLE_ADMIN")
                     .orElseThrow(() -> new RuntimeException("Admin role not found"));
-            admin.setRoles(Set.of(adminRole));
+                admin.addRole(adminRole);
 
-            userRepository.save(admin);
-            log.info("Admin user created successfully");
-        }
+                // Set admin scope
+                Scope adminScope = scopeRepository.findByName("admin")
+                    .orElseThrow(() -> new RuntimeException("Admin scope not found"));
+                admin.addScope(adminScope);
+
+                return userRepository.save(admin);
+            });
     }
 
-    private void initializePolicies() {
-        log.info("Initializing policies...");
+    private Set<Permission> createPermissions() {
+        Set<Permission> permissions = new HashSet<>();
+        
+        // User Management Permissions
+        permissions.add(createPermission("USER_CREATE", "Create new user"));
+        permissions.add(createPermission("USER_READ", "View user details"));
+        permissions.add(createPermission("USER_UPDATE", "Update user information"));
+        permissions.add(createPermission("USER_DELETE", "Delete user"));
+        
+        // Role Management Permissions
+        permissions.add(createPermission("ROLE_CREATE", "Create new role"));
+        permissions.add(createPermission("ROLE_READ", "View role details"));
+        permissions.add(createPermission("ROLE_UPDATE", "Update role information"));
+        permissions.add(createPermission("ROLE_DELETE", "Delete role"));
+        
+        // Resource Management Permissions
+        permissions.add(createPermission("RESOURCE_CREATE", "Create new resource"));
+        permissions.add(createPermission("RESOURCE_READ", "View resource details"));
+        permissions.add(createPermission("RESOURCE_UPDATE", "Update resource information"));
+        permissions.add(createPermission("RESOURCE_DELETE", "Delete resource"));
+        
+        // Client Application Permissions
+        permissions.add(createPermission("CLIENT_CREATE", "Create new client application"));
+        permissions.add(createPermission("CLIENT_READ", "View client details"));
+        permissions.add(createPermission("CLIENT_UPDATE", "Update client information"));
+        permissions.add(createPermission("CLIENT_DELETE", "Delete client application"));
 
-        // Get admin user and role
-        User admin = userRepository.findByUsername("admin")
-                .orElseThrow(() -> new RuntimeException("Admin user not found"));
+        return permissions;
+    }
+
+    private Set<Scope> createScopes(Set<Permission> permissions) {
+        Set<Scope> scopes = new HashSet<>();
+        
+        // Admin Scope with all permissions
+        Scope adminScope = scopeRepository.findByName("admin")
+            .orElseGet(() -> {
+                Scope scope = new Scope();
+                scope.setName("admin");
+                scope.setDescription("Full administrative access");
+                scope.setPermissions(permissions);
+                return scopeRepository.save(scope);
+            });
+        scopes.add(adminScope);
+        
+        // User Management Scope
+        Scope userManagementScope = scopeRepository.findByName("user_management")
+            .orElseGet(() -> {
+                Scope scope = new Scope();
+                scope.setName("user_management");
+                scope.setDescription("User management access");
+                scope.setPermissions(permissions.stream()
+                    .filter(p -> p.getName().startsWith("USER_"))
+                    .collect(java.util.stream.Collectors.toSet()));
+                return scopeRepository.save(scope);
+            });
+        scopes.add(userManagementScope);
+        
+        // Basic User Scope
+        Scope basicUserScope = scopeRepository.findByName("basic_user")
+            .orElseGet(() -> {
+                Scope scope = new Scope();
+                scope.setName("basic_user");
+                scope.setDescription("Basic user access");
+                scope.setPermissions(permissions.stream()
+                    .filter(p -> p.getName().equals("USER_READ"))
+                    .collect(java.util.stream.Collectors.toSet()));
+                return scopeRepository.save(scope);
+            });
+        scopes.add(basicUserScope);
+
+        return scopes;
+    }
+
+    private void createResources(Set<Permission> permissions) {
+        // User Resources
+        createResource("user_list", baseUrl + "/users", "GET", "List all users",
+            permissions.stream().filter(p -> p.getName().equals("USER_READ")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("user_detail", baseUrl + "/users/{id}", "GET", "Get user details",
+            permissions.stream().filter(p -> p.getName().equals("USER_READ")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("user_create", baseUrl + "/users", "POST", "Create new user",
+            permissions.stream().filter(p -> p.getName().equals("USER_CREATE")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("user_update", baseUrl + "/users/{id}", "PUT", "Update user",
+            permissions.stream().filter(p -> p.getName().equals("USER_UPDATE")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("user_delete", baseUrl + "/users/{id}", "DELETE", "Delete user",
+            permissions.stream().filter(p -> p.getName().equals("USER_DELETE")).collect(java.util.stream.Collectors.toSet()));
+
+        // Role Resources
+        createResource("role_list", baseUrl + "/roles", "GET", "List all roles",
+            permissions.stream().filter(p -> p.getName().equals("ROLE_READ")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("role_detail", baseUrl + "/roles/{id}", "GET", "Get role details",
+            permissions.stream().filter(p -> p.getName().equals("ROLE_READ")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("role_create", baseUrl + "/roles", "POST", "Create new role",
+            permissions.stream().filter(p -> p.getName().equals("ROLE_CREATE")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("role_update", baseUrl + "/roles/{id}", "PUT", "Update role",
+            permissions.stream().filter(p -> p.getName().equals("ROLE_UPDATE")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("role_delete", baseUrl + "/roles/{id}", "DELETE", "Delete role",
+            permissions.stream().filter(p -> p.getName().equals("ROLE_DELETE")).collect(java.util.stream.Collectors.toSet()));
+
+        // Resource Management Resources
+        createResource("resource_list", baseUrl + "/resources", "GET", "List all resources",
+            permissions.stream().filter(p -> p.getName().equals("RESOURCE_READ")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("resource_detail", baseUrl + "/resources/{id}", "GET", "Get resource details",
+            permissions.stream().filter(p -> p.getName().equals("RESOURCE_READ")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("resource_create", baseUrl + "/resources", "POST", "Create new resource",
+            permissions.stream().filter(p -> p.getName().equals("RESOURCE_CREATE")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("resource_update", baseUrl + "/resources/{id}", "PUT", "Update resource",
+            permissions.stream().filter(p -> p.getName().equals("RESOURCE_UPDATE")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("resource_delete", baseUrl + "/resources/{id}", "DELETE", "Delete resource",
+            permissions.stream().filter(p -> p.getName().equals("RESOURCE_DELETE")).collect(java.util.stream.Collectors.toSet()));
+
+        // Client Resources
+        createResource("client_list", baseUrl + "/clients", "GET", "List all clients",
+            permissions.stream().filter(p -> p.getName().equals("CLIENT_READ")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("client_detail", baseUrl + "/clients/{id}", "GET", "Get client details",
+            permissions.stream().filter(p -> p.getName().equals("CLIENT_READ")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("client_create", baseUrl + "/clients", "POST", "Create new client",
+            permissions.stream().filter(p -> p.getName().equals("CLIENT_CREATE")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("client_update", baseUrl + "/clients/{id}", "PUT", "Update client",
+            permissions.stream().filter(p -> p.getName().equals("CLIENT_UPDATE")).collect(java.util.stream.Collectors.toSet()));
+        
+        createResource("client_delete", baseUrl + "/clients/{id}", "DELETE", "Delete client",
+            permissions.stream().filter(p -> p.getName().equals("CLIENT_DELETE")).collect(java.util.stream.Collectors.toSet()));
+    }
+
+    private Resource createResource(String name, String path, String method, String description, Set<Permission> permissions) {
+        return resourceRepository.findByPathAndMethod(path, Resource.HttpMethod.valueOf(method))
+            .orElseGet(() -> {
+                Resource resource = new Resource();
+                resource.setName(name);
+                resource.setPath(path);
+                resource.setDescription(description);
+                resource.setMethod(Resource.HttpMethod.valueOf(method));
+                resource.setPermissions(permissions);
+                return resourceRepository.save(resource);
+            });
+    }
+
+    private void createRoles(Set<Permission> permissions) {
+        // Admin Role - có tất cả permissions
         Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                .orElseThrow(() -> new RuntimeException("Admin role not found"));
-
-        // Get all resources
-        List<Resource> allResources = resourceRepository.findAll();
-
-        // Create user-specific policies for admin
-        for (Resource resource : allResources) {
-            // Create policy for admin user
-            Policy userPolicy = new Policy();
-            userPolicy.setSubjectId(admin.getId());
-            userPolicy.setSubjectType(Policy.SubjectType.USER);
-            userPolicy.setResource(resource);
-            userPolicy.setScope(resource.getScopes().iterator().next()); // Use first scope
-            userPolicy.setDescription("Admin user policy for " + resource.getPath());
-            policyRepository.save(userPolicy);
-
-            // Create policy for admin role
-            Policy rolePolicy = new Policy();
-            rolePolicy.setSubjectId(adminRole.getId());
-            rolePolicy.setSubjectType(Policy.SubjectType.ROLE);
-            rolePolicy.setResource(resource);
-            rolePolicy.setScope(resource.getScopes().iterator().next()); // Use first scope
-            rolePolicy.setDescription("Admin role policy for " + resource.getPath());
-            policyRepository.save(rolePolicy);
-        }
-
-        log.info("Policies initialized successfully");
+            .orElseGet(() -> {
+                Role role = new Role();
+                role.setName("ROLE_ADMIN");
+                role.setDescription("Administrator role with full access");
+                role.setPermissions(permissions);
+                return roleRepository.save(role);
+            });
+        
+        // User Management Role - chỉ có permissions liên quan đến user
+        Role userManagerRole = roleRepository.findByName("ROLE_USER_MANAGER")
+            .orElseGet(() -> {
+                Role role = new Role();
+                role.setName("ROLE_USER_MANAGER");
+                role.setDescription("User management role");
+                role.setPermissions(permissions.stream()
+                    .filter(p -> p.getName().startsWith("USER_"))
+                    .collect(java.util.stream.Collectors.toSet()));
+                return roleRepository.save(role);
+            });
+        
+        // Basic User Role - chỉ có quyền đọc
+        Role basicUserRole = roleRepository.findByName("ROLE_USER")
+            .orElseGet(() -> {
+                Role role = new Role();
+                role.setName("ROLE_USER");
+                role.setDescription("Basic user role");
+                role.setPermissions(permissions.stream()
+                    .filter(p -> p.getName().equals("USER_READ"))
+                    .collect(java.util.stream.Collectors.toSet()));
+                return roleRepository.save(role);
+            });
     }
 
-    private void createScopeIfNotExists(String name, String description) {
-        if (scopeRepository.findByName(name).isEmpty()) {
-            Scope scope = new Scope();
-            scope.setName(name);
-            scope.setDescription(description);
-            scopeRepository.save(scope);
-            log.debug("Created scope: {}", name);
-        }
+    private Permission createPermission(String name, String description) {
+        return permissionRepository.findByName(name)
+            .orElseGet(() -> {
+                Permission permission = new Permission();
+                permission.setName(name);
+                permission.setDescription(description);
+                return permissionRepository.save(permission);
+            });
     }
-
-    private Role createRoleIfNotExists(String name, String description) {
-        return roleRepository.findByName(name)
-                .orElseGet(() -> {
-            Role role = new Role();
-            role.setName(name);
-            role.setDescription(description);
-            return roleRepository.save(role);
-        });
-    }
-
-    private void createResourceWithScopes(String path, String name, String description,
-                                        Resource.HttpMethod method, Set<String> scopeNames) {
-        // Check if resource with same path and method already exists
-        if (resourceRepository.findByPathAndMethod(path, method).isPresent()) {
-            log.debug("Resource already exists: {} [{}]", path, method);
-            return;
-        }
-
-        Resource resource = new Resource();
-        resource.setPath(path);
-        resource.setName(name);
-        resource.setDescription(description);
-        resource.setMethod(method);
-
-        Set<Scope> scopes = scopeNames.stream()
-                .map(scopeName -> scopeRepository.findByName(scopeName)
-                        .orElseThrow(() -> new RuntimeException("Scope not found: " + scopeName)))
-                .collect(Collectors.toSet());
-        resource.setScopes(scopes);
-
-        resourceRepository.save(resource);
-        log.debug("Created resource: {} [{}] with scopes: {}", path, method, scopeNames);
-    }
-}
+} 
