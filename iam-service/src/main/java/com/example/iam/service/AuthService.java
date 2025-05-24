@@ -1,16 +1,11 @@
 package com.example.iam.service;
 
 import com.example.iam.dto.SignupRequest;
-import com.example.iam.dto.TokenResponse;
 import com.example.iam.entity.Organization;
 import com.example.iam.entity.User;
 import com.example.iam.repository.OrganizationRepository;
 import com.example.iam.repository.UserRepository;
-import com.example.iam.security.JwtTokenProvider;
-import com.example.iam.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,8 +17,6 @@ public class AuthService {
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider tokenProvider;
-    private final TokenService tokenService;
 
     @Transactional
     public User registerUser(SignupRequest signupRequest) {
@@ -40,7 +33,7 @@ public class AuthService {
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         user.setFullName(signupRequest.getFullName());
-        
+
         if (signupRequest.getOrganizationId() != null) {
             Organization organization = organizationRepository.findById(signupRequest.getOrganizationId())
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
@@ -49,31 +42,6 @@ public class AuthService {
         return userRepository.save(user);
     }
 
-    public TokenResponse refreshToken(String refreshToken) {
-        if (!tokenProvider.validateToken(refreshToken)) {
-            throw new RuntimeException("Invalid refresh token");
-        }
-
-        String userName = tokenProvider.getUsernameFromJWT(refreshToken);
-        User user = userRepository.findByUsername(userName)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Revoke the old refresh token
-        tokenService.revokeToken(refreshToken);
-
-        // Create UserPrincipal and authentication
-        UserPrincipal userPrincipal = UserPrincipal.create(user);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-            userPrincipal,
-            null,
-            userPrincipal.getAuthorities()
-        );
-
-        String newAccessToken = tokenProvider.generateAccessToken(authentication);
-        String newRefreshToken = tokenProvider.generateRefreshToken(authentication);
-
-        return new TokenResponse(newAccessToken, newRefreshToken);
-    }
 
     @Transactional(readOnly = true)
     public User getUserByUsername(String username) {

@@ -25,7 +25,6 @@ public class TokenService {
         tokenEntity.setRevoked(false);
         tokenEntity.setCreatedAt(LocalDateTime.now());
         tokenEntity.setExpiresAt(expiresAt);
-        tokenEntity.setGrantType(Token.GrantType.PASSWORD);
         tokenRepository.save(tokenEntity);
     }
 
@@ -39,7 +38,6 @@ public class TokenService {
         tokenEntity.setRevoked(false);
         tokenEntity.setCreatedAt(LocalDateTime.now());
         tokenEntity.setExpiresAt(expiresAt);
-        tokenEntity.setGrantType(Token.GrantType.CLIENT_CREDENTIALS);
         tokenRepository.save(tokenEntity);
     }
 

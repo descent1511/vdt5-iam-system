@@ -5,7 +5,7 @@ import com.example.iam.service.PolicyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.example.iam.security.annotation.RequirePermission;
 import java.util.List;
 
 @RestController
@@ -16,26 +16,31 @@ public class PolicyController {
     private final PolicyService policyService;
 
     @GetMapping
+    @RequirePermission
     public ResponseEntity<List<PolicyDTO>> getAll() {
         return ResponseEntity.ok(policyService.getAllPolicies());
     }
 
     @GetMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<PolicyDTO> get(@PathVariable Long id) {
         return ResponseEntity.ok(policyService.getPolicyById(id));
     }
 
     @PostMapping
+    @RequirePermission
     public ResponseEntity<PolicyDTO> create(@RequestBody PolicyDTO dto) {
         return ResponseEntity.ok(policyService.createPolicy(dto));
     }
 
     @PutMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<PolicyDTO> update(@PathVariable Long id, @RequestBody PolicyDTO dto) {
         return ResponseEntity.ok(policyService.updatePolicy(id, dto));
     }
 
     @DeleteMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         policyService.deletePolicy(id);
         return ResponseEntity.noContent().build();

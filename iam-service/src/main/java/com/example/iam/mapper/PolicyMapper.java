@@ -10,13 +10,11 @@ import org.mapstruct.*;
 public interface PolicyMapper {
 
     @Mapping(source = "resource.id", target = "resourceId")
-    @Mapping(source = "scope.id", target = "scopeId")
     @Mapping(source = "subjectType", target = "subjectType")
     PolicyDTO toDTO(Policy policy);
 
     @InheritInverseConfiguration
     @Mapping(target = "resource", expression = "java(mapResource(dto.getResourceId()))")
-    @Mapping(target = "scope", expression = "java(mapScope(dto.getScopeId()))")
     @Mapping(target = "subjectType", expression = "java(dto.getSubjectType() != null ? com.example.iam.entity.Policy.SubjectType.valueOf(dto.getSubjectType()) : null)")
     Policy toEntity(PolicyDTO dto);
 

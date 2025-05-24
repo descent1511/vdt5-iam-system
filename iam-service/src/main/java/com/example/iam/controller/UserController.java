@@ -10,9 +10,9 @@ import com.example.iam.mapper.UserMapper;
 import com.example.iam.mapper.RoleMapper;
 import com.example.iam.mapper.ScopeMapper;
 import com.example.iam.service.UserService;
+import com.example.iam.security.annotation.RequirePermission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,24 +29,28 @@ public class UserController {
     private final ScopeMapper scopeMapper;
 
     @GetMapping
+    @RequirePermission
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> users = userService.findAll();
         return ResponseEntity.ok(userMapper.toDTOList(users));
     }
 
     @GetMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         User user = userService.findById(id);
         return ResponseEntity.ok(userMapper.toDTO(user));
     }
-    
+
     @PutMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
         User updated = userService.updateUser(id, userDTO);
         return ResponseEntity.ok(userMapper.toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
@@ -73,7 +77,6 @@ public class UserController {
     }
 
     @GetMapping("/{id}/scopes")
-    @PreAuthorize("hasAuthority('read:user')")
     public ResponseEntity<List<ScopeDTO>> getUserScopes(@PathVariable Long id) {
         Set<Scope> scopes = userService.getUserScopes(id);
         return ResponseEntity.ok(

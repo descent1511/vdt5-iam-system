@@ -13,12 +13,10 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface RoleMapper {
 
-    @Mapping(target = "scope_ids", expression = "java(mapScopeIds(role.getScopes()))")
     @Mapping(target = "user_ids", expression = "java(mapUserIds(role.getUsers()))")
     RoleDTO toDTO(Role role);
 
     @InheritInverseConfiguration
-    @Mapping(target = "scopes", ignore = true)
     @Mapping(target = "permissions", ignore = true)
     @Mapping(target = "users", ignore = true)
     Role toEntity(RoleDTO dto);

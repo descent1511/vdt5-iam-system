@@ -47,29 +47,6 @@ public class RoleService {
         roleRepository.delete(role);
     }
 
-    public Set<Scope> getRoleScopes(Long id) {
-        Role role = getRole(id);
-        return role.getScopes();
-    }
-
-    @Transactional
-    public Role addScopeToRole(Long roleId, Long scopeId) {
-        Role role = getRole(roleId);
-        Scope scope = scopeRepository.findById(scopeId)
-                .orElseThrow(() -> new RuntimeException("Scope not found"));
-        role.getScopes().add(scope);
-        return roleRepository.save(role);
-    }
-
-    @Transactional
-    public Role removeScopeFromRole(Long roleId, Long scopeId) {
-        Role role = getRole(roleId);
-        Scope scope = scopeRepository.findById(scopeId)
-                .orElseThrow(() -> new RuntimeException("Scope not found"));
-        role.getScopes().remove(scope);
-        return roleRepository.save(role);
-    }
-
     public Set<Permission> getRolePermissions(Long id) {
         Role role = getRole(id);
         return role.getPermissions();

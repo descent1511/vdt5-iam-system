@@ -6,6 +6,7 @@ import com.example.iam.entity.Role;
 import com.example.iam.entity.Scope;
 import com.example.iam.mapper.RoleMapper;
 import com.example.iam.mapper.ScopeMapper;
+import com.example.iam.security.annotation.RequirePermission;
 import com.example.iam.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class RoleController {
     private final ScopeMapper scopeMapper;
 
     @GetMapping
+    @RequirePermission
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
         List<Role> roles = roleService.getAllRoles();
         List<RoleDTO> dtos = roles.stream()
@@ -34,51 +36,31 @@ public class RoleController {
     }
 
     @PostMapping
+    @RequirePermission
     public ResponseEntity<RoleDTO> createRole(@RequestBody RoleDTO dto) {
         Role created = roleService.createRole(roleMapper.toEntity(dto));
         return ResponseEntity.ok(roleMapper.toDTO(created));
     }
 
     @GetMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<RoleDTO> getRole(@PathVariable Long id) {
         Role role = roleService.getRole(id);
         return ResponseEntity.ok(roleMapper.toDTO(role));
     }
 
     @PutMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<RoleDTO> updateRole(@PathVariable Long id, @RequestBody RoleDTO dto) {
         Role updated = roleService.updateRole(id, roleMapper.toEntity(dto));
         return ResponseEntity.ok(roleMapper.toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
+    @RequirePermission
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}/scopes")
-    public ResponseEntity<List<ScopeDTO>> getRoleScopes(@PathVariable Long id) {
-        Set<Scope> scopes = roleService.getRoleScopes(id);
-        List<ScopeDTO> dtos = scopes.stream()
-                .map(scopeMapper::toDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
-
-    @PostMapping("/{id}/scopes")
-    public ResponseEntity<RoleDTO> addScopeToRole(
-            @PathVariable Long id,
-            @RequestBody Long scopeId) {
-        Role updated = roleService.addScopeToRole(id, scopeId);
-        return ResponseEntity.ok(roleMapper.toDTO(updated));
-    }
-
-    @DeleteMapping("/{id}/scopes/{scopeId}")
-    public ResponseEntity<RoleDTO> removeScopeFromRole(
-            @PathVariable Long id,
-            @PathVariable Long scopeId) {
-        Role updated = roleService.removeScopeFromRole(id, scopeId);
-        return ResponseEntity.ok(roleMapper.toDTO(updated));
-    }
 }

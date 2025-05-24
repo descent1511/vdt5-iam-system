@@ -27,9 +27,10 @@ public class UserPrincipal implements UserDetails {
 
     public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> new SimpleGrantedAuthority(permission.getName()))
                 .collect(Collectors.toList());
-
+    
         return UserPrincipal.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -39,6 +40,7 @@ public class UserPrincipal implements UserDetails {
                 .user(user)
                 .build();
     }
+    
 
     @Override
     public boolean isAccountNonExpired() {

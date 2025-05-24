@@ -50,7 +50,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
             .authorizeHttpRequests(auth -> auth
-            .anyRequest().permitAll() // Cho phép tất cả request
+            .anyRequest().permitAll() 
         )
             .headers(headers -> headers
                 .xssProtection(xss -> xss.disable())
