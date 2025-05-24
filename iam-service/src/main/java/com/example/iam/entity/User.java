@@ -1,41 +1,52 @@
 package com.example.iam.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import java.util.HashSet;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+import java.util.HashSet;
 import java.util.Set;
 
+@Entity
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Entity
-@Table(name = "users")
+@SuperBuilder
 public class User extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
+    @NotBlank
+    @Size(min = 3, max = 50)
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Email
     @Column(nullable = false, unique = true)
     private String email;
 
+    @NotBlank
+    @Size(min = 6, max = 100)
     @Column(nullable = false)
     private String password;
 
     @Column(name = "full_name")
     private String fullName;
 
+    @Column(nullable = false)
+    private boolean enabled = true;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "user_role",
+        name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
@@ -43,10 +54,27 @@ public class User extends BaseEntity {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "user_scope",
+        name = "user_scopes",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "scope_id")
     )
     private Set<Scope> scopes = new HashSet<>();
 
+    public void addRole(Role role) {
+        roles.add(role);
+    }
+
+    public void removeRole(Role role) {
+        roles.remove(role);
+    }
+
+    public void addScope(Scope scope) {
+        scopes.add(scope);
+    }
+
+    public void removeScope(Scope scope) {
+        scopes.remove(scope);
+    }
 }
+
+

@@ -25,6 +25,21 @@ public class TokenService {
         tokenEntity.setRevoked(false);
         tokenEntity.setCreatedAt(LocalDateTime.now());
         tokenEntity.setExpiresAt(expiresAt);
+        tokenEntity.setGrantType(Token.GrantType.PASSWORD);
+        tokenRepository.save(tokenEntity);
+    }
+
+    @Transactional
+    public void saveClientToken(String token, String clientId, Token.TokenType tokenType, LocalDateTime expiresAt) {
+        Token tokenEntity = new Token();
+        tokenEntity.setToken(token);
+        tokenEntity.setClientId(clientId);
+        tokenEntity.setTokenType(tokenType);
+        tokenEntity.setExpired(false);
+        tokenEntity.setRevoked(false);
+        tokenEntity.setCreatedAt(LocalDateTime.now());
+        tokenEntity.setExpiresAt(expiresAt);
+        tokenEntity.setGrantType(Token.GrantType.CLIENT_CREDENTIALS);
         tokenRepository.save(tokenEntity);
     }
 
