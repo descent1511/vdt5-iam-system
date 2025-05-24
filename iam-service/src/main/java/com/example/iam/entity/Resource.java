@@ -33,7 +33,7 @@ public class Resource extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private HttpMethod method; 
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "resource_permissions",
         joinColumns = @JoinColumn(name = "resource_id"),
@@ -41,7 +41,7 @@ public class Resource extends BaseEntity {
     )
     private Set<Permission> permissions = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "resource_scopes",
         joinColumns = @JoinColumn(name = "resource_id"),

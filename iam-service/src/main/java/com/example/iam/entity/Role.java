@@ -28,7 +28,7 @@ public class Role extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "role_permissions",
         joinColumns = @JoinColumn(name = "role_id"),
@@ -37,7 +37,7 @@ public class Role extends BaseEntity {
     @JsonManagedReference(value = "role-permissions")
     private Set<Permission> permissions = new HashSet<>();
 
-    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonBackReference(value = "user-roles")
     private Set<User> users = new HashSet<>();
 

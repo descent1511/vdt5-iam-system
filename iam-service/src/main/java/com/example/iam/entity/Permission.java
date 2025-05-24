@@ -27,7 +27,7 @@ public class Permission extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "permission_resources",
         joinColumns = @JoinColumn(name = "permission_id"),
@@ -35,7 +35,7 @@ public class Permission extends BaseEntity {
     )
     private Set<Resource> resources = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "permission_scopes",
         joinColumns = @JoinColumn(name = "permission_id"),
@@ -43,7 +43,7 @@ public class Permission extends BaseEntity {
     )
     private Set<Scope> scopes = new HashSet<>();
 
-    @ManyToMany(mappedBy = "permissions")
+    @ManyToMany(mappedBy = "permissions", cascade = CascadeType.ALL)
     private Set<Role> roles = new HashSet<>();
 
     public void addResource(Resource resource) {
