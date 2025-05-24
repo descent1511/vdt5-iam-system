@@ -34,10 +34,6 @@ public class Token {
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
 
-    @Column(name = "grant_type", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private GrantType grantType;
-
     private boolean expired;
 
     private boolean revoked;
@@ -50,12 +46,5 @@ public class Token {
 
     public enum TokenType {
         ACCESS, REFRESH
-    }
-
-    public enum GrantType {
-        CLIENT_CREDENTIALS,
-        PASSWORD,
-        REFRESH_TOKEN,
-        AUTHORIZATION_CODE
     }
 } 
