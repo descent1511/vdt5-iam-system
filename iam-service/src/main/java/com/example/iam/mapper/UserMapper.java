@@ -16,25 +16,32 @@ import java.util.stream.Collectors;
 public interface UserMapper {
 
     @Mapping(source = "organization.id", target = "organization_id")
-    @Mapping(target = "role_ids", expression = "java(mapRoleIds(user.getRoles()))")
-    @Mapping(target = "scope_ids", expression = "java(mapScopeIds(user.getScopes()))")
+    @Mapping(source = "roles", target = "roles", qualifiedByName = "mapRoleNames")
+    @Mapping(target = "permissions", expression = "java(mapPermissions(user))")
     UserDTO toDTO(User user);
 
     @Mapping(target = "organization", ignore = true)
     @Mapping(target = "roles", ignore = true) 
-    @Mapping(target = "scopes", ignore = true) 
     User toEntity(UserDTO dto);
 
     List<UserDTO> toDTOList(List<User> users);
     List<User> toEntityList(List<UserDTO> dtos);
 
-    @Named("mapRoleIds")
-    default Set<Long> mapRoleIds(Set<Role> roles) {
-        return roles != null ? roles.stream().map(Role::getId).collect(Collectors.toSet()) : null;
+    @Named("mapRoleNames")
+    default Set<String> mapRoleNames(Set<Role> roles) {
+        return roles != null ? roles.stream()
+            .map(Role::getName)
+            .collect(Collectors.toSet()) : null;
     }
 
-    @Named("mapScopeIds")
-    default Set<Long> mapScopeIds(Set<Scope> scopes) {
-        return scopes != null ? scopes.stream().map(Scope::getId).collect(Collectors.toSet()) : null;
+    @Named("mapPermissions")
+    default Set<String> mapPermissions(User user) {
+        if (user == null || user.getRoles() == null) {
+            return null;
+        }
+        return user.getRoles().stream()
+            .flatMap(role -> role.getPermissions().stream())
+            .map(permission -> permission.getName())
+            .collect(Collectors.toSet());
     }
 }
