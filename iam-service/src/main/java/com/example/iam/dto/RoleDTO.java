@@ -13,7 +13,7 @@ public class RoleDTO {
     private Long id;
     private String name;
     private String description;
-    private Set<Long> scope_ids;
+    private Set<Long> permission_ids;
     private Set<Long> user_ids;
 
 } 

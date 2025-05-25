@@ -15,31 +15,31 @@ public class OrganizationController {
     private final OrganizationService organizationService;
 
     @GetMapping
-    @RequirePermission
+    @RequirePermission(value = "ORGANIZATION_READ", description = "View list of organizations")
     public ResponseEntity<List<Organization>> getAllOrganizations() {
         return ResponseEntity.ok(organizationService.getAllOrganizations());
     }
 
     @PostMapping
-    @RequirePermission
+    @RequirePermission(value = "ORGANIZATION_CREATE", description = "Create new organization")
     public ResponseEntity<Organization> createOrganization(@RequestBody Organization organization) {
         return ResponseEntity.ok(organizationService.createOrganization(organization));
     }   
 
     @GetMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "ORGANIZATION_READ", description = "View organization details")
     public ResponseEntity<Organization> getOrganization(@PathVariable Long id) {
         return ResponseEntity.ok(organizationService.getOrganization(id));
     }
 
     @PutMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "ORGANIZATION_UPDATE", description = "Update organization information")
     public ResponseEntity<Organization> updateOrganization(@PathVariable Long id, @RequestBody Organization organization) {
         return ResponseEntity.ok(organizationService.updateOrganization(id, organization));
     }
 
     @DeleteMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "ORGANIZATION_DELETE", description = "Delete organization")
     public ResponseEntity<Void> deleteOrganization(@PathVariable Long id) {
         organizationService.deleteOrganization(id);
         return ResponseEntity.noContent().build();

@@ -19,34 +19,34 @@ public class ResourceController {
     private final ResourceMapper resourceMapper;
 
     @GetMapping
-    @RequirePermission
+    @RequirePermission(value = "RESOURCE_READ", description = "View list of resources")
     public ResponseEntity<List<ResourceDTO>> getAll() {
         List<Resource> list = resourceService.getAll();
         return ResponseEntity.ok(resourceMapper.toDTOList(list));
     }
 
     @GetMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "RESOURCE_READ", description = "View resource details")
     public ResponseEntity<ResourceDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(resourceMapper.toDTO(resourceService.getById(id)));
     }
 
     @PostMapping
-    @RequirePermission
+    @RequirePermission(value = "RESOURCE_CREATE", description = "Create new resource")
     public ResponseEntity<ResourceDTO> create(@RequestBody ResourceDTO dto) {
         Resource resource = resourceMapper.toEntity(dto);
         return ResponseEntity.ok(resourceMapper.toDTO(resourceService.create(resource)));
     }
 
     @PutMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "RESOURCE_UPDATE", description = "Update resource information")
     public ResponseEntity<ResourceDTO> update(@PathVariable Long id, @RequestBody ResourceDTO dto) {
         Resource resource = resourceMapper.toEntity(dto);
         return ResponseEntity.ok(resourceMapper.toDTO(resourceService.update(id, resource)));
     }
 
     @DeleteMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "RESOURCE_DELETE", description = "Delete resource")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         resourceService.delete(id);
         return ResponseEntity.noContent().build();

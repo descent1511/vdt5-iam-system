@@ -20,7 +20,7 @@ public class ScopeController {
     private final ScopeMapper scopeMapper;
 
     @GetMapping
-    @RequirePermission
+    @RequirePermission(value = "SCOPE_READ", description = "View list of scopes")
     public ResponseEntity<List<ScopeDTO>> getAllScopes() {
         List<Scope> scopes = scopeService.getAllScopes();
         List<ScopeDTO> dtos = scopes.stream()
@@ -30,7 +30,7 @@ public class ScopeController {
     }
 
     @PostMapping
-    @RequirePermission
+    @RequirePermission(value = "SCOPE_CREATE", description = "Create new scope")
     public ResponseEntity<ScopeDTO> createScope(@RequestBody ScopeDTO dto) {
         Scope scope = scopeMapper.toEntity(dto);
         Scope saved = scopeService.createScope(scope);
@@ -38,21 +38,21 @@ public class ScopeController {
     }
 
     @GetMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "SCOPE_READ", description = "View scope details")
     public ResponseEntity<ScopeDTO> getScope(@PathVariable Long id) {
         Scope scope = scopeService.getScope(id);
         return ResponseEntity.ok(scopeMapper.toDTO(scope));
     }
 
     @PutMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "SCOPE_UPDATE", description = "Update scope information")
     public ResponseEntity<ScopeDTO> updateScope(@PathVariable Long id, @RequestBody ScopeDTO dto) {
         Scope updated = scopeService.updateScope(id, scopeMapper.toEntity(dto));
         return ResponseEntity.ok(scopeMapper.toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    @RequirePermission
+    @RequirePermission(value = "SCOPE_DELETE", description = "Delete scope")
     public ResponseEntity<Void> deleteScope(@PathVariable Long id) {
         scopeService.deleteScope(id);
         return ResponseEntity.noContent().build();

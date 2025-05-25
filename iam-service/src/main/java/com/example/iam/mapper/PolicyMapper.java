@@ -3,7 +3,6 @@ package com.example.iam.mapper;
 import com.example.iam.dto.PolicyDTO;
 import com.example.iam.entity.Policy;
 import com.example.iam.entity.Resource;
-import com.example.iam.entity.Scope;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
@@ -25,10 +24,4 @@ public interface PolicyMapper {
         return r;
     }
 
-    default Scope mapScope(Long id) {
-        if (id == null) return null;
-        Scope s = new Scope();
-        s.setId(id);
-        return s;
-    }
 }

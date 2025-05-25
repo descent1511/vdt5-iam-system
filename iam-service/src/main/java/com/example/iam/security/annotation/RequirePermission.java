@@ -8,5 +8,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequirePermission {
-    // No parameters needed as we'll check based on resource mapping
+    String value();  // Permission name (e.g., "USER_READ", "ROLE_CREATE")
+    String description() default "";  // Description of what this permission allows
 } 

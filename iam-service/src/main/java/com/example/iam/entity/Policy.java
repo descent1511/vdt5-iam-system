@@ -1,7 +1,4 @@
 package com.example.iam.entity;
-
-import java.util.Objects;
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
@@ -19,7 +15,6 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "policies")
 @Getter
 @Setter
-@SuperBuilder
 public class Policy extends BaseEntity  {
 
     @Column(name = "subject_id", nullable = false)

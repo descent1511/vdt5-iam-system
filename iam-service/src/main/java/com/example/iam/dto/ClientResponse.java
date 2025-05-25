@@ -1,9 +1,6 @@
 package com.example.iam.dto;
-
-import com.example.iam.entity.Scope;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor

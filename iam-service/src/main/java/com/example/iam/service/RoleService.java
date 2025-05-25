@@ -2,9 +2,7 @@ package com.example.iam.service;
 
 import com.example.iam.entity.Permission;
 import com.example.iam.entity.Role;
-import com.example.iam.entity.Scope;
 import com.example.iam.repository.RoleRepository;
-import com.example.iam.repository.ScopeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +15,6 @@ import java.util.Set;
 public class RoleService {
 
     private final RoleRepository roleRepository;
-    private final ScopeRepository scopeRepository;
 
     public List<Role> getAllRoles() {
         return roleRepository.findAll();

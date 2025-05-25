@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 public interface RoleMapper {
 
     @Mapping(target = "user_ids", expression = "java(mapUserIds(role.getUsers()))")
+    @Mapping(target = "permission_ids", expression = "java(mapPermissionIds(role.getPermissions()))")
     RoleDTO toDTO(Role role);
 
     @InheritInverseConfiguration
@@ -21,13 +22,13 @@ public interface RoleMapper {
     @Mapping(target = "users", ignore = true)
     Role toEntity(RoleDTO dto);
 
-    default Set<Long> mapScopeIds(Set<Scope> scopes) {
-        return scopes == null ? null :
-                scopes.stream().map(Scope::getId).collect(Collectors.toSet());
-    }
-
     default Set<Long> mapUserIds(Set<User> users) {
         return users == null ? null :
                 users.stream().map(User::getId).collect(Collectors.toSet());
+    }
+
+    default Set<Long> mapPermissionIds(Set<Permission> permissions) {
+        return permissions == null ? null :
+                permissions.stream().map(Permission::getId).collect(Collectors.toSet());
     }
 }

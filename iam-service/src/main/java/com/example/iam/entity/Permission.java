@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import lombok.Builder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,30 +30,16 @@ public class Permission extends BaseEntity {
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
-        name = "permission_resources",
-        joinColumns = @JoinColumn(name = "permission_id"),
-        inverseJoinColumns = @JoinColumn(name = "resource_id")
-    )
-    private Set<Resource> resources = new HashSet<>();
-
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(
         name = "permission_scopes",
         joinColumns = @JoinColumn(name = "permission_id"),
         inverseJoinColumns = @JoinColumn(name = "scope_id")
     )
+    @Builder.Default
     private Set<Scope> scopes = new HashSet<>();
 
     @ManyToMany(mappedBy = "permissions", cascade = CascadeType.ALL)
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
-
-    public void addResource(Resource resource) {
-        resources.add(resource);
-    }
-
-    public void removeResource(Resource resource) {
-        resources.remove(resource);
-    }
 
     public void addScope(Scope scope) {
         scopes.add(scope);

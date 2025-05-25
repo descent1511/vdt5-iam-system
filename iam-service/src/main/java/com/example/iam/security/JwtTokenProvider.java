@@ -2,7 +2,6 @@ package com.example.iam.security;
 
 import com.example.iam.entity.ClientApplication;
 import com.example.iam.entity.Token;
-import com.example.iam.entity.Scope;
 import com.example.iam.entity.User;
 import com.example.iam.service.TokenService;
 import io.jsonwebtoken.*;
@@ -12,14 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -142,7 +139,6 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Claims claims = getClaims(token);
             return tokenService.isTokenValid(token);
         } catch (SecurityException ex) {
             log.error("Invalid JWT signature: {}", ex.getMessage());

@@ -5,9 +5,6 @@ import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -17,6 +14,8 @@ import lombok.Setter;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.experimental.SuperBuilder;
+import lombok.Builder;
+import jakarta.persistence.*;
 
 @Getter
 @Setter
@@ -35,20 +34,15 @@ public class Scope extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "scope_permissions",
-        joinColumns = @JoinColumn(name = "scope_id"),
-        inverseJoinColumns = @JoinColumn(name = "permission_id")
-    )
+    @ManyToMany(mappedBy = "scopes", cascade = CascadeType.ALL)
+    @Builder.Default
     private Set<Permission> permissions = new HashSet<>();
 
-    // Mối quan hệ nhiều-nhiều với Resource (để ánh xạ scope với endpoint)
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "scope_resources",
-        joinColumns = @JoinColumn(name = "scope_id"),
-        inverseJoinColumns = @JoinColumn(name = "resource_id")
-    )
-    private Set<Resource> resources = new HashSet<>();
+    public void addPermission(Permission permission) {
+        permissions.add(permission);
+    }
+
+    public void removePermission(Permission permission) {
+        permissions.remove(permission);
+    }
 }
