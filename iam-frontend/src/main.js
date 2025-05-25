@@ -1,14 +1,40 @@
-import './assets/main.css'
-
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-
-import App from './App.vue'
 import router from './router'
+import App from './App.vue'
+import Toast from 'vue-toastification'
+import 'vue-toastification/dist/index.css'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap-icons/font/bootstrap-icons.css'
+import './assets/css/main.css'
+import { useAuthStore } from './stores/auth'
+
+// Import all Bootstrap JS
+import * as bootstrap from 'bootstrap'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+// Configure toast notifications
+const toastOptions = {
+  position: 'top-right',
+  timeout: 3000,
+  closeOnClick: true,
+  pauseOnFocusLoss: true,
+  pauseOnHover: true,
+  draggable: true,
+  draggablePercent: 0.6
+}
+
+// Make bootstrap available globally
+window.bootstrap = bootstrap
+
+app.use(pinia)
 app.use(router)
+app.use(Toast, toastOptions)
 
-app.mount('#app')
+// Initialize auth store
+const authStore = useAuthStore()
+authStore.init().then(() => {
+  app.mount('#app')
+})

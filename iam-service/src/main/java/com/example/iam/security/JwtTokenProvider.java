@@ -66,10 +66,6 @@ public class JwtTokenProvider {
             tokenService.saveToken(token, user, Token.TokenType.ACCESS,
                     LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));
         }
-        System.out.println("Generating token for user: " + userDetails.getUsername());
-        System.out.println("Authorities: " + userDetails.getAuthorities());
-        System.out.println("UserDetails class: " + userDetails.getClass().getName());
-
         return token;
     }
 

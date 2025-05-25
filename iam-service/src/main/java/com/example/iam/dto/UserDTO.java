@@ -16,8 +16,8 @@ public class UserDTO {
     private String username;
     private String email;
     private String fullName;
-    private Set<Long> role_ids;
-    private Set<Long> scope_ids;
+    private Set<String> roles;
+    private Set<String> permissions;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
