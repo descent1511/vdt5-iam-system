@@ -28,7 +28,7 @@ public class Permission extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "permission_scopes",
         joinColumns = @JoinColumn(name = "permission_id"),
@@ -37,7 +37,7 @@ public class Permission extends BaseEntity {
     @Builder.Default
     private Set<Scope> scopes = new HashSet<>();
 
-    @ManyToMany(mappedBy = "permissions", cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "permissions")
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
