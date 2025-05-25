@@ -1,25 +1,18 @@
 
 package com.example.iam.service;
-
 import com.example.iam.dto.ClientCreateRequest;
-import com.example.iam.dto.ClientResponse;
 import com.example.iam.entity.ClientApplication;
 import com.example.iam.entity.Scope;
-import com.example.iam.entity.User;
 import com.example.iam.repository.ClientApplicationRepository;
 import com.example.iam.repository.ScopeRepository;
-import com.example.iam.repository.UserRepository;
-import com.example.iam.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.HashSet;
 
 @Service
@@ -27,9 +20,7 @@ import java.util.HashSet;
 public class OAuthService {
 
     private final ClientApplicationRepository clientApplicationRepository;
-    private final UserRepository userRepository;
     private final ScopeRepository scopeRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
 
     // @Transactional(readOnly = true)
@@ -91,11 +82,7 @@ public class OAuthService {
         client.setScopes(scopes);
         client.setActive(true);
         return   clientApplicationRepository.save(client);
-
-
-       
     }
-
     private String generateClientSecret() {
         SecureRandom random = new SecureRandom();
         byte[] bytes = new byte[32]; // 32 bytes = 256 bits

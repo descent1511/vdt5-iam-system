@@ -17,7 +17,7 @@ public class OAuthController {
     private final OAuthService oauthService;
 
     @PostMapping()
-    @RequirePermission
+    @RequirePermission(value = "CLIENT_CREATE", description = "Create new OAuth client application")
     public ResponseEntity<ClientResponse> createClient(@Valid @RequestBody ClientCreateRequest request) {
         ClientApplication response = oauthService.createClientApplication(request);
         String accessToken = tokenProvider.generateClientAccessToken(response);

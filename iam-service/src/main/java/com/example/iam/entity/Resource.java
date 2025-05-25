@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -32,22 +30,6 @@ public class Resource extends BaseEntity {
     @Column(name = "http_method", nullable = false)
     @Enumerated(EnumType.STRING)
     private HttpMethod method; 
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "resource_permissions",
-        joinColumns = @JoinColumn(name = "resource_id"),
-        inverseJoinColumns = @JoinColumn(name = "permission_id")
-    )
-    private Set<Permission> permissions = new HashSet<>();
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "resource_scopes",
-        joinColumns = @JoinColumn(name = "resource_id"),
-        inverseJoinColumns = @JoinColumn(name = "scope_id")
-    )
-    private Set<Scope> scopes = new HashSet<>();
 
     public enum HttpMethod {
         GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS

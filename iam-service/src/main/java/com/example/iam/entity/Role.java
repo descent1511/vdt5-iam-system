@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.Builder;
 import lombok.experimental.SuperBuilder;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -35,10 +36,12 @@ public class Role extends BaseEntity {
         inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     @JsonManagedReference(value = "role-permissions")
+    @Builder.Default
     private Set<Permission> permissions = new HashSet<>();
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     @JsonBackReference(value = "user-roles")
+    @Builder.Default
     private Set<User> users = new HashSet<>();
 
     public void addPermission(Permission permission) {

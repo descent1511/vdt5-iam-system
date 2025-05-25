@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import lombok.Builder;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -42,6 +43,7 @@ public class User extends BaseEntity {
     private String fullName;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean enabled = true;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -50,6 +52,7 @@ public class User extends BaseEntity {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -58,6 +61,7 @@ public class User extends BaseEntity {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "scope_id")
     )
+    @Builder.Default
     private Set<Scope> scopes = new HashSet<>();
 
     public void addRole(Role role) {
