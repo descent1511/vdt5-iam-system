@@ -46,7 +46,7 @@ public class RoleController {
     @PutMapping("/{id}")
     @RequirePermission(value = "ROLE_UPDATE", description = "Update role information")
     public ResponseEntity<RoleDTO> updateRole(@PathVariable Long id, @RequestBody RoleDTO dto) {
-        Role updated = roleService.updateRole(id, roleMapper.toEntity(dto));
+        Role updated = roleService.updateRole(id, dto);
         return ResponseEntity.ok(roleMapper.toDTO(updated));
     }
 

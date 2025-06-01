@@ -33,7 +33,7 @@ public class UserService {
     public List<User> findAll() {
         return userRepository.findAll();
     }
-
+    
     public User findById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -53,8 +53,8 @@ public class UserService {
             existingUser.setFullName(userDTO.getFullName());
         }
 
-        if (userDTO.getRole_ids() != null) {
-            Set<Role> roles = roleRepository.findAllById(userDTO.getRole_ids())
+        if (userDTO.getRoles() != null) {
+            Set<Role> roles = roleRepository.findByNameIn(userDTO.getRoles())
                     .stream().collect(Collectors.toSet());
             existingUser.setRoles(roles);
         }
@@ -63,11 +63,6 @@ public class UserService {
             existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
 
-        if (userDTO.getScope_ids() != null) {
-            Set<Scope> scopes = scopeRepository.findAllById(userDTO.getScope_ids())
-                    .stream().collect(Collectors.toSet());
-            existingUser.setScopes(scopes);
-        }
 
         return userRepository.save(existingUser);
     }

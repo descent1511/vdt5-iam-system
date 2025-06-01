@@ -49,11 +49,19 @@ public class AuthController {
         return ResponseEntity.ok(user);
     }
 
+    
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String token) {
         String jwt = token.substring(7); // Remove "Bearer "
         tokenService.revokeToken(jwt);
         return ResponseEntity.ok().build();
+    }
+    
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refreshToken(@RequestHeader("Authorization") String refreshToken) {
+        String token = refreshToken.substring(7); // Remove "Bearer "
+        TokenResponse newTokens = authService.refreshToken(token);
+        return ResponseEntity.ok(newTokens);
     }
     
 } 

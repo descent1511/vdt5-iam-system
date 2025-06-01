@@ -37,10 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
                     if ("user".equals(subjectType)) {
                         String username = tokenProvider.getUsernameFromJWT(jwt);
+                        
                         authorities = userDetailsService.loadUserByUsername(username).getAuthorities().stream()
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.toSet());
-                            
+                        
                     } else if ("client".equals(subjectType)) {
                         String client_id  = tokenProvider.getClientIdFromJWT(jwt);
                         authorities = userDetailsService.loadUserByUsername(client_id).getAuthorities().stream()
