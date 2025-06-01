@@ -77,10 +77,11 @@ public class JwtTokenProvider {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "user");
-
+        claims.put("username", userDetails.getUsername());
+        
         String token = Jwts.builder()
                 .setClaims(claims)
-                .setSubject(String.valueOf(userDetails.getUsername()))
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -125,6 +126,7 @@ public class JwtTokenProvider {
         return getClaims(token).get("type", String.class);
     }
     public String getUsernameFromJWT(String token) {
+        
         return getClaims(token).get("username", String.class);
     }
 
