@@ -101,8 +101,7 @@ class RoleControllerTest {
     @Test
     void updateRole_ShouldReturnUpdatedRole() {
         // Arrange
-        when(roleMapper.toEntity(any(RoleDTO.class))).thenReturn(role);
-        when(roleService.updateRole(eq(1L), any(Role.class))).thenReturn(role);
+        when(roleService.updateRole(eq(1L), any(RoleDTO.class))).thenReturn(role);
         when(roleMapper.toDTO(any(Role.class))).thenReturn(roleDTO);
 
         // Act
@@ -112,7 +111,7 @@ class RoleControllerTest {
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
         assertEquals(roleDTO, response.getBody());
-        verify(roleService).updateRole(eq(1L), any(Role.class));
+        verify(roleService).updateRole(eq(1L), any(RoleDTO.class));
     }
 
     @Test
