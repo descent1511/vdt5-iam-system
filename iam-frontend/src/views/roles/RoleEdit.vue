@@ -245,7 +245,7 @@
                           :disabled="form.name === 'admin'"
                         >
                       </td>
-                       <td class="text-center">
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
@@ -260,6 +260,50 @@
                           type="checkbox" 
                           :checked="hasPolicyDelete"
                           @change="togglePermission('policies', 'delete')"
+                          :disabled="form.name === 'admin'"
+                        >
+                      </td>
+                    </tr>
+
+                    <!-- Organization Management -->
+                    <tr>
+                      <td>
+                        <i class="bi bi-building"></i>
+                        Organization Management
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasOrganizationRead"
+                          @change="togglePermission('organizations', 'read')"
+                          :disabled="form.name === 'admin'"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasOrganizationCreate"
+                          @change="togglePermission('organizations', 'create')"
+                          :disabled="form.name === 'admin'"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasOrganizationUpdate"
+                          @change="togglePermission('organizations', 'update')"
+                          :disabled="form.name === 'admin'"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasOrganizationDelete"
+                          @change="togglePermission('organizations', 'delete')"
                           :disabled="form.name === 'admin'"
                         >
                       </td>
@@ -343,6 +387,12 @@ const permissionMapping = {
     create: 'POLICY_CREATE',
     update: 'POLICY_UPDATE',
     delete: 'POLICY_DELETE'
+  },
+  organizations: {
+    read: 'ORGANIZATION_READ',
+    create: 'ORGANIZATION_CREATE',
+    update: 'ORGANIZATION_UPDATE',
+    delete: 'ORGANIZATION_DELETE'
   }
 }
 
@@ -366,6 +416,11 @@ const hasPolicyRead = computed(() => form.permissions.includes(permissionMapping
 const hasPolicyCreate = computed(() => form.permissions.includes(permissionMapping.policies.create))
 const hasPolicyUpdate = computed(() => form.permissions.includes(permissionMapping.policies.update))
 const hasPolicyDelete = computed(() => form.permissions.includes(permissionMapping.policies.delete))
+
+const hasOrganizationRead = computed(() => form.permissions.includes(permissionMapping.organizations.read))
+const hasOrganizationCreate = computed(() => form.permissions.includes(permissionMapping.organizations.create))
+const hasOrganizationUpdate = computed(() => form.permissions.includes(permissionMapping.organizations.update))
+const hasOrganizationDelete = computed(() => form.permissions.includes(permissionMapping.organizations.delete))
 
 // Methods to handle permission changes
 function togglePermission(entity, action) {

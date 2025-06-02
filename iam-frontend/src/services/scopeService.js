@@ -17,6 +17,7 @@ export const scopeService = {
   },
 
   async updateScope(id, scopeData) {
+    console.log(scopeData)
     const response = await api.put(`/scopes/${id}`, scopeData)
     return response
   },

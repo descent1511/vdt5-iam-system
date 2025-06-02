@@ -24,5 +24,10 @@ export const resourceService = {
   async deleteResource(id) {
     const response = await api.delete(`/resources/${id}`)
     return response
+  },
+
+  async discoverResources() {
+    const response = await api.post('/resources/discover')
+    return response
   }
 }
