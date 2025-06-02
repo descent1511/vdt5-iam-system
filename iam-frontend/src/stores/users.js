@@ -25,13 +25,12 @@ export const useUserStore = defineStore('users', () => {
       error.value = null
       
       const data = await userService.getUsers(params)
-      console.log(data)
-      users.value = data
-      totalUsers.value = data.length
+      users.value =  data
+      totalUsers.value =  data.length
       pagination.value = {
         page: params.page || 1,
         limit: params.limit || 10,
-        totalPages: Math.ceil(data.total / (params.limit || 10))
+        totalPages: Math.ceil((data.total || data.length) / (params.limit || 10))
       }
       
       return data
@@ -65,6 +64,8 @@ export const useUserStore = defineStore('users', () => {
       error.value = null
       
       const data = await userService.createUser(userData)
+      users.value = [...users.value, data]
+      totalUsers.value++
       toast.success('User created successfully')
       return data
     } catch (err) {
@@ -80,13 +81,17 @@ export const useUserStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+      console.log(userData)
       const data = await userService.updateUser(id, userData)
       
       // Update the user in the users array
       const index = users.value.findIndex(user => user.id === id)
       if (index !== -1) {
-        users.value[index] = { ...users.value[index], ...userData }
+        users.value = [
+          ...users.value.slice(0, index),
+          { ...users.value[index], ...userData },
+          ...users.value.slice(index + 1)
+        ]
       }
       
       toast.success('User updated successfully')
@@ -109,6 +114,7 @@ export const useUserStore = defineStore('users', () => {
       
       // Remove the user from the users array
       users.value = users.value.filter(user => user.id !== id)
+      totalUsers.value--
       
       toast.success('User deleted successfully')
       return true

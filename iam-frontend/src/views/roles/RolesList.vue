@@ -22,7 +22,7 @@
         </div>
       </div>
       
-      <div v-else-if="!roleStore.roles.length" class="col-12">
+      <div v-else-if="!roleStore.totalRoles" class="col-12">
         <div class="empty-state">
           <i class="bi bi-person-badge"></i>
           <h3>No Roles Found</h3>
@@ -40,19 +40,11 @@
             <div class="badge bg-primary">{{ role.permissions.length }} permissions</div>
           </div>
           <div class="card-body">
-            <p class="card-text">{{ role.description }}</p>
+            <p class="card-text text-muted mb-3">{{ role.description || 'No description' }}</p>
             
             <div class="mt-3">
-              <h6 class="mb-2">Permissions:</h6>
-              <div class="d-flex flex-wrap gap-1">
-                <span 
-                  v-for="(permission, index) in role.permissions" 
-                  :key="index"
-                  class="badge bg-light text-dark"
-                >
-                  {{ permission }}
-                </span>
-              </div>
+              <h6 class="mb-2 text-muted">Permissions:</h6>
+              <PermissionDisplay :permissions="role.permissions" />
             </div>
           </div>
           <div class="card-footer d-flex justify-content-between align-items-center">
@@ -64,6 +56,7 @@
               <router-link 
                 :to="`/roles/${role.id}/edit`" 
                 class="btn btn-sm btn-outline-primary"
+                :disabled="role.name === 'admin'"
               >
                 <i class="bi bi-pencil me-1"></i> Edit
               </router-link>
@@ -118,11 +111,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useRoleStore } from '../../stores/roles'
+import { useToast } from 'vue-toastification'
+import PermissionDisplay from '../../components/PermissionDisplay.vue'
 import * as bootstrap from 'bootstrap'
 
 // Store
 const roleStore = useRoleStore()
+const router = useRouter()
+const toast = useToast()
 
 // State
 const roleToDelete = ref(null)
@@ -138,14 +136,16 @@ onMounted(async () => {
 
 // Methods
 async function loadRoles() {
+  try {
   await roleStore.fetchRoles()
+  } catch (error) {
+    toast.error('Failed to load roles')
+  }
 }
 
 function formatDate(dateString) {
-  // Return early if dateString is invalid
   if (!dateString) return 'Unknown date'
   
-  // Check if the date is valid
   const date = new Date(dateString)
   if (isNaN(date.getTime())) return 'Unknown date'
   
@@ -157,8 +157,10 @@ function formatDate(dateString) {
 }
 
 function confirmDelete(role) {
-  // Prevent deleting the admin role
-  if (role.name === 'admin') return
+  if (role.name === 'admin') {
+    toast.warning('Cannot delete admin role')
+    return
+  }
   
   roleToDelete.value = role
   deleteModal.show()
@@ -169,23 +171,130 @@ async function deleteRole() {
   
   try {
     await roleStore.deleteRole(roleToDelete.value.id)
+    toast.success('Role deleted successfully')
     deleteModal.hide()
     roleToDelete.value = null
   } catch (error) {
-    console.error('Failed to delete role:', error)
+    toast.error('Failed to delete role')
   }
 }
 </script>
 
 <style scoped>
+.card {
+  border: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
+}
+
+.card-header h5 {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 1rem 1.25rem;
+}
+
+.badge {
+  padding: 0.5em 0.75em;
+  font-weight: 500;
+  border-radius: 50rem;
+}
+
 .empty-state {
   padding: 3rem;
   text-align: center;
-  color: var(--secondary);
+  color: #6c757d;
+  background-color: #f8f9fa;
+  border-radius: 12px;
 }
 
 .empty-state i {
   font-size: 3rem;
   margin-bottom: 1rem;
+  color: #dee2e6;
+}
+
+.btn-group {
+  gap: 0.5rem;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.btn-sm i {
+  font-size: 0.875rem;
+}
+
+.btn-outline-primary {
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.btn-outline-danger {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Modal styles */
+.modal-content {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #2c3e50;
 }
 </style>

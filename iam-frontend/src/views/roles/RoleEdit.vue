@@ -68,209 +68,204 @@
             <div class="col-12 mb-3 mt-4">
               <h5 class="border-bottom pb-2">Permissions</h5>
               <p class="text-muted small">Select the permissions that will be granted to users with this role.</p>
-            </div>
-            
-            <div class="col-12">
-              <div class="row g-4">
-                <!-- User Management -->
-                <div class="col-md-6 col-lg-4">
-                  <div class="card h-100">
-                    <div class="card-header">
-                      <h6 class="mb-0">User Management</h6>
-                    </div>
-                    <div class="card-body">
-                      <div class="form-check mb-2">
+              
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Management Type</th>
+                      <th class="text-center">
+                        <span class="permission-type permission-read">Read</span>
+                      </th>
+                      <th class="text-center">
+                        <span class="permission-type permission-write">Create</span>
+                      </th>
+                      <th class="text-center">
+                        <span class="permission-type permission-info">Update</span>
+                      </th>
+                      <th class="text-center">
+                        <span class="permission-type permission-delete">Delete</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- User Management -->
+                    <tr>
+                      <td>
+                        <i class="bi bi-people"></i>
+                        User Management
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-read-users" 
-                          value="read:users"
-                          v-model="form.permissions"
+                          :checked="hasUserRead"
+                          @change="togglePermission('users', 'read')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-read-users">
-                          View Users
-                        </label>
-                      </div>
-                      <div class="form-check mb-2">
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-write-users" 
-                          value="write:users"
-                          v-model="form.permissions"
+                          :checked="hasUserCreate"
+                          @change="togglePermission('users', 'create')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-write-users">
-                          Create/Edit Users
-                        </label>
-                      </div>
-                      <div class="form-check">
+                      </td>
+                       <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-delete-users" 
-                          value="delete:users"
-                          v-model="form.permissions"
+                          :checked="hasUserUpdate"
+                          @change="togglePermission('users', 'update')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-delete-users">
-                          Delete Users
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Role Management -->
-                <div class="col-md-6 col-lg-4">
-                  <div class="card h-100">
-                    <div class="card-header">
-                      <h6 class="mb-0">Role Management</h6>
-                    </div>
-                    <div class="card-body">
-                      <div class="form-check mb-2">
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-read-roles" 
-                          value="read:roles"
-                          v-model="form.permissions"
+                          :checked="hasUserDelete"
+                          @change="togglePermission('users', 'delete')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-read-roles">
-                          View Roles
-                        </label>
-                      </div>
-                      <div class="form-check mb-2">
+                      </td>
+                    </tr>
+                    
+                    <!-- Role Management -->
+                    <tr>
+                      <td>
+                        <i class="bi bi-shield-lock"></i>
+                        Role Management
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-write-roles" 
-                          value="write:roles"
-                          v-model="form.permissions"
+                          :checked="hasRoleRead"
+                          @change="togglePermission('roles', 'read')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-write-roles">
-                          Create/Edit Roles
-                        </label>
-                      </div>
-                      <div class="form-check">
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-delete-roles" 
-                          value="delete:roles"
-                          v-model="form.permissions"
+                          :checked="hasRoleCreate"
+                          @change="togglePermission('roles', 'create')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-delete-roles">
-                          Delete Roles
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Resource Management -->
-                <div class="col-md-6 col-lg-4">
-                  <div class="card h-100">
-                    <div class="card-header">
-                      <h6 class="mb-0">Resource Management</h6>
-                    </div>
-                    <div class="card-body">
-                      <div class="form-check mb-2">
+                      </td>
+                       <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-read-resources" 
-                          value="read:resources"
-                          v-model="form.permissions"
+                          :checked="hasRoleUpdate"
+                          @change="togglePermission('roles', 'update')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-read-resources">
-                          View Resources
-                        </label>
-                      </div>
-                      <div class="form-check mb-2">
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-write-resources" 
-                          value="write:resources"
-                          v-model="form.permissions"
+                          :checked="hasRoleDelete"
+                          @change="togglePermission('roles', 'delete')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-write-resources">
-                          Create/Edit Resources
-                        </label>
-                      </div>
-                      <div class="form-check">
+                      </td>
+                    </tr>
+                    
+                    <!-- Resource Management -->
+                    <tr>
+                      <td>
+                        <i class="bi bi-box"></i>
+                        Resource Management
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-delete-resources" 
-                          value="delete:resources"
-                          v-model="form.permissions"
+                          :checked="hasResourceRead"
+                          @change="togglePermission('resources', 'read')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-delete-resources">
-                          Delete Resources
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Policy Management -->
-                <div class="col-md-6 col-lg-4">
-                  <div class="card h-100">
-                    <div class="card-header">
-                      <h6 class="mb-0">Policy Management</h6>
-                    </div>
-                    <div class="card-body">
-                      <div class="form-check mb-2">
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-read-policies" 
-                          value="read:policies"
-                          v-model="form.permissions"
+                          :checked="hasResourceCreate"
+                          @change="togglePermission('resources', 'create')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-read-policies">
-                          View Policies
-                        </label>
-                      </div>
-                      <div class="form-check mb-2">
+                      </td>
+                       <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-write-policies" 
-                          value="write:policies"
-                          v-model="form.permissions"
+                          :checked="hasResourceUpdate"
+                          @change="togglePermission('resources', 'update')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-write-policies">
-                          Create/Edit Policies
-                        </label>
-                      </div>
-                      <div class="form-check">
+                      </td>
+                      <td class="text-center">
                         <input 
                           class="form-check-input" 
                           type="checkbox" 
-                          id="permission-delete-policies" 
-                          value="delete:policies"
-                          v-model="form.permissions"
+                          :checked="hasResourceDelete"
+                          @change="togglePermission('resources', 'delete')"
                           :disabled="form.name === 'admin'"
                         >
-                        <label class="form-check-label" for="permission-delete-policies">
-                          Delete Policies
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                      </td>
+                    </tr>
+                    
+                    <!-- Policy Management -->
+                    <tr>
+                      <td>
+                        <i class="bi bi-file-earmark-text"></i>
+                        Policy Management
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasPolicyRead"
+                          @change="togglePermission('policies', 'read')"
+                          :disabled="form.name === 'admin'"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasPolicyCreate"
+                          @change="togglePermission('policies', 'create')"
+                          :disabled="form.name === 'admin'"
+                        >
+                      </td>
+                       <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasPolicyUpdate"
+                          @change="togglePermission('policies', 'update')"
+                          :disabled="form.name === 'admin'"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasPolicyDelete"
+                          @change="togglePermission('policies', 'delete')"
+                          :disabled="form.name === 'admin'"
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
             
@@ -296,9 +291,11 @@
 </template>
 
 <script setup>
-import { reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRoleStore } from '../../stores/roles'
+import { useToast } from 'vue-toastification'
+import PermissionDisplay from '../../components/PermissionDisplay.vue'
 
 // Store
 const roleStore = useRoleStore()
@@ -320,6 +317,67 @@ const errors = reactive({
   name: '',
   description: ''
 })
+
+// Permission mapping
+const permissionMapping = {
+  users: {
+    read: 'USER_READ',
+    create: 'USER_CREATE',
+    update: 'USER_UPDATE',
+    delete: 'USER_DELETE'
+  },
+  roles: {
+    read: 'ROLE_READ',
+    create: 'ROLE_CREATE',
+    update: 'ROLE_UPDATE',
+    delete: 'ROLE_DELETE'
+  },
+  resources: {
+    read: 'RESOURCE_READ',
+    create: 'RESOURCE_CREATE',
+    update: 'RESOURCE_UPDATE',
+    delete: 'RESOURCE_DELETE'
+  },
+  policies: {
+    read: 'POLICY_READ',
+    create: 'POLICY_CREATE',
+    update: 'POLICY_UPDATE',
+    delete: 'POLICY_DELETE'
+  }
+}
+
+// Computed properties for permission checks
+const hasUserRead = computed(() => form.permissions.includes(permissionMapping.users.read))
+const hasUserCreate = computed(() => form.permissions.includes(permissionMapping.users.create))
+const hasUserUpdate = computed(() => form.permissions.includes(permissionMapping.users.update))
+const hasUserDelete = computed(() => form.permissions.includes(permissionMapping.users.delete))
+
+const hasRoleRead = computed(() => form.permissions.includes(permissionMapping.roles.read))
+const hasRoleCreate = computed(() => form.permissions.includes(permissionMapping.roles.create))
+const hasRoleUpdate = computed(() => form.permissions.includes(permissionMapping.roles.update))
+const hasRoleDelete = computed(() => form.permissions.includes(permissionMapping.roles.delete))
+
+const hasResourceRead = computed(() => form.permissions.includes(permissionMapping.resources.read))
+const hasResourceCreate = computed(() => form.permissions.includes(permissionMapping.resources.create))
+const hasResourceUpdate = computed(() => form.permissions.includes(permissionMapping.resources.update))
+const hasResourceDelete = computed(() => form.permissions.includes(permissionMapping.resources.delete))
+
+const hasPolicyRead = computed(() => form.permissions.includes(permissionMapping.policies.read))
+const hasPolicyCreate = computed(() => form.permissions.includes(permissionMapping.policies.create))
+const hasPolicyUpdate = computed(() => form.permissions.includes(permissionMapping.policies.update))
+const hasPolicyDelete = computed(() => form.permissions.includes(permissionMapping.policies.delete))
+
+// Methods to handle permission changes
+function togglePermission(entity, action) {
+  const permission = permissionMapping[entity][action]
+  const index = form.permissions.indexOf(permission)
+  
+  if (index === -1) {
+    form.permissions.push(permission)
+  } else {
+    form.permissions.splice(index, 1)
+  }
+}
 
 // Lifecycle hooks
 onMounted(async () => {
@@ -374,7 +432,8 @@ async function handleSubmit() {
     await roleStore.updateRole(roleId, {
       name: form.name,
       description: form.description,
-      permissions: form.permissions
+      // Use toRaw to get the plain JavaScript array of permissions
+      permissions: toRaw(form.permissions)
     })
     
     router.push('/roles')
@@ -386,4 +445,113 @@ async function handleSubmit() {
 
 <style scoped>
 /* Component-specific styles */
+.card-header {
+  border-bottom: none;
+  padding: 1rem;
+}
+
+.card-header h6 {
+  font-weight: 600;
+}
+
+.form-check-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.form-check-label i {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.form-check-input:checked + .form-check-label {
+  color: var(--bs-primary);
+  font-weight: 500;
+}
+
+.form-check-input:disabled + .form-check-label {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* New table styles */
+.table {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  padding: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.table tbody td {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.table tbody td:first-child {
+  font-weight: 500;
+  color: #495057;
+}
+
+.table tbody td:first-child i {
+  color: #6c757d;
+  font-size: 1.1rem;
+  margin-right: 0.5rem;
+}
+
+.form-check-input {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Permission type colors */
+.permission-type {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.permission-read {
+  background-color: #e3f2fd;
+  color: #0d6efd;
+}
+
+.permission-write {
+  background-color: #e8f5e9;
+  color: #198754;
+}
+
+.permission-delete {
+  background-color: #fbe9e7;
+  color: #dc3545;
+}
 </style>

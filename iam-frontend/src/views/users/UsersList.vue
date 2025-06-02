@@ -132,31 +132,50 @@
                   </div>
                 </td>
                 <td>
-                  <div class="d-flex flex-wrap gap-1">
-                    <span 
-                      v-for="permission in user.permissions.slice(0, 3)" 
-                      :key="permission"
-                      class="badge rounded-pill bg-info"
+                  <div class="permissions-container">
+                    <div class="permissions-wrapper" :class="{ 'expanded': user.showAllPermissions }">
+                      <span class="permission-count">
+                        {{ user.permissions.length }} permissions
+                      </span>
+                      <div class="permissions-list" :class="{ 'show': user.showAllPermissions }">
+                        <span 
+                          v-for="permission in user.permissions" 
+                          :key="permission"
+                          class="permission-badge"
+                        >
+                          <span class="permission-type">{{ formatPermissionType(permission) }}</span>
+                          <span class="permission-action">{{ formatPermissionAction(permission) }}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <button 
+                      class="btn btn-sm btn-link toggle-btn"
+                      @click="togglePermissions(user)"
                     >
-                      {{ permission }}
-                    </span>
-                    <span 
-                      v-if="user.permissions.length > 3" 
-                      class="badge rounded-pill bg-secondary"
-                    >
-                      +{{ user.permissions.length - 3 }} more
-                    </span>
+                      <span class="toggle-content">
+                        <span v-if="!user.showAllPermissions">
+                          Detail
+                          <i class="bi bi-chevron-down"></i>
+                        </span>
+                        <span v-else>
+                          Hide
+                          <i class="bi bi-chevron-up"></i>
+                        </span>
+                      </span>
+                    </button>
                   </div>
                 </td>
                 <td>
                   <div class="d-flex gap-2">
                     <router-link 
+                      v-if="hasPermission('USER_UPDATE')"
                       :to="`/users/${user.id}/edit`" 
                       class="btn btn-sm btn-outline-primary"
                     >
                       <i class="bi bi-pencil"></i>
                     </router-link>
                     <button 
+                      v-if="hasPermission('USER_DELETE')"
                       class="btn btn-sm btn-outline-danger"
                       @click="confirmDelete(user)"
                     >
@@ -246,10 +265,12 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../../stores/users'
+import { useAuthStore } from '../../stores/auth'
 import * as bootstrap from 'bootstrap'
 
 // Store
 const userStore = useUserStore()
+const authStore = useAuthStore()
 
 // State
 const filters = ref({
@@ -360,6 +381,24 @@ async function deleteUser() {
     console.error('Failed to delete user:', error)
   }
 }
+
+function hasPermission(permission) {
+  return authStore.can(permission)
+}
+
+function togglePermissions(user) {
+  user.showAllPermissions = !user.showAllPermissions
+}
+
+function formatPermissionType(permission) {
+  const type = permission.split('_')[0].toLowerCase()
+  return type.charAt(0).toUpperCase() + type.slice(1)
+}
+
+function formatPermissionAction(permission) {
+  const action = permission.split('_')[1].toLowerCase()
+  return action.charAt(0).toUpperCase() + action.slice(1)
+}
 </script>
 
 <style scoped>
@@ -383,5 +422,138 @@ async function deleteUser() {
 
 .badge {
   font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+}
+
+.btn-link {
+  font-size: 0.75rem;
+  color: var(--bs-info);
+}
+
+.btn-link:hover {
+  color: var(--bs-info-dark);
+}
+
+.permissions-container {
+  position: relative;
+  min-width: 150px;
+}
+
+.permissions-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.permission-count {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.permissions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.permissions-list.show {
+  max-height: 500px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.permission-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25em 0.5em;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #0c5460;
+  background-color: #d1ecf1;
+  border: 1px solid #bee5eb;
+  border-radius: 50rem;
+  transition: all 0.2s ease-in-out;
+  gap: 0.35rem;
+  white-space: nowrap;
+  transform: scale(0.95);
+  opacity: 0;
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.permissions-list.show .permission-badge {
+  transform: scale(1);
+  opacity: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.permission-type {
+  color: #0a3d42;
+  font-weight: 600;
+}
+
+.permission-action {
+  color: #0c5460;
+  opacity: 0.9;
+}
+
+.permission-badge:hover {
+  background-color: #bee5eb;
+  transform: translateY(-1px);
+}
+
+.toggle-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 0;
+  font-size: 0.75rem;
+  color: #0c5460;
+  background: linear-gradient(90deg, transparent, #fff 30%);
+  border: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.toggle-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.toggle-btn:hover {
+  color: #0a3d42;
+}
+
+.toggle-btn:hover .toggle-content {
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-btn i {
+  font-size: 0.7rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.permissions-list.show + .toggle-btn i {
+  transform: rotate(180deg);
 }
 </style>
