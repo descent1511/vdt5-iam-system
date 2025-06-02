@@ -36,5 +36,5 @@ app.use(Toast, toastOptions)
 // Initialize auth store
 const authStore = useAuthStore()
 authStore.init().then(() => {
-  app.mount('#app')
+app.mount('#app')
 })

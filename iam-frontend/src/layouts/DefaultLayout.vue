@@ -122,9 +122,9 @@
       
       <div class="container-fluid">
         <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
+        <transition name="fade" mode="out-in">
             <component :is="Component" />
-          </transition>
+        </transition>
         </router-view>
       </div>
     </main>

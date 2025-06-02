@@ -1,9 +1,6 @@
 <template>
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb bg-transparent mb-0 p-0">
-      <li class="breadcrumb-item">
-        <router-link to="/" class="text-decoration-none"></router-link>
-      </li>
       
       <li 
         v-for="(crumb, index) in breadcrumbs" 
@@ -18,7 +15,6 @@
         >
           {{ crumb.name }}
         </router-link>
-        <span v-else>{{ crumb.name }}</span>
       </li>
     </ol>
   </nav>
