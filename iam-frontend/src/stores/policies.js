@@ -24,8 +24,8 @@ export const usePolicyStore = defineStore('policies', () => {
     try {
       loading.value = true
       error.value = null
-      
       const data = await policyService.getPolicies(params)
+      console.log(data)
       policies.value = data
       totalPolicies = data.length 
       pagination.value = {
@@ -37,6 +37,7 @@ export const usePolicyStore = defineStore('policies', () => {
       
       return data
     } catch (err) {
+      console.log(err)
       error.value = err.message || 'Failed to fetch policies'
       toast.error(error.value)
     } finally {
@@ -50,6 +51,7 @@ export const usePolicyStore = defineStore('policies', () => {
       error.value = null
       
       const data = await policyService.getPolicyById(id)
+      console.log(data)
       currentPolicy.value = data
       return data
     } catch (err) {

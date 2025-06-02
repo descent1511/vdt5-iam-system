@@ -1,33 +1,29 @@
 import api from './api'
 
 export const organizationService = {
-  async getOrganization() {
-    const response = await api.get('/organization')
+  async getAllOrganizations() {
+    const response = await api.get('/organizations')
     return response
   },
   
-  async updateOrganization(orgData) {
-    const response = await api.put('/organization', orgData)
+  async getOrganization(id) {
+    const response = await api.get(`/organizations/${id}`)
     return response
   },
   
-  async getDepartments() {
-    const response = await api.get('/departments')
+  async createOrganization(organizationData) {
+    const response = await api.post('/organizations', organizationData)
     return response
   },
   
-  async createDepartment(departmentData) {
-    const response = await api.post('/departments', departmentData)
+  async updateOrganization(id, organizationData) {
+    const response = await api.put(`/organizations/${id}`, organizationData)
     return response
   },
   
-  async updateDepartment(id, departmentData) {
-    const response = await api.put(`/departments/${id}`, departmentData)
+  async deleteOrganization(id) {
+    const response = await api.delete(`/organizations/${id}`)
     return response
   },
   
-  async deleteDepartment(id) {
-    const response = await api.delete(`/departments/${id}`)
-    return response
-  }
 }

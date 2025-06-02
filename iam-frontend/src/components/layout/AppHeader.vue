@@ -19,6 +19,12 @@
       
       <!-- Navbar content -->
       <div class="collapse navbar-collapse" id="navbarNav">
+        <!-- Dashboard Button -->
+        <router-link to="/" class="btn btn-primary me-3 d-flex align-items-center">
+          <i class="bi bi-speedometer2 me-2"></i>
+          <span>Dashboard</span>
+        </router-link>
+        
         <!-- Search -->
         <div class="ms-auto me-2 d-none d-lg-block">
           <div class="input-group">
@@ -172,5 +178,18 @@ async function handleLogout() {
   body[data-sidebar="collapsed"] .navbar-brand span {
     display: none;
   }
+}
+
+.btn-primary {
+  background-color: var(--bs-primary);
+  border: none;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>

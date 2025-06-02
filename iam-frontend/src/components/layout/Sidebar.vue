@@ -15,15 +15,28 @@
       :class="{ 'collapsed': !isExpanded }"
     >
       <!-- Logo Section -->
-      <div class="sidebar-header">
-        <div class="logo">
-          <i class="bi bi-shield-lock-fill"></i>
+      <router-link to="/" class="sidebar-header-link">
+        <div class="sidebar-header">
+          <div class="logo">
+            <i class="bi bi-shield-lock-fill"></i>
+          </div>
+          <h1 class="site-title" v-show="isExpanded">Access Manager</h1>
         </div>
-        <h1 class="site-title" v-show="isExpanded">Access Manager</h1>
-      </div>
+      </router-link>
 
       <!-- Navigation Menu -->
       <nav class="sidebar-nav">
+        <div class="nav-section">
+          <router-link 
+            to="/" 
+            class="nav-link dashboard-btn"
+            :class="{ 'collapsed': !isExpanded }"
+          >
+            <i class="bi bi-speedometer2"></i>
+            <span v-show="isExpanded">Dashboard</span>
+          </router-link>
+        </div>
+
         <div class="nav-section" v-if="authStore.can('USER_READ')">
           <h6 class="nav-section-title" v-show="isExpanded">User Management</h6>
           <router-link 
@@ -386,5 +399,41 @@ onUnmounted(() => {
   .sidebar-toggle {
     display: none;
   }
+}
+
+.dashboard-btn {
+  background-color: var(--bs-primary);
+  margin: 0.5rem 1rem;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.dashboard-btn:hover {
+  background-color: var(--bs-primary);
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.dashboard-btn.router-link-active {
+  background-color: var(--bs-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-btn.collapsed {
+  margin: 0.5rem auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-header-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
 </style>

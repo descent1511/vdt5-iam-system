@@ -164,6 +164,26 @@
               </div>
             </div>
             
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="organization_id" class="form-label">Organization*</label>
+                <select 
+                  class="form-select" 
+                  id="organization_id" 
+                  v-model="form.organization_id" 
+                  required
+                >
+                  <option value="" disabled>Select an organization</option>
+                  <option v-for="organization in organizations" :key="organization.id" :value="organization.id">
+                    {{ organization.name }}
+                  </option>
+                </select>
+                <div v-if="errors.organization_id" class="text-danger small mt-1">
+                  {{ errors.organization_id }}
+                </div>
+              </div>
+            </div>
+            
             <!-- Submit buttons -->
             <div class="col-12 mt-4 d-flex justify-content-end gap-2">
               <router-link to="/users" class="btn btn-outline-secondary">
@@ -190,7 +210,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../../stores/users'
 import { useRoleStore } from '../../stores/roles'
-import { useOrganizationStore } from '../../stores/organization'
+import { useOrganizationStore } from '../../stores/organizations'
 import { useToast } from 'vue-toastification'
 
 // Stores
@@ -213,8 +233,7 @@ const form = reactive({
   newPassword: '',
   confirmPassword: '',
   role: '',
-  department: '',
-  status: 'active'
+  organization_id: null
 })
 
 const errors = reactive({
@@ -223,11 +242,12 @@ const errors = reactive({
   email: '',
   newPassword: '',
   confirmPassword: '',
-  role: ''
+  role: '',
+  organization_id: ''
 })
 
 const roles = ref([])
-const departments = ref([])
+const organizations = ref([])
 const showPassword = ref(false)
 const loading = ref(false)
 const isEdit = computed(() => !!route.params.id)
@@ -267,6 +287,9 @@ const rules = {
   ],
   role: [
     { required: true, message: 'Role is required' }
+  ],
+  organization_id: [
+    { required: true, message: 'Organization is required' }
   ]
 }
 
@@ -276,11 +299,14 @@ onMounted(async () => {
     // Load user data
     await loadUserData()
     
-    // Load roles
-    await roleStore.fetchRoles()
-    roles.value = roleStore.roles
+    // Load roles and organizations
+    const rolesData = await roleStore.fetchRoles()
+    roles.value = rolesData
+    
+    const organizationsData = await organizationStore.fetchOrganizations()
+    organizations.value = organizationsData
   } catch (error) {
-    console.error('Failed to load user data:', error)
+    console.error('Failed to load form data:', error)
   }
 })
 
@@ -339,50 +365,63 @@ function validateConfirmPassword() {
 }
 
 function validateForm() {
-  errors.value = {}
-  let isValid = true
-
+  let valid = true
+  
+  // Reset errors
+  Object.keys(errors).forEach(key => {
+    errors[key] = ''
+  })
+  
+  // Validate full name
+  if (!form.fullName.trim()) {
+    errors.fullName = 'Full name is required'
+    valid = false
+  }
+  
+  // Validate username
+  if (!form.username.trim()) {
+    errors.username = 'Username is required'
+    valid = false
+  } else if (form.username.length < 3) {
+    errors.username = 'Username must be at least 3 characters'
+    valid = false
+  }
+  
+  // Validate email
+  if (!form.email.trim()) {
+    errors.email = 'Email is required'
+    valid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    errors.email = 'Please enter a valid email address'
+    valid = false
+  }
+  
   // Validate password if it's being changed
   if (form.newPassword) {
-    validatePassword()
-    validateConfirmPassword()
-    if (errors.newPassword || errors.confirmPassword) {
-      isValid = false
+    if (form.newPassword.length < 6) {
+      errors.newPassword = 'Password must be at least 6 characters'
+      valid = false
+    }
+    
+    if (form.newPassword !== form.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match'
+      valid = false
     }
   }
-
-  // Validate other fields
-  Object.keys(rules).forEach(field => {
-    if (field === 'password') return // Skip password validation as it's handled separately
-    
-    const fieldRules = rules[field]
-    const value = form[field]
-
-    for (const rule of fieldRules) {
-      if (rule.required && !value) {
-        errors.value[field] = rule.message
-        isValid = false
-        break
-      }
-
-      if (rule.min && value && value.length < rule.min) {
-        errors.value[field] = rule.message
-        isValid = false
-        break
-      }
-
-      if (rule.type === 'email' && value) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(value)) {
-          errors.value[field] = rule.message
-          isValid = false
-          break
-        }
-      }
-    }
-  })
-  console.log(errors.value)
-  return isValid
+  
+  // Validate role
+  if (!form.role) {
+    errors.role = 'Role is required'
+    valid = false
+  }
+  
+  // Validate organization
+  if (!form.organization_id) {
+    errors.organization_id = 'Organization is required'
+    valid = false
+  }
+  
+  return valid
 }
 
 async function loadUserData() {
@@ -397,6 +436,16 @@ async function loadUserData() {
         form.username = userData.username
         form.email = userData.email
         form.role = userData.roles[0] // Assuming first role is primary
+        
+        // Set organization_id from the organization object if it exists
+        if (userData.organization) {
+          form.organization_id = userData.organization.id
+        } else if (userData.organization_id) {
+          form.organization_id = userData.organization_id
+        }
+        
+        console.log('Loaded user data:', userData)
+        console.log('Set organization_id to:', form.organization_id)
       }
     } catch (error) {
       toast.error('Failed to load user data')
@@ -415,7 +464,8 @@ async function handleSubmit() {
     const updateData = {
       fullName: form.fullName,
       email: form.email,
-      roles: [form.role] 
+      roles: [form.role],
+      organization_id: form.organization_id
     }
     
     // Only include password if it was changed
@@ -423,19 +473,11 @@ async function handleSubmit() {
       updateData.password = form.newPassword
     }
     
-    console.log('Sending update data:', updateData) // Debug log
-    
-    // Update user
-    const response = await userStore.updateUser(userId, updateData)
-    console.log('Update response:', response) // Debug log
-    
-    if (response) {
-      router.push('/users')
-    } else {
-      toast.error('Failed to update user')
-    }
+    await userStore.updateUser(userId, updateData)
+    toast.success('User updated successfully')
+    router.push('/users')
   } catch (error) {
-    console.error('Update error:', error)
+    console.error('Failed to update user:', error)
     toast.error(error.response?.data?.message || 'Failed to update user')
   } finally {
     loading.value = false

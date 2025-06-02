@@ -101,8 +101,7 @@ class ScopeControllerTest {
     @Test
     void updateScope_ShouldReturnUpdatedScope() {
         // Arrange
-        when(scopeMapper.toEntity(any(ScopeDTO.class))).thenReturn(scope);
-        when(scopeService.updateScope(eq(1L), any(Scope.class))).thenReturn(scope);
+        when(scopeService.updateScope(eq(1L), any(ScopeDTO.class))).thenReturn(scope);
         when(scopeMapper.toDTO(any(Scope.class))).thenReturn(scopeDTO);
 
         // Act
@@ -112,7 +111,7 @@ class ScopeControllerTest {
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
         assertEquals(scopeDTO, response.getBody());
-        verify(scopeService).updateScope(eq(1L), any(Scope.class));
+        verify(scopeService).updateScope(eq(1L), any(ScopeDTO.class));
     }
 
     @Test

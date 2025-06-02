@@ -4,6 +4,7 @@ import com.example.iam.dto.ResourceDTO;
 import com.example.iam.entity.Resource;
 import com.example.iam.mapper.ResourceMapper;
 import com.example.iam.service.ResourceService;
+import com.example.iam.service.ResourceDiscoveryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ public class ResourceController {
 
     private final ResourceService resourceService;
     private final ResourceMapper resourceMapper;
+    private final ResourceDiscoveryService resourceDiscoveryService;
 
     @GetMapping
     @RequirePermission(value = "RESOURCE_READ", description = "View list of resources")
@@ -50,5 +52,11 @@ public class ResourceController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         resourceService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/discover")
+    public ResponseEntity<String> discoverResources() {
+        resourceDiscoveryService.discoverAndRegisterResources();
+        return ResponseEntity.ok("Resource discovery completed successfully");
     }
 }

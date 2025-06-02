@@ -19,32 +19,16 @@
             
             <div class="col-md-6">
               <div class="form-group">
-                <label for="firstName" class="form-label">First Name*</label>
+                <label for="fullName" class="form-label">Full Name*</label>
                 <input 
                   type="text" 
                   class="form-control" 
-                  id="firstName" 
-                  v-model="form.firstName" 
+                  id="fullName" 
+                  v-model="form.fullName" 
                   required
                 >
-                <div v-if="errors.firstName" class="text-danger small mt-1">
-                  {{ errors.firstName }}
-                </div>
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="lastName" class="form-label">Last Name*</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="lastName" 
-                  v-model="form.lastName" 
-                  required
-                >
-                <div v-if="errors.lastName" class="text-danger small mt-1">
-                  {{ errors.lastName }}
+                <div v-if="errors.fullName" class="text-danger small mt-1">
+                  {{ errors.fullName }}
                 </div>
               </div>
             </div>
@@ -130,63 +114,23 @@
                 </div>
               </div>
             </div>
-            
-            <!-- Organization Information -->
-            <div class="col-12 mb-3 mt-4">
-              <h5 class="border-bottom pb-2">Organization Information</h5>
-            </div>
-            
+
             <div class="col-md-6">
               <div class="form-group">
-                <label for="department" class="form-label">Department</label>
+                <label for="organization" class="form-label">Organization*</label>
                 <select 
                   class="form-select" 
-                  id="department" 
-                  v-model="form.department"
+                  id="organization" 
+                  v-model="form.organization_id" 
+                  required
                 >
-                  <option value="" disabled>Select a department</option>
-                  <option v-for="dept in departments" :key="dept.id" :value="dept.name">
-                    {{ dept.name }}
+                  <option value="" disabled>Select an organization</option>
+                  <option v-for="org in organizations" :key="org.id" :value="org.id">
+                    {{ org.name }}
                   </option>
                 </select>
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="status" class="form-label">Status</label>
-                <select 
-                  class="form-select" 
-                  id="status" 
-                  v-model="form.status"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-            
-            <!-- Permissions -->
-            <div class="col-12 mb-3 mt-4">
-              <h5 class="border-bottom pb-2">Permissions</h5>
-              <p class="text-muted small">These permissions will be added in addition to role-based permissions.</p>
-            </div>
-            
-            <div class="col-12">
-              <div class="row g-3">
-                <div v-for="(permission, index) in availablePermissions" :key="index" class="col-md-4">
-                  <div class="form-check">
-                    <input 
-                      class="form-check-input" 
-                      type="checkbox" 
-                      :id="`permission-${index}`" 
-                      :value="permission"
-                      v-model="form.permissions"
-                    >
-                    <label class="form-check-label" :for="`permission-${index}`">
-                      {{ permission }}
-                    </label>
-                  </div>
+                <div v-if="errors.organization_id" class="text-danger small mt-1">
+                  {{ errors.organization_id }}
                 </div>
               </div>
             </div>
@@ -217,53 +161,38 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../stores/users'
 import { useRoleStore } from '../../stores/roles'
-import { useOrganizationStore } from '../../stores/organization'
+import { useOrganizationStore } from '../../stores/organizations'
+import { useToast } from 'vue-toastification'
 
 // Stores
 const userStore = useUserStore()
 const roleStore = useRoleStore()
 const organizationStore = useOrganizationStore()
 const router = useRouter()
+const toast = useToast()
 
 // State
 const form = reactive({
-  firstName: '',
-  lastName: '',
+  username: '',
+  email: '',
+  password: '',
+  fullName: '',
+  roles: [],
+  organization_id: null
+})
+
+const errors = reactive({
+  fullName: '',
   username: '',
   email: '',
   password: '',
   role: '',
-  department: '',
-  status: 'active',
-  permissions: []
-})
-
-const errors = reactive({
-  firstName: '',
-  lastName: '',
-  username: '',
-  email: '',
-  password: '',
-  role: ''
+  organization_id: ''
 })
 
 const roles = ref([])
-const departments = ref([])
+const organizations = ref([])
 const showPassword = ref(false)
-const availablePermissions = ref([
-  'USER_READ',
-  'USER_WRITE',
-  'USER_DELETE',
-  'ROLE_READ',
-  'ROLE_WRITE',
-  'ROLE_DELETE',
-  'RESOURCE_READ',
-  'RESOURCE_WRITE',
-  'RESOURCE_DELETE',
-  'POLICY_READ',
-  'POLICY_WRITE',
-  'POLICY_DELETE'
-])
 
 // Lifecycle hooks
 onMounted(async () => {
@@ -271,8 +200,9 @@ onMounted(async () => {
     const rolesData = await roleStore.fetchRoles()
     roles.value = rolesData
     
-    const departmentsData = await organizationStore.fetchDepartments()
-    departments.value = departmentsData
+    const  organizationsData = await organizationStore.fetchOrganizations()
+    console.log(organizationsData)
+    organizations.value = organizationsData
   } catch (error) {
     console.error('Failed to load form data:', error)
   }
@@ -292,14 +222,8 @@ function validateForm() {
   })
   
   // Validate first name
-  if (!form.firstName.trim()) {
-    errors.firstName = 'First name is required'
-    valid = false
-  }
-  
-  // Validate last name
-  if (!form.lastName.trim()) {
-    errors.lastName = 'Last name is required'
+  if (!form.fullName.trim()) {
+    errors.fullName = 'Full name is required'
     valid = false
   }
   
@@ -336,6 +260,12 @@ function validateForm() {
     valid = false
   }
   
+  // Validate organization
+  if (!form.organization_id) {
+    errors.organization_id = 'Organization is required'
+    valid = false
+  }
+  
   return valid
 }
 
@@ -343,10 +273,21 @@ async function handleSubmit() {
   if (!validateForm()) return
   
   try {
-    await userStore.createUser(form)
+    const userData = {
+      username: form.username,
+      email: form.email,
+      password: form.password,
+      fullName: form.fullName,
+      roles: [form.role],
+      organization_id: form.organization_id
+    }
+    
+    await userStore.createUser(userData)
+    toast.success('User created successfully')
     router.push('/users')
   } catch (error) {
     console.error('Failed to create user:', error)
+    toast.error(error.response?.data?.message || 'Failed to create user')
   }
 }
 </script>

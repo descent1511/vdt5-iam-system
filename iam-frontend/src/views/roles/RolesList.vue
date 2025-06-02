@@ -171,7 +171,6 @@ async function deleteRole() {
   
   try {
     await roleStore.deleteRole(roleToDelete.value.id)
-    toast.success('Role deleted successfully')
     deleteModal.hide()
     roleToDelete.value = null
   } catch (error) {

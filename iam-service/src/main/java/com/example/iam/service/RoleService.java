@@ -11,18 +11,41 @@ import java.util.List;
 import java.util.Set;
 import com.example.iam.dto.RoleDTO;
 import com.example.iam.repository.PermissionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.util.HashSet;
+
 @Service
 @RequiredArgsConstructor
 public class RoleService {
 
-    private final RoleRepository roleRepository;
-    private final PermissionRepository permissionRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
+
     public List<Role> getAllRoles() {
         return roleRepository.findAll();
     }
 
+
     @Transactional
-    public Role createRole(Role role) {
+    public Role createRole(RoleDTO dto) {
+        Role role = new Role();
+        role.setName(dto.getName());
+        role.setDescription(dto.getDescription());
+        
+        // Handle permissions
+        if (dto.getPermissions() != null && !dto.getPermissions().isEmpty()) {
+            Set<Permission> permissions = dto.getPermissions().stream()
+                .map(permissionName -> permissionRepository.findByName(permissionName)
+                    .orElseThrow(() -> new IllegalArgumentException("Permission not found: " + permissionName)))
+                .collect(Collectors.toSet());
+            role.setPermissions(permissions);
+        } else {
+            role.setPermissions(new HashSet<>());
+        }
+
         return roleRepository.save(role);
     }
 
@@ -34,7 +57,6 @@ public class RoleService {
     @Transactional
     public Role updateRole(Long id, RoleDTO roleDTO) {
         Role existingRole = getRole(id);
-        System.out.println("Existing role: " + existingRole);
         existingRole.setName(roleDTO.getName());
         existingRole.setDescription(roleDTO.getDescription());
        

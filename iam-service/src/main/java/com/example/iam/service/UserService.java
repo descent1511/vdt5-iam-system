@@ -4,9 +4,11 @@ import com.example.iam.dto.UserDTO;
 import com.example.iam.entity.Role;
 import com.example.iam.entity.Scope;
 import com.example.iam.entity.User;
+import com.example.iam.entity.Organization;
 import com.example.iam.repository.RoleRepository;
 import com.example.iam.repository.ScopeRepository;
 import com.example.iam.repository.UserRepository;
+import com.example.iam.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final ScopeRepository scopeRepository;
+    private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
 
     public User findByUsername(String username) {
@@ -52,7 +55,7 @@ public class UserService {
         if (userDTO.getFullName() != null) {
             existingUser.setFullName(userDTO.getFullName());
         }
-
+        
         if (userDTO.getRoles() != null) {
             Set<Role> roles = roleRepository.findByNameIn(userDTO.getRoles())
                     .stream().collect(Collectors.toSet());
@@ -63,6 +66,11 @@ public class UserService {
             existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
 
+        if (userDTO.getOrganization_id() != null) {
+            Organization organization = organizationRepository.findById(userDTO.getOrganization_id())
+                    .orElseThrow(() -> new RuntimeException("Organization not found with id: " + userDTO.getOrganization_id()));
+            existingUser.setOrganization(organization);
+        }
 
         return userRepository.save(existingUser);
     }

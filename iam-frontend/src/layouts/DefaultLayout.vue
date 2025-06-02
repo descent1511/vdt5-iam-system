@@ -90,18 +90,27 @@
 
       <!-- Footer -->
       <div class="sidebar-footer">
+        <div class="user-section">
+          <div class="user-info" v-show="isExpanded">
+            <div class="user-avatar">
+              {{ getUserInitials() }}
+            </div>
+            <div class="user-details">
+              <span class="user-name">{{ authStore.user?.fullName }}</span>
+              <span class="user-role">{{ getUserRole() }}</span>
+            </div>
+          </div>
+          <button 
+            class="logout-button" 
+            @click="authStore.logout"
+            :class="{ 'collapsed': !isExpanded }"
+          >
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+        </div>
         <p class="copyright" v-show="isExpanded">
           © {{ new Date().getFullYear() }} Access Manager
         </p>
-        <div class="user-info" v-show="isExpanded">
-          <div class="user-avatar">
-            {{ getUserInitials() }}
-          </div>
-          <div class="user-details">
-            <span class="user-name">{{ authStore.user?.fullName }}</span>
-            <span class="user-role">{{ getUserRole() }}</span>
-          </div>
-        </div>
       </div>
 
       <!-- Toggle Button -->
@@ -318,10 +327,13 @@ onUnmounted(() => {
   background-color: rgba(0, 0, 0, 0.2);
 }
 
-.copyright {
-  font-size: 0.75rem;
-  color: var(--bs-gray-400);
+.user-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
 }
 
 .user-info {
@@ -355,6 +367,44 @@ onUnmounted(() => {
 .user-role {
   font-size: 0.75rem;
   color: var(--bs-gray-400);
+}
+
+.logout-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--bs-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  opacity: 0.7;
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.logout-button:active {
+  transform: scale(0.95);
+}
+
+.logout-button i {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.copyright {
+  font-size: 0.75rem;
+  color: var(--bs-gray-400);
+  text-align: center;
+  margin: 0;
 }
 
 /* Main Content */

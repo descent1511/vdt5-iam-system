@@ -22,11 +22,25 @@ import RoleEdit from '../views/roles/RoleEdit.vue'
 import ResourcesList from '../views/resources/ResourcesList.vue'
 import ScopesList from '../views/scopes/ScopesList.vue'
 import PoliciesList from '../views/policies/PoliciesList.vue'
+import PolicyCreate from '../views/policies/PolicyCreate.vue'
+import PolicyEdit from '../views/policies/PolicyEdit.vue'
+import ResourceEdit from '../views/resources/ResourceEdit.vue'
 
 // Organization Management
-import Organization from '../views/organization/Organization.vue'
+import OrganizationList from '../views/organization/OrganizationList.vue'
+import OrganizationForm from '../views/organization/OrganizationForm.vue'
+
+// New scope components
+import ScopeEdit from '../views/scopes/ScopeEdit.vue'
+import ScopeCreate from '../views/scopes/ScopeCreate.vue'
 
 const routes = [
+  {
+    path: '/',
+    name: 'Dashboard',
+    component: Dashboard,
+    meta: { requiresAuth: true }
+  },
   {
     path: '/login',
     name: 'Login',
@@ -56,19 +70,19 @@ const routes = [
     path: '/users',
     name: 'Users',
     component: UsersList,
-    meta: { requiresAuth: true, requiredPermissions: ['USER_READ'] }
+    meta: { requiresAuth: true }
   },
   {
     path: '/users/create',
     name: 'CreateUser',
     component: UserCreate,
-    meta: { requiresAuth: true, requiredPermissions: ['USER_WRITE'] }
+    meta: { requiresAuth: true}
   },
   {
     path: '/users/:id/edit',
     name: 'EditUser',
     component: UserEdit,
-    meta: { requiresAuth: true, requiredPermissions: ['USER_UPDATE'] }
+    meta: { requiresAuth: true}
   },
   // Role routes
   {
@@ -92,9 +106,30 @@ const routes = [
   // Resource Management routes
   {
     path: '/resources',
-    name: 'Resources',
+    name: 'resources',
     component: ResourcesList,
-    meta: { requiresAuth: true, requiredPermissions: ['RESOURCE_READ'] }
+    meta: {
+      requiresAuth: true,
+      title: 'Resources'
+    }
+  },
+  {
+    path: '/resources/create',
+    name: 'resource-create',
+    component: ResourceEdit,
+    meta: {
+      requiresAuth: true,
+      title: 'Create Resource'
+    }
+  },
+  {
+    path: '/resources/:id/edit',
+    name: 'resource-edit',
+    component: ResourceEdit,
+    meta: {
+      requiresAuth: true,
+      title: 'Edit Resource'
+    }
   },
   {
     path: '/scopes',
@@ -103,17 +138,54 @@ const routes = [
     meta: { requiresAuth: true, requiredPermissions: ['SCOPE_READ'] }
   },
   {
+    path: '/scopes/create',
+    name: 'CreateScope',
+    component: ScopeCreate,
+    meta: { requiresAuth: true, requiredPermissions: ['SCOPE_CREATE'] }
+  },
+  {
+    path: '/scopes/:id/edit',
+    name: 'EditScope',
+    component: ScopeEdit,
+    meta: { requiresAuth: true, requiredPermissions: ['SCOPE_UPDATE'] }
+  },
+  // Policy routes
+  {
     path: '/policies',
     name: 'Policies',
     component: PoliciesList,
     meta: { requiresAuth: true, requiredPermissions: ['POLICY_READ'] }
   },
-  // Organization route
   {
-    path: '/organization',
-    name: 'Organization',
-    component: Organization,
-    meta: { requiresAuth: true, requiredPermissions: ['ORGANIZATION_READ'] }
+    path: '/policies/create',
+    name: 'CreatePolicy',
+    component: PolicyCreate,
+    meta: { requiresAuth: true, requiredPermissions: ['POLICY_CREATE'] }
+  },
+  {
+    path: '/policies/:id/edit',
+    name: 'EditPolicy',
+    component: PolicyEdit,
+    meta: { requiresAuth: true, requiredPermissions: ['POLICY_UPDATE'] }
+  },
+  // Organization routes
+  {
+    path: '/organizations',
+    name: 'Organizations',
+    component: OrganizationList,
+    meta: { requiresAuth: true}
+  },
+  {
+    path: '/organizations/create',
+    name: 'CreateOrganization',
+    component: OrganizationForm,
+    meta: { requiresAuth: true}
+  },
+  {
+    path: '/organizations/:id/edit',
+    name: 'EditOrganization',
+    component: OrganizationForm,
+    meta: { requiresAuth: true }
   },
   {
     path: '/:pathMatch(.*)*',

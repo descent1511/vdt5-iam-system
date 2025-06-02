@@ -34,7 +34,12 @@ public class Scope extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToMany(mappedBy = "scopes", cascade = CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "scope_permissions",
+        joinColumns = @JoinColumn(name = "scope_id"),
+        inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
     @Builder.Default
     private Set<Permission> permissions = new HashSet<>();
 

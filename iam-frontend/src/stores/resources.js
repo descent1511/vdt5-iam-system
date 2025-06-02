@@ -31,6 +31,23 @@ export const useResourceStore = defineStore('resources', () => {
     }
   }
 
+  async function discoverResources() {
+    try {
+      loading.value = true
+      error.value = null
+      
+      await resourceService.discoverResources()
+      return true
+    } catch (err) {
+      console.log(err)
+      error.value = err.message || 'Failed to discover resources'
+      toast.error(error.value)
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function fetchResourceById(id) {
     try {
       loading.value = true
@@ -128,10 +145,10 @@ export const useResourceStore = defineStore('resources', () => {
     
     // Getters
     totalResources,
-
     
     // Actions
     fetchResources,
+    discoverResources,
     fetchResourceById,
     createResource,
     updateResource,

@@ -1,6 +1,6 @@
 package com.example.iam.controller;
 
-import com.example.iam.entity.Organization;
+import com.example.iam.dto.OrganizationDTO;
 import com.example.iam.service.OrganizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,26 +16,26 @@ public class OrganizationController {
 
     @GetMapping
     @RequirePermission(value = "ORGANIZATION_READ", description = "View list of organizations")
-    public ResponseEntity<List<Organization>> getAllOrganizations() {
+    public ResponseEntity<List<OrganizationDTO>> getAllOrganizations() {
         return ResponseEntity.ok(organizationService.getAllOrganizations());
     }
 
     @PostMapping
     @RequirePermission(value = "ORGANIZATION_CREATE", description = "Create new organization")
-    public ResponseEntity<Organization> createOrganization(@RequestBody Organization organization) {
-        return ResponseEntity.ok(organizationService.createOrganization(organization));
+    public ResponseEntity<OrganizationDTO> createOrganization(@RequestBody OrganizationDTO organizationDTO) {
+        return ResponseEntity.ok(organizationService.createOrganization(organizationDTO));
     }   
 
     @GetMapping("/{id}")
     @RequirePermission(value = "ORGANIZATION_READ", description = "View organization details")
-    public ResponseEntity<Organization> getOrganization(@PathVariable Long id) {
+    public ResponseEntity<OrganizationDTO> getOrganization(@PathVariable Long id) {
         return ResponseEntity.ok(organizationService.getOrganization(id));
     }
 
     @PutMapping("/{id}")
     @RequirePermission(value = "ORGANIZATION_UPDATE", description = "Update organization information")
-    public ResponseEntity<Organization> updateOrganization(@PathVariable Long id, @RequestBody Organization organization) {
-        return ResponseEntity.ok(organizationService.updateOrganization(id, organization));
+    public ResponseEntity<OrganizationDTO> updateOrganization(@PathVariable Long id, @RequestBody OrganizationDTO organizationDTO) {
+        return ResponseEntity.ok(organizationService.updateOrganization(id, organizationDTO));
     }
 
     @DeleteMapping("/{id}")
