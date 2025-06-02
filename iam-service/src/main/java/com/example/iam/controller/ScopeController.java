@@ -47,7 +47,7 @@ public class ScopeController {
     @PutMapping("/{id}")
     @RequirePermission(value = "SCOPE_UPDATE", description = "Update scope information")
     public ResponseEntity<ScopeDTO> updateScope(@PathVariable Long id, @RequestBody ScopeDTO dto) {
-        Scope updated = scopeService.updateScope(id, scopeMapper.toEntity(dto));
+        Scope updated = scopeService.updateScope(id, dto);
         return ResponseEntity.ok(scopeMapper.toDTO(updated));
     }
 

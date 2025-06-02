@@ -32,7 +32,7 @@ public class RoleController {
     @PostMapping
     @RequirePermission(value = "ROLE_CREATE", description = "Create new role")
     public ResponseEntity<RoleDTO> createRole(@RequestBody RoleDTO dto) {
-        Role created = roleService.createRole(roleMapper.toEntity(dto));
+        Role created = roleService.createRole(dto);
         return ResponseEntity.ok(roleMapper.toDTO(created));
     }
 

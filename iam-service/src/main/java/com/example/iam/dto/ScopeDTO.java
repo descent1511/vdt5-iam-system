@@ -3,6 +3,7 @@ package com.example.iam.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -11,5 +12,5 @@ public class ScopeDTO {
     private Long id;
     private String name;
     private String description;
-
+    private Set<String> permissions;
 } 

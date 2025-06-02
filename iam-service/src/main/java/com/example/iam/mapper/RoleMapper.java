@@ -3,32 +3,48 @@ package com.example.iam.mapper;
 import com.example.iam.dto.RoleDTO;
 import com.example.iam.entity.Permission;
 import com.example.iam.entity.Role;
-import com.example.iam.entity.Scope;
 import com.example.iam.entity.User;
-import org.mapstruct.*;
-
+import org.springframework.stereotype.Component;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
-public interface RoleMapper {
-
-    @Mapping(target = "user_ids", expression = "java(mapUserIds(role.getUsers()))")
-    @Mapping(target = "permissions", expression = "java(mapPermissions(role.getPermissions()))")
-    RoleDTO toDTO(Role role);
-
-    @InheritInverseConfiguration
-    @Mapping(target = "permissions", ignore = true)
-    @Mapping(target = "users", ignore = true)
-    Role toEntity(RoleDTO dto);
-
-    default Set<Long> mapUserIds(Set<User> users) {
-        return users == null ? null :
-                users.stream().map(User::getId).collect(Collectors.toSet());
+@Component
+public class RoleMapper {
+    
+    public RoleDTO toDTO(Role role) {
+        if (role == null) return null;
+        
+        RoleDTO dto = new RoleDTO();
+        dto.setId(role.getId());
+        dto.setName(role.getName());
+        dto.setDescription(role.getDescription());
+        dto.setPermissions(role.getPermissions().stream()
+            .map(permission -> permission.getName())
+            .collect(Collectors.toSet()));
+        return dto;
     }
 
-    default Set<String> mapPermissions(Set<Permission> permissions) {
-        return permissions == null ? null :
-                permissions.stream().map(Permission::getName).collect(Collectors.toSet());
+    public Role toEntity(RoleDTO dto) {
+        if (dto == null) return null;
+        
+        Role role = new Role();
+        role.setId(dto.getId());
+        role.setName(dto.getName());
+        role.setDescription(dto.getDescription());
+        return role;
+    }
+
+    public Set<Long> mapUserIds(Set<User> users) {
+        if (users == null) return null;
+        return users.stream()
+            .map(User::getId)
+            .collect(Collectors.toSet());
+    }
+
+    public Set<String> mapPermissions(Set<Permission> permissions) {
+        if (permissions == null) return null;
+        return permissions.stream()
+            .map(Permission::getName)
+            .collect(Collectors.toSet());
     }
 }

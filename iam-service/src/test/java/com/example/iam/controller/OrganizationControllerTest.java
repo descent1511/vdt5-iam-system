@@ -1,6 +1,6 @@
 package com.example.iam.controller;
 
-import com.example.iam.entity.Organization;
+import com.example.iam.dto.OrganizationDTO;
 import com.example.iam.service.OrganizationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,26 +26,20 @@ class OrganizationControllerTest {
     @InjectMocks
     private OrganizationController organizationController;
 
-    private Organization organization;
+    private OrganizationDTO organizationDTO;
 
     @BeforeEach
     void setUp() {
-        organization = new Organization();
-        organization.setId(1L);
-        organization.setName("Test Organization");
-        organization.setDescription("Test Organization Description");
+        organizationDTO = new OrganizationDTO(1L, "Test Organization", "Test Organization Description", null);
     }
 
     @Test
     void getAllOrganizations_ShouldReturnListOfOrganizations() {
-        // Arrange
-        List<Organization> organizations = Arrays.asList(organization);
+        List<OrganizationDTO> organizations = Arrays.asList(organizationDTO);
         when(organizationService.getAllOrganizations()).thenReturn(organizations);
 
-        // Act
-        ResponseEntity<List<Organization>> response = organizationController.getAllOrganizations();
+        ResponseEntity<List<OrganizationDTO>> response = organizationController.getAllOrganizations();
 
-        // Assert
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
         assertEquals(organizations, response.getBody());
@@ -54,55 +48,44 @@ class OrganizationControllerTest {
 
     @Test
     void createOrganization_ShouldReturnCreatedOrganization() {
-        // Arrange
-        when(organizationService.createOrganization(any(Organization.class))).thenReturn(organization);
+        when(organizationService.createOrganization(any(OrganizationDTO.class))).thenReturn(organizationDTO);
 
-        // Act
-        ResponseEntity<Organization> response = organizationController.createOrganization(organization);
+        ResponseEntity<OrganizationDTO> response = organizationController.createOrganization(organizationDTO);
 
-        // Assert
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
-        assertEquals(organization, response.getBody());
-        verify(organizationService).createOrganization(any(Organization.class));
+        assertEquals(organizationDTO, response.getBody());
+        verify(organizationService).createOrganization(any(OrganizationDTO.class));
     }
 
     @Test
     void getOrganization_ShouldReturnOrganizationById() {
-        // Arrange
-        when(organizationService.getOrganization(1L)).thenReturn(organization);
+        when(organizationService.getOrganization(1L)).thenReturn(organizationDTO);
 
-        // Act
-        ResponseEntity<Organization> response = organizationController.getOrganization(1L);
+        ResponseEntity<OrganizationDTO> response = organizationController.getOrganization(1L);
 
-        // Assert
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
-        assertEquals(organization, response.getBody());
+        assertEquals(organizationDTO, response.getBody());
         verify(organizationService).getOrganization(1L);
     }
 
     @Test
     void updateOrganization_ShouldReturnUpdatedOrganization() {
-        // Arrange
-        when(organizationService.updateOrganization(eq(1L), any(Organization.class))).thenReturn(organization);
+        when(organizationService.updateOrganization(eq(1L), any(OrganizationDTO.class))).thenReturn(organizationDTO);
 
-        // Act
-        ResponseEntity<Organization> response = organizationController.updateOrganization(1L, organization);
+        ResponseEntity<OrganizationDTO> response = organizationController.updateOrganization(1L, organizationDTO);
 
-        // Assert
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
-        assertEquals(organization, response.getBody());
-        verify(organizationService).updateOrganization(eq(1L), any(Organization.class));
+        assertEquals(organizationDTO, response.getBody());
+        verify(organizationService).updateOrganization(eq(1L), any(OrganizationDTO.class));
     }
 
     @Test
     void deleteOrganization_ShouldReturnNoContent() {
-        // Act
         ResponseEntity<Void> response = organizationController.deleteOrganization(1L);
 
-        // Assert
         assertNotNull(response);
         assertEquals(204, response.getStatusCode().value());
         verify(organizationService).deleteOrganization(1L);
