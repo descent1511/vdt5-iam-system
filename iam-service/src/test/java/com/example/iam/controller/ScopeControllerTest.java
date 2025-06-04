@@ -68,7 +68,6 @@ class ScopeControllerTest {
     @Test
     void createScope_ShouldReturnCreatedScope() {
         // Arrange
-        when(scopeMapper.toEntity(any(ScopeDTO.class))).thenReturn(scope);
         when(scopeService.createScope(any(ScopeDTO.class))).thenReturn(scope);
         when(scopeMapper.toDTO(any(Scope.class))).thenReturn(scopeDTO);
 
