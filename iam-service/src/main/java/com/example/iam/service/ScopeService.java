@@ -29,15 +29,18 @@ public class ScopeService {
         return scopeRepository.findAll();
     }
 
+
     @Transactional
-    public Scope createScope(Scope scope) {
-        if (scope.getPermissions() != null) {
-            Set<String> permissionNames = scope.getPermissions().stream()
-                .map(Permission::getName)
-                .collect(Collectors.toSet());
-            Set<Permission> permissions = permissionRepository.findByNameIn(permissionNames);
+    public Scope createScope(ScopeDTO dto) {
+        Scope scope = new Scope();
+        scope.setName(dto.getName());
+        scope.setDescription(dto.getDescription());
+        
+        if (dto.getPermissions() != null && !dto.getPermissions().isEmpty()) {
+            Set<Permission> permissions = permissionRepository.findByNameIn(dto.getPermissions());
             scope.setPermissions(permissions);
         }
+        
         return scopeRepository.save(scope);
     }
 

@@ -3,35 +3,35 @@ package com.example.iam.service;
 import com.example.iam.dto.PolicyDTO;
 import com.example.iam.entity.Policy;
 import com.example.iam.entity.Resource;
+import com.example.iam.entity.Role;
+import com.example.iam.entity.User;
+import com.example.iam.entity.ClientApplication;
 import com.example.iam.exception.ResourceNotFoundException;
 import com.example.iam.mapper.PolicyMapper;
 import com.example.iam.repository.PolicyRepository;
 import com.example.iam.repository.ResourceRepository;
+import com.example.iam.repository.ClientApplicationRepository;
 import com.example.iam.security.UserDetailsWithOrganization;
+import com.example.iam.security.UserPrincipal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
+import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.commons.net.util.SubnetUtils;
 
 @Slf4j
 @Service
@@ -42,6 +42,7 @@ public class PolicyService {
     private final PolicyMapper policyMapper;
     private final ResourceRepository resourceRepository;
     private final UserService userService;
+    private final ClientApplicationRepository clientApplicationRepository;
 
     public List<PolicyDTO> getAllPolicies() {
         return policyRepository.findAll().stream()
@@ -120,71 +121,16 @@ public class PolicyService {
                 .toList();
     }
 
-    public boolean checkPermission(Policy.SubjectType subjectType, Long subjectId, Long resourceId, String action) {
+    public boolean checkPermission(Policy.SubjectType subjectType, Long subjectId, Long resourceId, String action, String path, String method) {
         Resource resource = resourceRepository.findById(resourceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
 
         // Get all policies for this subject and resource
         Set<Policy> policies = policyRepository.findBySubjectTypeAndSubjectIdAndResource(subjectType, subjectId, resource);
 
-        // If no policies found, deny access
+        // If no policies found, allow access
         if (policies.isEmpty()) {
-            return true;
-        }
-
-        // Check if any policy explicitly allows this action
-        boolean hasAllowPolicy = policies.stream()
-                .anyMatch(policy -> {
-                    if (!policy.getAction().equals(action) || policy.getEffect() != Policy.Effect.ALLOW) {
-                        return false;
-                    }
-                    // If no conditions, allow access
-                    if (policy.getConditionJson() == null || policy.getConditionJson().isEmpty()) {
-                        return true;
-                    }
-                    // Evaluate conditions
-                    return evaluateConditions(policy.getConditionJson());
-                });
-
-        // Check if any policy explicitly denies this action
-        boolean hasDenyPolicy = policies.stream()
-                .anyMatch(policy -> {
-                    if (!policy.getAction().equals(action) || policy.getEffect() != Policy.Effect.DENY) {
-                        return false;
-                    }
-                    // If no conditions, deny access
-                    if (policy.getConditionJson() == null || policy.getConditionJson().isEmpty()) {
-                        return true;
-                    }
-                    // Evaluate conditions
-                    return evaluateConditions(policy.getConditionJson());
-                });
-
-        // If there's an explicit deny, deny access
-        if (hasDenyPolicy) {
-            return false;
-        }
-
-        // If there's an explicit allow, allow access
-        return hasAllowPolicy;
-    }
-
-    public boolean checkPermissionByPath(Policy.SubjectType subjectType, String username, 
-                                       String path, String method, String action) {
-        log.info("Checking permission for - SubjectType: {}, Username: {}, Path: {}, Method: {}, Action: {}", 
-                subjectType, username, path, method, action);
-        
-        // Get user ID from username
-        Long userId = userService.findByUsername(username).getId();
-        log.info("User ID: {}", userId);
-        
-        // Get all policies for this subject
-        Set<Policy> policies = policyRepository.findBySubjectTypeAndSubjectId(subjectType, userId);
-        log.info("Found {} policies for subject", policies.size());
-
-        // If no policies found, allow access (default allow)
-        if (policies.isEmpty()) {
-            log.info("No policies found, defaulting to allow access");
+            log.info("No policies found, allowing access");
             return true;
         }
 
@@ -221,9 +167,9 @@ public class PolicyService {
 
         log.info("Found {} policies matching basic conditions", matchingPolicies.size());
 
-        // If no policies match basic conditions, allow access (default allow)
+        // If no policies match basic conditions, allow access
         if (matchingPolicies.isEmpty()) {
-            log.info("No policies match basic conditions, defaulting to allow access");
+            log.info("No policies match basic conditions, allowing access");
             return true;
         }
 
@@ -252,7 +198,141 @@ public class PolicyService {
         }
 
         // Check for explicit ALLOW policies
-        boolean hasAllowPolicy = matchingPolicies.stream()
+        boolean hasAllowPolicy = false;
+        boolean hasAnyAllowPolicy = matchingPolicies.stream()
+                .anyMatch(policy -> policy.getEffect() == Policy.Effect.ALLOW);
+        
+        if (hasAnyAllowPolicy) {
+            // Nếu có policy ALLOW, kiểm tra điều kiện
+            hasAllowPolicy = matchingPolicies.stream()
+                    .filter(policy -> policy.getEffect() == Policy.Effect.ALLOW)
+                    .anyMatch(policy -> {
+                        log.info("Checking ALLOW policy {}", policy.getId());
+                        
+                        // If no conditions, allow access
+                        if (policy.getConditionJson() == null || policy.getConditionJson().isEmpty()) {
+                            log.info("Policy {} has no conditions, allowing access", policy.getId());
+                            return true;
+                        }
+                        
+                        // Evaluate conditions
+                        boolean conditionsMet = evaluateConditions(policy.getConditionJson());
+                        log.info("Policy {} conditions evaluation result: {}", policy.getId(), conditionsMet);
+                        return conditionsMet;
+                    });
+        } else {
+            // Nếu không có policy ALLOW nào, cho phép truy cập
+            hasAllowPolicy = true;
+            log.info("No ALLOW policies found, allowing access");
+        }
+
+        // If there's an explicit allow with matching conditions, allow access
+        // If there's an explicit allow but conditions are not met, deny access
+        log.info("Final permission check result - hasAllowPolicy: {}", hasAllowPolicy);
+        return hasAllowPolicy;
+    }
+
+    public boolean checkPermissionByPath(Policy.SubjectType subjectType, String username, 
+                                       String path, String method, String action) {
+        log.info("Checking permission for - SubjectType: {}, Username: {}, Path: {}, Method: {}, Action: {}", 
+                subjectType, username, path, method, action);
+        
+        // Get subject ID based on type
+        Long subjectId;
+        if (subjectType == Policy.SubjectType.CLIENT) {
+            // For client, username is actually the clientId
+            // Get the client application to get its ID
+            ClientApplication client = clientApplicationRepository.findByClientId(username)
+                .orElseThrow(() -> new RuntimeException("Client not found with ID: " + username));
+            subjectId = client.getId();
+            log.info("Client ID: {}", subjectId);
+        } else {
+            // For user, get ID from username
+            subjectId = userService.findByUsername(username).getId();
+            log.info("User ID: {}", subjectId);
+        }
+        
+        // Get all policies for this subject
+        Set<Policy> policies = policyRepository.findBySubjectTypeAndSubjectId(subjectType, subjectId);
+        log.info("Found {} policies for subject", policies.size());
+
+        // If no policies found, deny access (default deny)
+        if (policies.isEmpty()) {
+            return true;
+        }
+
+        // First, find all policies that match the basic conditions (subjectType, subjectId, path, method, action)
+        Set<Policy> matchingPolicies = policies.stream()
+                .filter(policy -> {
+                    // Check if action matches
+                    if (!policy.getAction().equals(action)) {
+                        log.info("Policy {} action does not match - Expected: {}, Got: {}", 
+                                policy.getId(), action, policy.getAction());
+                        return false;
+                    }
+
+                    // Check if resource path matches
+                    String resourcePath = policy.getResource().getPath();
+                    if (!isPathMatch(path, resourcePath)) {
+                        log.info("Policy {} resource path does not match - Expected: {}, Got: {}", 
+                                policy.getId(), path, resourcePath);
+                        return false;
+                    }
+
+                    // Check if method matches
+                    Resource.HttpMethod resourceMethod = policy.getResource().getMethod();
+                    if (!method.equalsIgnoreCase(resourceMethod.name())) {
+                        log.info("Policy {} method does not match - Expected: {}, Got: {}", 
+                                policy.getId(), method, resourceMethod);
+                        return false;
+                    }
+
+                    log.info("Policy {} matches all basic conditions", policy.getId());
+                    return true;
+                })
+                .collect(Collectors.toSet());
+
+        log.info("Found {} policies matching basic conditions", matchingPolicies.size());
+
+        // If no policies match basic conditions, deny access (default deny)
+        if (matchingPolicies.isEmpty()) {
+            log.info("No policies match basic conditions, denying access");
+            return false;
+        }
+
+        // Check for explicit DENY policies first
+        boolean hasDenyPolicy = false;
+        hasDenyPolicy = matchingPolicies.stream()
+                .filter(policy -> policy.getEffect() == Policy.Effect.DENY)
+                .anyMatch(policy -> {
+                    log.info("Checking DENY policy {}", policy.getId());
+                    
+                    // If no conditions, deny access
+                    if (policy.getConditionJson() == null || policy.getConditionJson().isEmpty()) {
+                        log.info("Policy {} has no conditions, denying access", policy.getId());
+                        return true;
+                    }
+                    
+                    // Evaluate conditions
+                    boolean conditionsMet = evaluateConditions(policy.getConditionJson());
+                    log.info("Policy {} conditions evaluation result: {}", policy.getId(), conditionsMet);
+                    return conditionsMet;
+                });
+
+        // If there's an explicit deny with matching conditions, deny access
+        if (hasDenyPolicy) {
+            log.info("Found explicit DENY policy with matching conditions, denying access");
+            return false;
+        }
+        
+        // Check for explicit ALLOW policies
+        boolean hasAllowPolicy = false;  // Khởi tạo là false
+        boolean hasAnyAllowPolicy = matchingPolicies.stream()
+                .anyMatch(policy -> policy.getEffect() == Policy.Effect.ALLOW);
+        
+        if (hasAnyAllowPolicy) {
+            // Nếu có policy ALLOW, kiểm tra điều kiện
+            hasAllowPolicy = matchingPolicies.stream()
                 .filter(policy -> policy.getEffect() == Policy.Effect.ALLOW)
                 .anyMatch(policy -> {
                     log.info("Checking ALLOW policy {}", policy.getId());
@@ -268,8 +348,14 @@ public class PolicyService {
                     log.info("Policy {} conditions evaluation result: {}", policy.getId(), conditionsMet);
                     return conditionsMet;
                 });
+        } else {
+            // Nếu không có policy ALLOW nào, cho phép truy cập
+            hasAllowPolicy = true;
+            log.info("No ALLOW policies found, allowing access");
+        }
 
         // If there's an explicit allow with matching conditions, allow access
+        // If there's an explicit allow but conditions are not met, deny access
         log.info("Final permission check result - hasAllowPolicy: {}", hasAllowPolicy);
         return hasAllowPolicy;
     }
@@ -398,6 +484,7 @@ public class PolicyService {
                     
                 case "before":
                     LocalTime before = LocalTime.parse(value.asText());
+                    log.info("currentTime: {}", currentTime);
                     result = currentTime.isBefore(before);
                     log.info("Time before check - Before: {}, Result: {}", before, result);
                     break;
@@ -506,28 +593,40 @@ public class PolicyService {
         try {
             switch (operator) {
                 case "has":
-                    boolean hasRole = userRoles.contains(value.asText());
-                    log.info("Role has check - Role: {}, Result: {}", value.asText(), hasRole);
-                    return hasRole;
+                    // Handle both string and array values
+                    if (value.isArray()) {
+                        for (JsonNode role : value) {
+                            if (userRoles.contains(role.asText())) {
+                                log.info("Role has check - Role: {}, Result: true", role.asText());
+                                return true;
+                            }
+                        }
+                        log.info("Role has check - No matching roles found");
+                        return false;
+                    } else {
+                        boolean hasRole = userRoles.contains(value.asText());
+                        log.info("Role has check - Role: {}, Result: {}", value.asText(), hasRole);
+                        return hasRole;
+                    }
                     
                 case "has_any":
                     for (JsonNode role : value) {
-                        boolean roleCheck = userRoles.contains(role.asText());
-                        log.info("Role has_any check - Role: {}, Result: {}", role.asText(), roleCheck);
-                        if (roleCheck) {
+                        if (userRoles.contains(role.asText())) {
+                            log.info("Role has_any check - Role: {}, Result: true", role.asText());
                             return true;
                         }
                     }
+                    log.info("Role has_any check - No matching roles found");
                     return false;
                     
                 case "has_all":
                     for (JsonNode role : value) {
-                        boolean roleCheck = userRoles.contains(role.asText());
-                        log.info("Role has_all check - Role: {}, Result: {}", role.asText(), roleCheck);
-                        if (!roleCheck) {
+                        if (!userRoles.contains(role.asText())) {
+                            log.info("Role has_all check - Role: {}, Result: false", role.asText());
                             return false;
                         }
                     }
+                    log.info("Role has_all check - All roles found");
                     return true;
                     
                 default:
@@ -546,6 +645,12 @@ public class PolicyService {
                 userOrgId, operator, value);
         
         try {
+            // If user has no organization, deny access for organization conditions
+            if (userOrgId == null) {
+                log.info("User has no organization, denying access");
+                return false;
+            }
+
             switch (operator) {
                 case "is":
                     boolean isOrg = userOrgId.equals(value.asLong());
@@ -622,17 +727,48 @@ public class PolicyService {
     private Set<String> getCurrentUserRoles() {
         Set<String> roles = new HashSet<>();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getAuthorities() != null) {
-            authentication.getAuthorities().forEach(authority -> roles.add(authority.getAuthority()));
+        if (authentication != null) {
+            String username = authentication.getName();
+            log.info("Getting roles for username: {}", username);
+            
+            try {
+                User user = userService.findByUsername(username);
+                if (user != null) {
+                    roles = user.getRoles().stream()
+                            .map(Role::getName)
+                            .collect(Collectors.toSet());
+                    log.info("Retrieved roles from user: {}", roles);
+                } else {
+                    log.warn("User not found for username: {}", username);
+                }
+            } catch (Exception e) {
+                log.error("Error getting roles for user {}: {}", username, e.getMessage());
+            }
+        } else {
+            log.warn("No authentication found");
         }
         return roles;
     }
-
     private Long getCurrentUserOrganizationId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetailsWithOrganization) {
-            UserDetailsWithOrganization userDetails = (UserDetailsWithOrganization) authentication.getPrincipal();
-            return userDetails.getOrganizationId();
+        if (authentication != null) {
+            String username = authentication.getName();
+            log.info("Getting organization ID for username: {}", username);
+            
+            try {
+                User user = userService.findByUsername(username);
+                if (user != null && user.getOrganization() != null) {
+                    Long orgId = user.getOrganization().getId();
+                    log.info("Retrieved organization ID: {} for user: {}", orgId, username);
+                    return orgId;
+                } else {
+                    log.warn("User {} has no organization", username);
+                }
+            } catch (Exception e) {
+                log.error("Error getting organization ID for user {}: {}", username, e.getMessage());
+            }
+        } else {
+            log.warn("No authentication found");
         }
         return null;
     }
@@ -647,7 +783,20 @@ public class PolicyService {
         }
         
         try {
-            Policy.SubjectType.valueOf(dto.getSubjectType());
+            Policy.SubjectType subjectType = Policy.SubjectType.valueOf(dto.getSubjectType());
+            
+            // Validate subject ID based on type
+            if (subjectType == Policy.SubjectType.CLIENT) {
+                // For client, subjectId should be the clientId
+                if (!StringUtils.hasText(dto.getSubjectId().toString())) {
+                    throw new IllegalArgumentException("Client ID is required");
+                }
+            } else {
+                // For user and role, subjectId should be a valid ID
+                if (dto.getSubjectId() <= 0) {
+                    throw new IllegalArgumentException("Invalid subject ID");
+                }
+            }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid subject type: " + dto.getSubjectType());
         }

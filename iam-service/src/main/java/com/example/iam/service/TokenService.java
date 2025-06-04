@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,11 +45,12 @@ public class TokenService {
 
     @Transactional
     public void revokeToken(String token) {
-        Optional<Token> tokenOpt = tokenRepository.findByToken(token);
-        if (tokenOpt.isPresent()) {
-            Token tokenEntity = tokenOpt.get();
-            tokenEntity.setRevoked(true);
-            tokenRepository.save(tokenEntity);
+        List<Token> tokens = tokenRepository.findByToken(token);
+        if (!tokens.isEmpty()) {
+            tokens.forEach(tokenEntity -> {
+                tokenEntity.setRevoked(true);
+                tokenRepository.save(tokenEntity);
+            });
         }
     }
 
@@ -61,16 +64,22 @@ public class TokenService {
     }
 
     public boolean isTokenValid(String token) {
-        Optional<Token> tokenOpt = tokenRepository.findByToken(token);
-        if (tokenOpt.isPresent()) {
-            Token tokenEntity = tokenOpt.get();
-            // Check if token is expired
-            if (LocalDateTime.now().isAfter(tokenEntity.getExpiresAt())) {
-                tokenEntity.setExpired(true);
-                tokenRepository.save(tokenEntity);
-                return false;
+        List<Token> tokens = tokenRepository.findByToken(token);
+        if (!tokens.isEmpty()) {
+            // Get the most recent token
+            Token tokenEntity = tokens.stream()
+                .max(Comparator.comparing(Token::getCreatedAt))
+                .orElse(null);
+                
+            if (tokenEntity != null) {
+                // Check if token is expired
+                if (LocalDateTime.now().isAfter(tokenEntity.getExpiresAt())) {
+                    tokenEntity.setExpired(true);
+                    tokenRepository.save(tokenEntity);
+                    return false;
+                }
+                return !tokenEntity.isExpired() && !tokenEntity.isRevoked();
             }
-            return !tokenEntity.isExpired() && !tokenEntity.isRevoked();
         }
         return false;
     }
