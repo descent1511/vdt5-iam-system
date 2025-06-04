@@ -9,6 +9,7 @@ import com.example.iam.repository.RoleRepository;
 import com.example.iam.repository.ScopeRepository;
 import com.example.iam.repository.UserRepository;
 import com.example.iam.repository.OrganizationRepository;
+import com.example.iam.repository.ClientApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,11 @@ public class UserService {
     private final ScopeRepository scopeRepository;
     private final OrganizationRepository organizationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ClientApplicationRepository clientApplicationRepository;
+
+    public boolean isClientId(String id) {
+        return clientApplicationRepository.findByClientId(id).isPresent();
+    }
 
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)

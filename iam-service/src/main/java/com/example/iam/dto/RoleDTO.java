@@ -4,7 +4,7 @@ import lombok.Data;
 import java.util.Set;
 
 @Data
-public class RoleDTO {
+public class RoleDTO extends BaseDTO {
     private Long id;
     private String name;
     private String description;

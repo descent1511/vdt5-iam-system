@@ -32,8 +32,7 @@ public class ScopeController {
     @PostMapping
     @RequirePermission(value = "SCOPE_CREATE", description = "Create new scope")
     public ResponseEntity<ScopeDTO> createScope(@RequestBody ScopeDTO dto) {
-        Scope scope = scopeMapper.toEntity(dto);
-        Scope saved = scopeService.createScope(scope);
+        Scope saved = scopeService.createScope(dto);
         return ResponseEntity.ok(scopeMapper.toDTO(saved));
     }
 

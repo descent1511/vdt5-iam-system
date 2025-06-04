@@ -1,5 +1,6 @@
 package com.example.iam.security;
 
+import com.example.iam.entity.Role;
 import com.example.iam.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
@@ -23,6 +25,7 @@ public class UserPrincipal implements UserDetails {
     @JsonIgnore
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
+    private Set<Role> roles;
     private User user;
 
     public static UserPrincipal create(User user) {
@@ -30,17 +33,21 @@ public class UserPrincipal implements UserDetails {
                 .flatMap(role -> role.getPermissions().stream())
                 .map(permission -> new SimpleGrantedAuthority(permission.getName()))
                 .collect(Collectors.toList());
-    
+
+        Set<Role> roles = user.getRoles();
+        System.out.println("UserPrincipal - User roles: " + roles.size());
+        roles.forEach(role -> System.out.println("Role: " + role.getName() + ", Permissions: " + role.getPermissions().size()));
+
         return UserPrincipal.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .password(user.getPassword())
                 .authorities(authorities)
+                .roles(roles) 
                 .user(user)
                 .build();
     }
-    
 
     @Override
     public boolean isAccountNonExpired() {
@@ -61,4 +68,4 @@ public class UserPrincipal implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-} 
+}

@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String usernameOrClientId) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(usernameOrClientId).orElse(null);
+        User user = userRepository.findByUsernameWithRoles(usernameOrClientId).orElse(null);
         if (user != null) {
             return UserPrincipal.create(user);
         }
@@ -37,16 +37,4 @@ public class CustomUserDetailsService implements UserDetailsService {
         throw new UsernameNotFoundException("No user or client found with username/clientId: " + usernameOrClientId);
     }
 
-    @Transactional
-    public UserDetails loadUserByUserId(Long userId) {
-        log.debug("Loading user details for userId: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.warn("User not found with id: {}", userId);
-                    return new UsernameNotFoundException("User not found with id: " + userId);
-                });
-
-        return UserPrincipal.create(user);
-    }
 }

@@ -100,17 +100,20 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("type", "client");
-        claims.put("client_id", clientApp.getClientId());
+        log.info("Client ID from clientApp: " + clientApp.getClientId());
+        log.info("Client App details - Name: " + clientApp.getName() + ", Description: " + clientApp.getDescription());
 
         String token = Jwts.builder()
                 .setSubject(clientApp.getClientId())
-                .setClaims(claims)
+                .claim("type", "client")
+                .claim("client_id", clientApp.getClientId())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key)
                 .compact();
+
+        log.info("Generated token subject: " + getClaims(token).getSubject());
+        log.info("Generated token client_id: " + getClaims(token).get("client_id", String.class));
 
         tokenService.saveClientToken(token, clientApp.getClientId(), Token.TokenType.ACCESS,
             LocalDateTime.ofInstant(expiryDate.toInstant(), ZoneId.systemDefault()));

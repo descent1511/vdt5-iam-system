@@ -69,7 +69,7 @@ class ScopeControllerTest {
     void createScope_ShouldReturnCreatedScope() {
         // Arrange
         when(scopeMapper.toEntity(any(ScopeDTO.class))).thenReturn(scope);
-        when(scopeService.createScope(any(Scope.class))).thenReturn(scope);
+        when(scopeService.createScope(any(ScopeDTO.class))).thenReturn(scope);
         when(scopeMapper.toDTO(any(Scope.class))).thenReturn(scopeDTO);
 
         // Act
@@ -79,7 +79,7 @@ class ScopeControllerTest {
         assertNotNull(response);
         assertEquals(200, response.getStatusCode().value());
         assertEquals(scopeDTO, response.getBody());
-        verify(scopeService).createScope(any(Scope.class));
+        verify(scopeService).createScope(any(ScopeDTO.class));
     }
 
     @Test

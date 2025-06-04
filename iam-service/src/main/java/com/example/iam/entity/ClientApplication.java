@@ -33,10 +33,6 @@ public class ClientApplication extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "redirect_uri")
-    private String redirectUri;
-
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "client_scopes",
