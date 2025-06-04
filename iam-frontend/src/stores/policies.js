@@ -26,8 +26,12 @@ export const usePolicyStore = defineStore('policies', () => {
       error.value = null
       const data = await policyService.getPolicies(params)
       console.log(data)
-      policies.value = data
-      totalPolicies = data.length 
+      // Thêm showAllResources cho mỗi policy
+      policies.value = data.map(policy => ({
+        ...policy,
+        showAllResources: false // Khởi tạo thuộc tính
+      }))
+      totalPolicies.value = data.length 
       pagination.value = {
         page: params.page || 1,
         limit: params.limit || 10,
@@ -51,12 +55,19 @@ export const usePolicyStore = defineStore('policies', () => {
       error.value = null
       
       const data = await policyService.getPolicyById(id)
-      console.log(data)
-      currentPolicy.value = data
+      console.log('Policy data from API:', data)
+      
+      if (!data) {
+        throw new Error('Policy not found')
+      }
+      
+      currentPolicy.value = { ...data, showAllResources: false } // Thêm showAllResources
       return data
     } catch (err) {
+      console.error('Error in fetchPolicyById:', err)
       error.value = err.message || 'Failed to fetch policy'
       toast.error(error.value)
+      throw err
     } finally {
       loading.value = false
     }
@@ -68,9 +79,7 @@ export const usePolicyStore = defineStore('policies', () => {
       error.value = null
       
       const data = await policyService.createPolicy(policyData)
-      
-      toast.success('Policy created successfully')
-      policies.value.push(data)
+      policies.value.push({ ...data, showAllResources: false }) // Thêm showAllResources
       return data
     } catch (err) {
       error.value = err.message || 'Failed to create policy'
@@ -88,13 +97,16 @@ export const usePolicyStore = defineStore('policies', () => {
       
       const data = await policyService.updatePolicy(id, policyData)
       
-      // Update the policy in the policies array
+      // Cập nhật policy trong mảng policies
       const index = policies.value.findIndex(policy => policy.id === id)
       if (index !== -1) {
-        policies.value[index] = { ...policies.value[index], ...policyData }
+        policies.value[index] = { 
+          ...policies.value[index], 
+          ...policyData,
+          showAllResources: policies.value[index].showAllResources // Giữ lại showAllResources
+        }
       }
-      
-      toast.success('Policy updated successfully')
+    
       return data
     } catch (err) {
       error.value = err.message || 'Failed to update policy'
@@ -112,10 +124,9 @@ export const usePolicyStore = defineStore('policies', () => {
       
       await policyService.deletePolicy(id)
       
-      // Remove the policy from the policies array
+      // Xóa policy khỏi mảng policies
       policies.value = policies.value.filter(policy => policy.id !== id)
       
-      toast.success('Policy deleted successfully')
       return true
     } catch (err) {
       error.value = err.message || 'Failed to delete policy'
@@ -123,6 +134,14 @@ export const usePolicyStore = defineStore('policies', () => {
       return false
     } finally {
       loading.value = false
+    }
+  }
+
+  // Action để toggle showAllResources
+  function toggleResourceVisibility(id) {
+    const policy = policies.value.find(policy => policy.id === id)
+    if (policy) {
+      policy.showAllResources = !policy.showAllResources
     }
   }
   
@@ -157,6 +176,7 @@ export const usePolicyStore = defineStore('policies', () => {
     createPolicy,
     updatePolicy,
     deletePolicy,
+    toggleResourceVisibility,
     resetState
   }
 })

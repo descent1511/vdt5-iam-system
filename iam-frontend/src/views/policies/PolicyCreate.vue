@@ -12,19 +12,16 @@
         <form @submit.prevent="savePolicy">
           <div class="row">
             <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label">Subject Type</label>
-                <select v-model="form.subjectType" class="form-select" required>
-                  <option value="USER">User</option>
-                  <option value="ROLE">Role</option>
-                  <option value="CLIENT">Client</option>
-                  <option value="SCOPE">Scope</option>
-                </select>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Subject ID</label>
-                <input v-model="form.subjectId" type="number" class="form-control" required />
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">Subject</h5>
+                </div>
+                <div class="card-body">
+                  <SubjectSelector
+                    v-model="form.subject"
+                    :errors="errors"
+                  />
+                </div>
               </div>
 
               <div class="mb-3">
@@ -163,14 +160,19 @@ import { useRouter } from 'vue-router'
 import { policyService } from '../../services/policyService'
 import { resourceService } from '../../services/resourceService'
 import { useToast } from 'vue-toastification'
+import SubjectSelector from '../../components/policies/SubjectSelector.vue'
 
 const router = useRouter()
 const toast = useToast()
 const resources = ref([])
 
 const form = ref({
-  subjectType: 'USER',
-  subjectId: null,
+  name: '',
+  description: '',
+  subject: {
+    subjectType: '',
+    subjectId: ''
+  },
   resourceId: null,
   action: '',
   effect: 'ALLOW',
@@ -186,6 +188,17 @@ const condition = ref({
   ips: [''],
   roles: [''],
   orgIds: [null]
+})
+
+const errors = ref({
+  name: '',
+  description: '',
+  subjectType: '',
+  subjectId: '',
+  resourceId: '',
+  action: '',
+  effect: '',
+  conditionJson: ''
 })
 
 onMounted(async () => {
@@ -266,7 +279,19 @@ const removeOrgId = (index) => {
 
 const savePolicy = async () => {
   try {
-    await policyService.createPolicy(form.value)
+    // Prepare the policy data
+    const policyData = {
+      name: form.value.name,
+      description: form.value.description,
+      subjectType: form.value.subject.subjectType,
+      subjectId: form.value.subject.subjectId,
+      resourceId: form.value.resourceId,
+      action: form.value.action,
+      effect: form.value.effect,
+      conditionJson: form.value.conditionJson
+    }
+
+    await policyService.createPolicy(policyData)
     toast.success('Policy created successfully')
     router.push('/policies')
   } catch (error) {

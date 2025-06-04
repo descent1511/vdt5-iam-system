@@ -275,6 +275,126 @@
                         >
                       </td>
                     </tr>
+
+                    <!-- Scope Management -->
+                    <tr>
+                      <td>
+                        <i class="bi bi-diagram-3"></i>
+                        Scope Management
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasScopeRead"
+                          @change="togglePermission('scopes', 'read')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasScopeCreate"
+                          @change="togglePermission('scopes', 'create')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasScopeUpdate"
+                          @change="togglePermission('scopes', 'update')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasScopeDelete"
+                          @change="togglePermission('scopes', 'delete')"
+                        >
+                      </td>
+                    </tr>
+
+                    <!-- Client Management -->
+                    <tr>
+                      <td>
+                        <i class="bi bi-shield"></i>
+                        Client Management
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasClientRead"
+                          @change="togglePermission('clients', 'read')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasClientCreate"
+                          @change="togglePermission('clients', 'create')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasClientUpdate"
+                          @change="togglePermission('clients', 'update')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasClientDelete"
+                          @change="togglePermission('clients', 'delete')"
+                        >
+                      </td>
+                    </tr>
+
+                    <!-- Product Management -->
+                    <tr>
+                      <td>
+                        <i class="bi bi-box"></i>
+                        Product Management
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasProductRead"
+                          @change="togglePermission('products', 'read')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasProductCreate"
+                          @change="togglePermission('products', 'create')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasProductUpdate"
+                          @change="togglePermission('products', 'update')"
+                        >
+                      </td>
+                      <td class="text-center">
+                        <input 
+                          class="form-check-input" 
+                          type="checkbox" 
+                          :checked="hasProductDelete"
+                          @change="togglePermission('products', 'delete')"
+                        >
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -353,6 +473,24 @@ const permissionMapping = {
     create: 'ORGANIZATION_CREATE',
     update: 'ORGANIZATION_UPDATE',
     delete: 'ORGANIZATION_DELETE'
+  },
+  clients: {
+    read: 'CLIENT_READ',
+    create: 'CLIENT_CREATE',
+    update: 'CLIENT_UPDATE',
+    delete: 'CLIENT_DELETE'
+  },
+  products: {
+    read: 'PRODUCT_READ',
+    create: 'PRODUCT_CREATE',
+    update: 'PRODUCT_UPDATE',
+    delete: 'PRODUCT_DELETE'
+  },
+  scopes: {
+    read: 'SCOPE_READ',
+    create: 'SCOPE_CREATE',
+    update: 'SCOPE_UPDATE',
+    delete: 'SCOPE_DELETE'
   }
 }
 
@@ -381,6 +519,21 @@ const hasOrganizationRead = computed(() => form.permissions.includes(permissionM
 const hasOrganizationCreate = computed(() => form.permissions.includes(permissionMapping.organizations.create))
 const hasOrganizationUpdate = computed(() => form.permissions.includes(permissionMapping.organizations.update))
 const hasOrganizationDelete = computed(() => form.permissions.includes(permissionMapping.organizations.delete))
+
+const hasClientRead = computed(() => form.permissions.includes(permissionMapping.clients.read))
+const hasClientCreate = computed(() => form.permissions.includes(permissionMapping.clients.create))
+const hasClientUpdate = computed(() => form.permissions.includes(permissionMapping.clients.update))
+const hasClientDelete = computed(() => form.permissions.includes(permissionMapping.clients.delete))
+
+const hasProductRead = computed(() => form.permissions.includes(permissionMapping.products.read))
+const hasProductCreate = computed(() => form.permissions.includes(permissionMapping.products.create))
+const hasProductUpdate = computed(() => form.permissions.includes(permissionMapping.products.update))
+const hasProductDelete = computed(() => form.permissions.includes(permissionMapping.products.delete))
+
+const hasScopeRead = computed(() => form.permissions.includes(permissionMapping.scopes.read))
+const hasScopeCreate = computed(() => form.permissions.includes(permissionMapping.scopes.create))
+const hasScopeUpdate = computed(() => form.permissions.includes(permissionMapping.scopes.update))
+const hasScopeDelete = computed(() => form.permissions.includes(permissionMapping.scopes.delete))
 
 // Methods to handle permission changes
 function togglePermission(entity, action) {

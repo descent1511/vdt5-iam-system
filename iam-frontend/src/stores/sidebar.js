@@ -1,26 +1,49 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export const useSidebarStore = defineStore('sidebar', () => {
-  // Default to open on desktop, closed on mobile
-  const isOpen = ref(window.innerWidth >= 992)
-  
-  function toggle() {
-    isOpen.value = !isOpen.value
-  }
-  
-  function close() {
-    isOpen.value = false
-  }
-  
-  function open() {
-    isOpen.value = true
-  }
-  
-  return {
-    isOpen,
-    toggle,
-    close,
-    open
-  }
+export const useSidebarStore = defineStore('sidebar', {
+  state: () => ({
+    menuItems: [
+      {
+        title: 'Dashboard',
+        icon: 'bi-speedometer2',
+        route: '/dashboard'
+      },
+      {
+        title: 'Users',
+        icon: 'bi-people',
+        route: '/users'
+      },
+      {
+        title: 'Roles',
+        icon: 'bi-person-badge',
+        route: '/roles'
+      },
+      {
+        title: 'Policies',
+        icon: 'bi-shield-lock',
+        route: '/policies'
+      },
+      {
+        title: 'Resources',
+        icon: 'bi-box',
+        route: '/resources'
+      },
+      {
+        title: 'Scopes',
+        icon: 'bi-diagram-3',
+        route: '/scopes'
+      },
+      {
+        title: 'Clients',
+        icon: 'bi-app',
+        route: '/clients'
+      },
+      {
+        title: 'Organizations',
+        icon: 'bi-building',
+        route: '/organizations'
+      }
+    ]
+  })
 })

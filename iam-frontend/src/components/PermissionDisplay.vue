@@ -105,6 +105,69 @@
           </span>
         </div>
       </div>
+
+      <!-- Client Group -->
+      <div v-if="hasClientPermissions" class="permission-group mb-3">
+        <h6 class="group-title">
+          <i class="bi bi-key me-2"></i>Clients
+        </h6>
+        <div class="permission-tags">
+          <span v-if="hasClientRead" class="permission-tag bg-primary-subtle text-primary">
+            <i class="bi bi-eye me-1"></i>View
+          </span>
+          <span v-if="hasClientCreate" class="permission-tag bg-success-subtle text-success">
+            <i class="bi bi-plus-lg me-1"></i>Create
+          </span>
+          <span v-if="hasClientUpdate" class="permission-tag bg-warning-subtle text-warning">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </span>
+          <span v-if="hasClientDelete" class="permission-tag bg-danger-subtle text-danger">
+            <i class="bi bi-trash me-1"></i>Delete
+          </span>
+        </div>
+      </div>
+
+      <!-- Product Group -->
+      <div v-if="hasProductPermissions" class="permission-group mb-3">
+        <h6 class="group-title">
+          <i class="bi bi-bag me-2"></i>Products
+        </h6>
+        <div class="permission-tags">
+          <span v-if="hasProductRead" class="permission-tag bg-primary-subtle text-primary">
+            <i class="bi bi-eye me-1"></i>View
+          </span>
+          <span v-if="hasProductCreate" class="permission-tag bg-success-subtle text-success">
+            <i class="bi bi-plus-lg me-1"></i>Create
+          </span>
+          <span v-if="hasProductUpdate" class="permission-tag bg-warning-subtle text-warning">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </span>
+          <span v-if="hasProductDelete" class="permission-tag bg-danger-subtle text-danger">
+            <i class="bi bi-trash me-1"></i>Delete
+          </span>
+        </div>
+      </div>
+
+      <!-- Scope Group -->
+      <div v-if="hasScopePermissions" class="permission-group mb-3">
+        <h6 class="group-title">
+          <i class="bi bi-diagram-3 me-2"></i>Scopes
+        </h6>
+        <div class="permission-tags">
+          <span v-if="hasScopeRead" class="permission-tag bg-primary-subtle text-primary">
+            <i class="bi bi-eye me-1"></i>View
+          </span>
+          <span v-if="hasScopeCreate" class="permission-tag bg-success-subtle text-success">
+            <i class="bi bi-plus-lg me-1"></i>Create
+          </span>
+          <span v-if="hasScopeUpdate" class="permission-tag bg-warning-subtle text-warning">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </span>
+          <span v-if="hasScopeDelete" class="permission-tag bg-danger-subtle text-danger">
+            <i class="bi bi-trash me-1"></i>Delete
+          </span>
+        </div>
+      </div>
     </div>
     <span v-else class="text-muted">No permissions</span>
   </div>
@@ -154,6 +217,27 @@ const hasOrganizationCreate = computed(() => props.permissions.includes('ORGANIZ
 const hasOrganizationUpdate = computed(() => props.permissions.includes('ORGANIZATION_UPDATE'))
 const hasOrganizationDelete = computed(() => props.permissions.includes('ORGANIZATION_DELETE'))
 const hasOrganizationPermissions = computed(() => hasOrganizationRead.value || hasOrganizationCreate.value || hasOrganizationUpdate.value || hasOrganizationDelete.value)
+
+// Client permissions
+const hasClientRead = computed(() => props.permissions.includes('CLIENT_READ'))
+const hasClientCreate = computed(() => props.permissions.includes('CLIENT_CREATE'))
+const hasClientUpdate = computed(() => props.permissions.includes('CLIENT_UPDATE'))
+const hasClientDelete = computed(() => props.permissions.includes('CLIENT_DELETE'))
+const hasClientPermissions = computed(() => hasClientRead.value || hasClientCreate.value || hasClientUpdate.value || hasClientDelete.value)
+
+// Product permissions
+const hasProductRead = computed(() => props.permissions.includes('PRODUCT_READ'))
+const hasProductCreate = computed(() => props.permissions.includes('PRODUCT_CREATE'))
+const hasProductUpdate = computed(() => props.permissions.includes('PRODUCT_UPDATE'))
+const hasProductDelete = computed(() => props.permissions.includes('PRODUCT_DELETE'))
+const hasProductPermissions = computed(() => hasProductRead.value || hasProductCreate.value || hasProductUpdate.value || hasProductDelete.value)
+
+// Scope permissions
+const hasScopeRead = computed(() => props.permissions.includes('SCOPE_READ'))
+const hasScopeCreate = computed(() => props.permissions.includes('SCOPE_CREATE'))
+const hasScopeUpdate = computed(() => props.permissions.includes('SCOPE_UPDATE'))
+const hasScopeDelete = computed(() => props.permissions.includes('SCOPE_DELETE'))
+const hasScopePermissions = computed(() => hasScopeRead.value || hasScopeCreate.value || hasScopeUpdate.value || hasScopeDelete.value)
 </script>
 
 <style scoped>
