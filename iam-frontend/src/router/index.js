@@ -30,6 +30,11 @@ import ResourceEdit from '../views/resources/ResourceEdit.vue'
 import OrganizationList from '../views/organization/OrganizationList.vue'
 import OrganizationForm from '../views/organization/OrganizationForm.vue'
 
+// Product Management
+import ProductsList from '../views/products/ProductsList.vue'
+import ProductCreate from '../views/products/ProductCreate.vue'
+import ProductEdit from '../views/products/ProductEdit.vue'
+
 // New scope components
 import ScopeEdit from '../views/scopes/ScopeEdit.vue'
 import ScopeCreate from '../views/scopes/ScopeCreate.vue'
@@ -153,20 +158,20 @@ const routes = [
   {
     path: '/policies',
     name: 'Policies',
-    component: PoliciesList,
-    meta: { requiresAuth: true, requiredPermissions: ['POLICY_READ'] }
+    component: () => import('../views/policies/PoliciesList.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/policies/create',
     name: 'CreatePolicy',
-    component: PolicyCreate,
-    meta: { requiresAuth: true, requiredPermissions: ['POLICY_CREATE'] }
+    component: () => import('../views/policies/PolicyCreate.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/policies/:id/edit',
     name: 'EditPolicy',
-    component: PolicyEdit,
-    meta: { requiresAuth: true, requiredPermissions: ['POLICY_UPDATE'] }
+    component: () => import('../views/policies/PolicyEdit.vue'),
+    meta: { requiresAuth: true }
   },
   // Organization routes
   {
@@ -185,6 +190,49 @@ const routes = [
     path: '/organizations/:id/edit',
     name: 'EditOrganization',
     component: OrganizationForm,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/clients',
+    name: 'Clients',
+    component: () => import('../views/clients/ClientsList.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/clients/create',
+    name: 'CreateClient',
+    component: () => import('../views/clients/ClientCreate.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/clients/:id/edit',
+    name: 'EditClient',
+    component: () => import('../views/clients/ClientEdit.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  // Product routes
+  {
+    path: '/products',
+    name: 'Products',
+    component: () => import('../views/products/ProductsList.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/products/create',
+    name: 'CreateProduct',
+    component: () => import('../views/products/ProductCreate.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/products/:id/edit',
+    name: 'EditProduct',
+    component: () => import('../views/products/ProductEdit.vue'),
     meta: { requiresAuth: true }
   },
   {

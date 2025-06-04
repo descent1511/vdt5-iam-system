@@ -1,218 +1,228 @@
 <template>
-  <div>
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h2 mb-0">Policies</h1>
-      <router-link to="/policies/create" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-2"></i> New Policy
-      </router-link>
-    </div>
-
-    <!-- Filters -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <input
-              v-model="filters.search"
-              type="text"
-              class="form-control"
-              placeholder="Search policies..."
-              @input="debounceSearch"
-            />
-          </div>
-          <div class="col-md-3">
-            <select v-model="filters.subjectType" class="form-select" @change="applyFilters">
-              <option value="">All Subject Types</option>
-              <option value="USER">User</option>
-              <option value="ROLE">Role</option>
-              <option value="CLIENT">Client</option>
-              <option value="SCOPE">Scope</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <select v-model="filters.effect" class="form-select" @change="applyFilters">
-              <option value="">All Effects</option>
-              <option value="ALLOW">Allow</option>
-              <option value="DENY">Deny</option>
-            </select>
-          </div>
-          <div class="col-md-2">
-            <button class="btn btn-outline-secondary w-100" @click="resetFilters">
-              Reset
-            </button>
-          </div>
+  <DataList
+    ref="dataList"
+    title="Policies"
+    :items="policyStore.policies"
+    :columns="columns"
+    :can-create="hasPermission('POLICY_CREATE')"
+    create-route="/policies/create"
+    create-button-text="New Policy"
+    search-placeholder="Search policies..."
+    :search-fields="['subjectType', 'subjectId', 'action']"
+    :loading="policyStore.loading"
+    :error="policyStore.error"
+    @delete="deletePolicy"
+  >
+    <!-- Custom column slots -->
+    <template #subject="{ item }">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-person-badge text-primary me-2"></i>
+        <div class="d-flex flex-column">
+          <span class="fw-medium text-dark">{{ item.subjectType }}</span>
+          <small class="text-muted">{{ getSubjectName(item) }}</small>
         </div>
       </div>
-    </div>
+    </template>
 
-    <!-- Policies Table -->
-    <div class="card">
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>Resource</th>
-                <th>Action</th>
-                <th>Effect</th>
-                <th>Conditions</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="policy in policies" :key="policy.id">
-                <td>
-                  <span class="badge bg-secondary">
-                    {{ policy.subjectType }}: {{ policy.subjectId }}
-                  </span>
-                </td>
-                <td>{{ policy.resource?.name || 'N/A' }}</td>
-                <td>{{ policy.action }}</td>
-                <td>
-                  <span :class="`badge bg-${policy.effect === 'ALLOW' ? 'success' : 'danger'}`">
-                    {{ policy.effect }}
-                  </span>
-                </td>
-                <td>
-                  <span v-if="policy.conditionJson" class="badge bg-info">
-                    Has Conditions
-                  </span>
-                  <span v-else class="text-muted">None</span>
-                </td>
-                <td>
-                  <div class="btn-group">
-                    <button 
-                      class="btn btn-sm btn-outline-primary" 
-                      @click="handleEdit(policy)"
-                      :disabled="loading"
-                    >
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" @click="confirmDelete(policy)">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <template #effect="{ item }">
+      <span 
+        class="badge"
+        :class="item.effect === 'ALLOW' ? 'bg-success' : 'bg-danger'"
+      >
+        {{ item.effect }}
+      </span>
+    </template>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Confirm Delete</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            Are you sure you want to delete this policy?
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-danger" @click="deletePolicy">Delete</button>
-          </div>
-        </div>
+    <template #action="{ item }">
+      <span class="badge bg-info">{{ item.action }}</span>
+    </template>
+
+    <template #resource="{ item }">
+      <span class="text-muted small">{{ getResourcePath(item.resourceId) }}</span>
+    </template>
+
+    <template #actions="{ item }">
+      <div class="d-flex justify-content-end gap-2">
+        <router-link 
+          v-if="hasPermission('POLICY_UPDATE')"
+          :to="`/policies/${item.id}/edit`" 
+          class="btn btn-sm btn-outline-primary"
+          title="Edit"
+        >
+          <i class="bi bi-pencil"></i>
+        </router-link>
+        <button 
+          v-if="hasPermission('POLICY_DELETE')"
+          class="btn btn-sm btn-outline-danger"
+          @click="confirmDelete(item)"
+          title="Delete"
+        >
+          <i class="bi bi-trash"></i>
+        </button>
       </div>
-    </div>
-  </div>
+    </template>
+  </DataList>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { policyService } from '../../services/policyService'
-import { Modal } from 'bootstrap'
-import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router'
+import { usePolicyStore } from '../../stores/policies'
+import { useAuthStore } from '../../stores/auth'
+import DataList from '../../components/layout/DataList.vue'
 
-const toast = useToast()
-const policies = ref([])
-const deleteModal = ref(null)
-const selectedPolicy = ref(null)
-const router = useRouter()
-const loading = ref(false)
+const policyStore = usePolicyStore()
+const authStore = useAuthStore()
+const dataList = ref(null)
 
-const filters = ref({
-  search: '',
-  subjectType: '',
-  effect: ''
-})
+const columns = [
+  { key: 'subject', label: 'Subject' },
+  { key: 'effect', label: 'Effect' },
+  { key: 'action', label: 'Action' },
+  { key: 'resource', label: 'Resource' },
+  { key: 'actions', label: 'Actions', class: 'text-end' }
+]
 
-onMounted(async () => {
-  deleteModal.value = new Modal(document.getElementById('deleteModal'))
-  await loadPolicies()
-})
-
-const loadPolicies = async () => {
-  try {
-    console.log('Loading policies...')
-    const response = await policyService.getPolicies()
-    console.log('Policies loaded:', response)
-    policies.value = response
-  } catch (error) {
-    console.error('Error loading policies:', error)
-    toast.error('Failed to load policies')
+function getSubjectName(item) {
+  if (item.subjectType === 'USER') {
+    return item.username || `User ${item.subjectId}`
+  } else if (item.subjectType === 'CLIENT') {
+    return item.clientName || `Client ${item.subjectId}`
   }
+  return `ID: ${item.subjectId}`
 }
 
-const confirmDelete = (policy) => {
-  selectedPolicy.value = policy
-  deleteModal.value.show()
+function getResourcePath(resourceId) {
+  // TODO: Implement resource path lookup
+  return `/api/resources/${resourceId}`
 }
 
-const deletePolicy = async () => {
+function confirmDelete(policy) {
+  policyStore.selectedPolicy = policy
+  dataList.value.showDeleteModal()
+}
+
+async function deletePolicy() {
+  if (!policyStore.selectedPolicy) return
+
   try {
-    await policyService.deletePolicy(selectedPolicy.value.id)
-    toast.success('Policy deleted successfully')
-    deleteModal.value.hide()
+    await policyStore.deletePolicy(policyStore.selectedPolicy.id)
     await loadPolicies()
+    dataList.value.hideDeleteModal()
   } catch (error) {
-    toast.error('Failed to delete policy')
+    console.error('Failed to delete policy:', error)
   }
 }
 
-const debounceSearch = debounce(() => {
-  applyFilters()
-}, 300)
-
-const applyFilters = () => {
-  loadPolicies()
+function hasPermission(permission) {
+  return authStore.can(permission)
 }
 
-const resetFilters = () => {
-  filters.value = {
-    search: '',
-    subjectType: '',
-    effect: ''
-  }
-  loadPolicies()
+async function loadPolicies() {
+  await policyStore.fetchPolicies()
 }
 
-const handleEdit = (policy) => {
-  console.log('Edit button clicked for policy:', policy)
-  if (!policy || !policy.id) {
-    console.error('Invalid policy or missing ID:', policy)
-    toast.error('Invalid policy data')
-    return
-  }
-  try {
-    console.log('Attempting to navigate to:', `/policies/${policy.id}/edit`)
-    router.push(`/policies/${policy.id}/edit`)
-  } catch (error) {
-    console.error('Navigation error:', error)
-    toast.error('Failed to navigate to edit page')
-  }
-}
-
-function debounce(fn, delay) {
-  let timeoutId
-  return function (...args) {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => fn.apply(this, args), delay)
-  }
-}
+onMounted(loadPolicies)
 </script>
+
+<style scoped>
+/* Table styles */
+:deep(.table) {
+  margin-bottom: 0;
+}
+
+:deep(.table th) {
+  font-weight: 600;
+  color: #495057;
+  border-top: none;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  white-space: nowrap;
+}
+
+:deep(.table td) {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #e9ecef;
+}
+
+:deep(.table tr:hover) {
+  background-color: #f8f9fa;
+}
+
+/* Column specific styles */
+:deep(.table td:nth-child(1)) { /* Subject column */
+  min-width: 200px;
+}
+
+:deep(.table td:nth-child(2)) { /* Effect column */
+  min-width: 80px;
+
+}
+
+:deep(.table td:nth-child(3)) { /* Action column */
+  min-width: 120px;
+}
+
+:deep(.table td:nth-child(4)) { /* Resource column */
+  min-width: 200px;
+}
+
+:deep(.table td:nth-child(5)) { /* Actions column */
+  min-width: 80px;
+ 
+  text-align: right;
+}
+
+/* Badge styles */
+.badge {
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+/* Action buttons */
+:deep(.btn-group) {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+:deep(.btn-group .btn) {
+  padding: 0.375rem 0.5rem;
+  line-height: 1;
+}
+
+:deep(.btn-group .btn i) {
+  font-size: 0.875rem;
+}
+
+/* Card styles */
+:deep(.card) {
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+:deep(.card-body) {
+  padding: 1.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :deep(.table td),
+  :deep(.table th) {
+    padding: 0.75rem;
+  }
+  
+  :deep(.table td:nth-child(1)) {
+    min-width: 150px;
+  }
+  
+  :deep(.table td:nth-child(4)) {
+    min-width: 150px;
+  }
+}
+
+</style>

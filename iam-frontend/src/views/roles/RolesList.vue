@@ -3,7 +3,11 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="h2 mb-0">Roles</h1>
       
-      <router-link to="/roles/create" class="btn btn-primary">
+      <router-link 
+        v-if="authStore.can('ROLE_CREATE')"
+        to="/roles/create" 
+        class="btn btn-primary"
+      >
         <i class="bi bi-plus-lg me-2"></i> New Role
       </router-link>
     </div>
@@ -54,6 +58,7 @@
             
             <div class="btn-group">
               <router-link 
+                v-if="authStore.can('ROLE_UPDATE')"
                 :to="`/roles/${role.id}/edit`" 
                 class="btn btn-sm btn-outline-primary"
                 :disabled="role.name === 'admin'"
@@ -61,6 +66,7 @@
                 <i class="bi bi-pencil me-1"></i> Edit
               </router-link>
               <button 
+                v-if="authStore.can('ROLE_DELETE')"
                 class="btn btn-sm btn-outline-danger"
                 @click="confirmDelete(role)"
                 :disabled="role.name === 'admin'"
@@ -114,11 +120,13 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoleStore } from '../../stores/roles'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '../../stores/auth'
 import PermissionDisplay from '../../components/PermissionDisplay.vue'
 import * as bootstrap from 'bootstrap'
 
 // Store
 const roleStore = useRoleStore()
+const authStore = useAuthStore()
 const router = useRouter()
 const toast = useToast()
 
@@ -137,7 +145,7 @@ onMounted(async () => {
 // Methods
 async function loadRoles() {
   try {
-  await roleStore.fetchRoles()
+    await roleStore.fetchRoles()
   } catch (error) {
     toast.error('Failed to load roles')
   }
@@ -162,6 +170,11 @@ function confirmDelete(role) {
     return
   }
   
+  if (!authStore.can('ROLE_DELETE')) {
+    toast.error('You do not have permission to delete roles')
+    return
+  }
+  
   roleToDelete.value = role
   deleteModal.show()
 }
@@ -169,10 +182,16 @@ function confirmDelete(role) {
 async function deleteRole() {
   if (!roleToDelete.value) return
   
+  if (!authStore.can('ROLE_DELETE')) {
+    toast.error('You do not have permission to delete roles')
+    return
+  }
+  
   try {
     await roleStore.deleteRole(roleToDelete.value.id)
     deleteModal.hide()
     roleToDelete.value = null
+    toast.success('Role deleted successfully')
   } catch (error) {
     toast.error('Failed to delete role')
   }

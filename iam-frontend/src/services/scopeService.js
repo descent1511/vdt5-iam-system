@@ -23,7 +23,9 @@ export const scopeService = {
   },
 
   async deleteScope(id) {
+    console.log('Making DELETE request to /scopes/' + id)
     const response = await api.delete(`/scopes/${id}`)
+    console.log('DELETE response:', response)
     return response
   }
 }

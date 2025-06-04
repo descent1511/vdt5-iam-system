@@ -41,35 +41,16 @@
                   <h5 class="card-title mb-0">Basic Information</h5>
                 </div>
                 <div class="card-body">
-                  <div class="mb-3">
-                    <label class="form-label required">Subject Type</label>
-                    <select 
-                      v-model="form.subjectType" 
-                      class="form-select" 
-                      :class="{ 'is-invalid': errors.subjectType }"
-                      required
-                      @change="validateField('subjectType')"
-                    >
-                      <option value="">Select a subject type</option>
-                      <option value="USER">User</option>
-                      <option value="ROLE">Role</option>
-                      <option value="CLIENT">Client</option>
-                      <option value="SCOPE">Scope</option>
-                    </select>
-                    <div class="invalid-feedback">{{ errors.subjectType }}</div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label class="form-label required">Subject ID</label>
-                    <input 
-                      v-model="form.subjectId" 
-                      type="number" 
-                      class="form-control" 
-                      :class="{ 'is-invalid': errors.subjectId }"
-                      required
-                      @input="validateField('subjectId')"
-                    />
-                    <div class="invalid-feedback">{{ errors.subjectId }}</div>
+                  <div class="card mb-4">
+                    <div class="card-header">
+                      <h5 class="card-title mb-0">Subject</h5>
+                    </div>
+                    <div class="card-body">
+                      <SubjectSelector
+                        v-model="form.subject"
+                        :errors="errors"
+                      />
+                    </div>
                   </div>
 
                   <div class="mb-3">
@@ -255,14 +236,22 @@
 
                           <!-- Organization IDs -->
                           <div class="mb-3" v-if="condition.type === 'organization'">
-                            <label class="form-label">Organization IDs</label>
+                            <label class="form-label">Organizations</label>
                             <div v-for="(orgId, index) in condition.orgIds" :key="index" class="input-group mb-2">
-                              <input 
+                              <select 
                                 v-model="condition.orgIds[index]" 
-                                type="number" 
-                                class="form-control" 
-                                @change="updateConditionJson" 
-                              />
+                                class="form-select" 
+                                @change="updateConditionJson"
+                              >
+                                <option :value="null">Select an organization</option>
+                                <option 
+                                  v-for="org in organizations" 
+                                  :key="org.id" 
+                                  :value="org.id"
+                                >
+                                  {{ org.name }}
+                                </option>
+                              </select>
                               <button 
                                 type="button" 
                                 class="btn btn-outline-danger" 
@@ -273,7 +262,7 @@
                               </button>
                             </div>
                             <button type="button" class="btn btn-outline-primary btn-sm" @click="addOrgId">
-                              <i class="bi bi-plus-lg me-2"></i>Add Organization ID
+                              <i class="bi bi-plus-lg me-2"></i>Add Organization
                             </button>
                           </div>
                         </template>
@@ -310,22 +299,35 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePolicyStore } from '../../stores/policies'
-import { resourceService } from '../../services/resourceService'
+import { useResourceStore } from '../../stores/resources'
+import { useOrganizationStore } from '../../stores/organizations'
+import { useRoleStore } from '../../stores/roles'
 import { Modal } from 'bootstrap'
+import { useToast } from 'vue-toastification'
+import SubjectSelector from '../../components/policies/SubjectSelector.vue'
 
 const router = useRouter()
 const route = useRoute()
 const policyStore = usePolicyStore()
+const resourceStore = useResourceStore()
+const organizationStore = useOrganizationStore()
+const roleStore = useRoleStore()
+const toast = useToast()
 const loading = ref(true)
 const resources = ref([])
+const organizations = ref([])
 const discardModal = ref(null)
 
 const form = ref({
-  subjectType: '',
-  subjectId: null,
+  name: '',
+  description: '',
+  subject: {
+    subjectType: '',
+    subjectId: ''
+  },
   resourceId: null,
   action: '',
   effect: '',
@@ -333,6 +335,8 @@ const form = ref({
 })
 
 const errors = ref({
+  name: '',
+  description: '',
   subjectType: '',
   subjectId: '',
   resourceId: '',
@@ -352,42 +356,98 @@ const condition = ref({
 })
 
 const isFormValid = computed(() => {
-  return form.value.subjectType &&
-         form.value.subjectId &&
+  const valid = form.value.name &&
+         form.value.subject.subjectType &&
+         form.value.subject.subjectId &&
          form.value.resourceId &&
          form.value.action &&
          form.value.effect
+
+  console.log('Form validation check:', {
+    name: form.value.name,
+    subjectType: form.value.subject.subjectType,
+    subjectId: form.value.subject.subjectId,
+    resourceId: form.value.resourceId,
+    action: form.value.action,
+    effect: form.value.effect,
+    isValid: valid
+  })
+  
+  return valid
 })
 
 onMounted(async () => {
   discardModal.value = new Modal(document.getElementById('discardModal'))
-  await Promise.all([loadResources(), loadPolicy()])
+  await Promise.all([
+    loadResources(),
+    loadPolicy(),
+    loadOrganizations()
+  ])
   loading.value = false
 })
 
 const loadResources = async () => {
   try {
-    resources.value = await resourceService.getResources()
+    await resourceStore.fetchResources()
+    resources.value = resourceStore.resources
   } catch (error) {
-    console.error('Failed to load resources')
+    console.error('Failed to load resources:', error)
+    toast.error('Failed to load resources')
+  }
+}
+
+const loadOrganizations = async () => {
+  try {
+    await organizationStore.fetchOrganizations()
+    organizations.value = organizationStore.organizations
+  } catch (error) {
+    console.error('Failed to load organizations:', error)
+    toast.error('Failed to load organizations')
   }
 }
 
 const loadPolicy = async () => {
   try {
+    console.log('Loading policy:', route.params.id)
     const policy = await policyStore.fetchPolicyById(route.params.id)
-    form.value = {
-      subjectType: policy.subjectType,
-      subjectId: policy.subjectId,
-      resourceId: policy.resource.id,
-      action: policy.action,
-      effect: policy.effect,
-      conditionJson: policy.conditionJson
+    console.log('Loaded policy:', policy)
+
+    if (!policy) {
+      throw new Error('Policy not found')
     }
 
+    // Generate a default name if not provided
+    const defaultName = `${policy.subjectType}_${policy.action}_${policy.resourceId}`
+
+    // Update form with policy data
+    form.value = {
+      name: policy.name || defaultName,
+      description: policy.description || '',
+      subject: {
+        subjectType: policy.subjectType || '',
+        subjectId: policy.subjectId || ''
+      },
+      resourceId: policy.resourceId || null,
+      action: policy.action || '',
+      effect: policy.effect || '',
+      conditionJson: policy.conditionJson || ''
+    }
+
+    console.log('Form after loading:', form.value)
+    console.log('Form validation check:', {
+      name: !!form.value.name,
+      subjectType: !!form.value.subject.subjectType,
+      subjectId: !!form.value.subject.subjectId,
+      resourceId: !!form.value.resourceId,
+      action: !!form.value.action,
+      effect: !!form.value.effect
+    })
+
+    // Load condition data if exists
     if (policy.conditionJson) {
       try {
         const conditionData = JSON.parse(policy.conditionJson)
+        console.log('Parsed condition data:', conditionData)
         condition.value = {
           type: conditionData.type || '',
           operator: conditionData.operator || '',
@@ -402,7 +462,16 @@ const loadPolicy = async () => {
         console.error('Error parsing condition JSON:', e)
       }
     }
+
+    // Load resources if not already loaded
+    if (!resources.value.length) {
+      await loadResources()
+    }
+
+    loading.value = false
   } catch (error) {
+    console.error('Failed to load policy:', error)
+    toast.error('Failed to load policy details')
     router.push('/policies')
   }
 }
@@ -411,13 +480,18 @@ const validateField = (field) => {
   errors.value[field] = ''
   
   switch (field) {
+    case 'name':
+      if (!form.value.name) {
+        errors.value.name = 'Name is required'
+      }
+      break
     case 'subjectType':
-      if (!form.value.subjectType) {
+      if (!form.value.subject.subjectType) {
         errors.value.subjectType = 'Subject type is required'
       }
       break
     case 'subjectId':
-      if (!form.value.subjectId) {
+      if (!form.value.subject.subjectId) {
         errors.value.subjectId = 'Subject ID is required'
       }
       break
@@ -437,6 +511,11 @@ const validateField = (field) => {
       }
       break
   }
+  
+  console.log(`Validating field ${field}:`, {
+    value: form.value[field],
+    error: errors.value[field]
+  })
 }
 
 const updateConditionJson = () => {
@@ -513,10 +592,24 @@ const savePolicy = async () => {
 
   loading.value = true
   try {
-    await policyStore.updatePolicy(route.params.id, form.value)
+    // Prepare the policy data
+    const policyData = {
+      name: form.value.name,
+      description: form.value.description,
+      subjectType: form.value.subject.subjectType,
+      subjectId: form.value.subject.subjectId,
+      resourceId: form.value.resourceId,
+      action: form.value.action,
+      effect: form.value.effect,
+      conditionJson: form.value.conditionJson
+    }
+
+    await policyStore.updatePolicy(route.params.id, policyData)
+    toast.success('Policy updated successfully')
     router.push('/policies')
   } catch (error) {
-    // Error handling is done in the store
+    console.error('Failed to update policy:', error)
+    toast.error('Failed to update policy')
   } finally {
     loading.value = false
   }

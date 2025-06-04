@@ -75,6 +75,18 @@
           </router-link>
         </div>
 
+        <div class="nav-section" v-if="authStore.can('CLIENT_READ')">
+          <h6 class="nav-section-title" v-show="isExpanded">Client Management</h6>
+          <router-link 
+            to="/clients" 
+            class="nav-link"
+            :class="{ 'collapsed': !isExpanded }"
+          >
+            <i class="bi bi-app"></i>
+            <span v-show="isExpanded">Clients</span>
+          </router-link>
+        </div>
+
         <div class="nav-section" v-if="authStore.can('ORGANIZATION_READ')">
           <h6 class="nav-section-title" v-show="isExpanded">Organization</h6>
           <router-link 
@@ -84,6 +96,18 @@
           >
             <i class="bi bi-building"></i>
             <span v-show="isExpanded">Organizations</span>
+          </router-link>
+        </div>
+
+        <div class="nav-section" v-if="authStore.can('PRODUCT_READ')">
+          <h6 class="nav-section-title" v-show="isExpanded">Product Management</h6>
+          <router-link 
+            to="/products" 
+            class="nav-link"
+            :class="{ 'collapsed': !isExpanded }"
+          >
+            <i class="bi bi-bag"></i>
+            <span v-show="isExpanded">Products</span>
           </router-link>
         </div>
       </nav>

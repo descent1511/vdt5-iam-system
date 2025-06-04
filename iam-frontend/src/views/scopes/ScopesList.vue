@@ -1,90 +1,35 @@
 <template>
-  <div>
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h2 mb-0">Scopes</h1>
-      
-      <router-link to="/scopes/create" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-2"></i> New Scope
-      </router-link>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="scopeStore.loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-2">Loading scopes...</p>
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="scopeStore.error" class="alert alert-danger">
-      {{ scopeStore.error }}
-    </div>
-
-    <!-- Empty State -->
-    <div v-else-if="scopeStore.scopes.length === 0" class="card">
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Permissions</th>
-                <th>Created At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="5">
-                  <div class="text-center py-4">
-                    <div class="text-muted">
-                      <i class="bi bi-shield-lock fs-4 d-block mb-2"></i>
-                      No scopes found
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Scopes Table -->
-    <div v-else>
-      <div class="card">
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Permissions</th>
-                  <th>Created At</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="scope in scopeStore.scopes" :key="scope.id">
-                  <td>
+  <DataList
+    ref="dataList"
+    title="Scopes"
+    :items="scopeStore.scopes"
+    :columns="columns"
+    :can-create="hasPermission('SCOPE_CREATE')"
+    create-route="/scopes/create"
+    create-button-text="New Scope"
+    search-placeholder="Search scopes..."
+    :search-fields="['name', 'description']"
+    :loading="scopeStore.loading"
+    :error="scopeStore.error"
+    @delete="deleteScope"
+  >
+    <!-- Custom column slots -->
+    <template #name="{ item }">
                     <div class="d-flex align-items-center">
                       <i class="bi bi-shield-lock text-primary me-2"></i>
-                      <span class="fw-medium">{{ scope.name }}</span>
+        <span class="fw-medium">{{ item.name }}</span>
                     </div>
-                  </td>
-                  <td>{{ scope.description }}</td>
-                  <td>
+    </template>
+
+    <template #permissions="{ item }">
                     <div class="permissions-container">
-                      <div class="permissions-wrapper" :class="{ 'expanded': scope.showAllPermissions }">
+        <div class="permissions-wrapper" :class="{ 'expanded': item.showAllPermissions }">
                         <span class="permission-count">
-                          {{ scope.permissions.length }} permissions
+            {{ item.permissions.length }} permissions
                         </span>
-                        <div class="permissions-list" :class="{ 'show': scope.showAllPermissions }">
+          <div class="permissions-list" :class="{ 'show': item.showAllPermissions }">
                           <span 
-                            v-for="permission in scope.permissions" 
+              v-for="permission in item.permissions" 
                             :key="permission"
                             class="permission-badge"
                           >
@@ -95,10 +40,10 @@
                       </div>
                       <button 
                         class="btn btn-sm btn-link toggle-btn"
-                        @click="togglePermissions(scope)"
+          @click="togglePermissions(item)"
                       >
                         <span class="toggle-content">
-                          <span v-if="!scope.showAllPermissions">
+            <span v-if="!item.showAllPermissions">
                             Detail
                             <i class="bi bi-chevron-down"></i>
                           </span>
@@ -109,87 +54,53 @@
                         </span>
                       </button>
                     </div>
-                  </td>
-                  <td>{{ formatDate(scope.createdAt) }}</td>
-                  <td>
-                    <div class="btn-group">
-                      <router-link 
-                        :to="'/scopes/' + scope.id + '/edit'" 
-                        class="btn btn-sm btn-outline-primary"
-                      >
-                        <i class="bi bi-pencil"></i>
-                      </router-link>
-                      <button 
-                        class="btn btn-sm btn-outline-danger"
-                        @click="confirmDelete(scope)"
-                      >
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+    </template>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" ref="deleteModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Delete Scope</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <p>Are you sure you want to delete the scope "{{ scopeToDelete?.name }}"?</p>
-            <p class="text-danger mb-0">This action cannot be undone.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button 
-              type="button" 
-              class="btn btn-danger"
-              @click="deleteScope"
-              :disabled="scopeStore.loading"
-            >
-              <span v-if="scopeStore.loading" class="spinner-border spinner-border-sm me-2"></span>
-              Delete Scope
-            </button>
-          </div>
-        </div>
+    <template #createdAt="{ item }">
+      {{ formatDate(item.createdAt) }}
+    </template>
+
+    <template #actions="{ item }">
+      <div class="d-flex justify-content-end gap-2">
+        <router-link 
+          v-if="hasPermission('SCOPE_UPDATE')"
+          :to="`/scopes/${item.id}/edit`" 
+          class="btn btn-sm btn-outline-primary"
+          title="Edit Scope"
+        >
+          <i class="bi bi-pencil"></i>
+        </router-link>
+        <button 
+          v-if="hasPermission('SCOPE_DELETE') && deletingScopeId !== item.id"
+          class="btn btn-sm btn-outline-danger"
+          @click="confirmDelete(item)"
+          title="Delete Scope"
+        >
+          <i class="bi bi-trash"></i>
+        </button>
       </div>
-    </div>
-  </div>
+    </template>
+  </DataList>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useScopeStore } from '../../stores/scopes'
-import { useToast } from 'vue-toastification'
-import { Modal } from 'bootstrap'
+import { useAuthStore } from '../../stores/auth'
+import DataList from '../../components/layout/DataList.vue'
 
 const scopeStore = useScopeStore()
-const toast = useToast()
+const authStore = useAuthStore()
+const dataList = ref(null)
+const deletingScopeId = ref(null)
 
-const deleteModal = ref(null)
-const scopeToDelete = ref(null)
-let modal = null
-
-onMounted(async () => {
-  await loadScopes()
-  modal = new Modal(deleteModal.value)
-})
-
-async function loadScopes() {
-  try {
-    await scopeStore.fetchScopes()
-  } catch (error) {
-    toast.error('Failed to load scopes')
-  }
-}
+const columns = [
+  { key: 'name', label: 'Name' },
+  { key: 'description', label: 'Description' },
+  { key: 'permissions', label: 'Permissions' },
+  { key: 'createdAt', label: 'Created At' },
+  { key: 'actions', label: 'Actions', class: 'text-end' }
+]
 
 function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -200,21 +111,46 @@ function formatDate(dateString) {
 }
 
 function confirmDelete(scope) {
-  scopeToDelete.value = scope
-  modal.show()
+  if (!hasPermission('SCOPE_DELETE')) {
+    console.warn('User does not have SCOPE_DELETE permission')
+    return
+  }
+  console.log('Confirming delete for scope:', scope)
+  scopeStore.selectedScope = scope
+  deletingScopeId.value = scope.id
+  dataList.value.showDeleteModal()
 }
 
 async function deleteScope() {
-  if (!scopeToDelete.value) return
-
-  try {
-    await scopeStore.deleteScope(scopeToDelete.value.id)
-    toast.success('Scope deleted successfully')
-    modal.hide()
-    scopeToDelete.value = null
-  } catch (error) {
-    toast.error('Failed to delete scope')
+  if (!scopeStore.selectedScope) {
+    console.warn('No scope selected for deletion')
+    return
   }
+  if (!hasPermission('SCOPE_DELETE')) {
+    console.warn('User does not have SCOPE_DELETE permission')
+    return
+  }
+
+  console.log('Attempting to delete scope:', scopeStore.selectedScope)
+  try {
+    const result = await scopeStore.deleteScope(scopeStore.selectedScope.id)
+    console.log('Delete result:', result)
+    if (result) {
+      await loadScopes()
+      dataList.value.hideDeleteModal()
+      scopeStore.selectedScope = null
+      deletingScopeId.value = null
+    } else {
+      console.error('Delete operation returned false')
+    }
+  } catch (error) {
+    console.error('Failed to delete scope:', error)
+    deletingScopeId.value = null
+  }
+}
+
+function hasPermission(permission) {
+  return authStore.can(permission)
 }
 
 function togglePermissions(scope) {
@@ -230,122 +166,62 @@ function formatPermissionAction(permission) {
   const action = permission.split('_')[1].toLowerCase()
   return action.charAt(0).toUpperCase() + action.slice(1)
 }
+
+async function loadScopes() {
+  await scopeStore.fetchScopes()
+}
+
+onMounted(loadScopes)
 </script>
 
 <style scoped>
-.card {
-  border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-}
-
-.table {
+/* Table styles */
+:deep(.table) {
   margin-bottom: 0;
 }
 
-.table th {
+:deep(.table th) {
   font-weight: 500;
   color: #2c3e50;
   border-top: none;
   padding: 1rem;
   background-color: #f8f9fa;
+  white-space: nowrap;
 }
 
-.table td {
+:deep(.table td) {
   padding: 1rem;
   vertical-align: middle;
+  border-bottom: 1px solid #e9ecef;
 }
 
-.badge {
-  font-weight: 500;
-  padding: 0.35em 0.65em;
-  font-size: 0.75rem;
-  background-color: #e9ecef;
-  color: #495057;
-}
-
-.btn-group .btn {
-  padding: 0.25rem 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.btn-group .btn:hover {
-  transform: translateY(-1px);
-}
-
-.btn-group .btn i {
-  font-size: 0.875rem;
-}
-
-.empty-state {
-  padding: 4rem 2rem;
-  text-align: center;
+:deep(.table tr:hover) {
   background-color: #f8f9fa;
-  border-radius: 12px;
-  margin: 2rem 0;
 }
 
-.empty-state-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 1.5rem;
-  background-color: #e9ecef;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Column specific styles */
+:deep(.table td:nth-child(1)) { /* Name column */
+  min-width: 200px;
 }
 
-.empty-state-icon i {
-  font-size: 2.5rem;
-  color: #6c757d;
+:deep(.table td:nth-child(2)) { /* Description column */
+  min-width: 250px;
 }
 
-.empty-state h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.75rem;
+:deep(.table td:nth-child(3)) { /* Permissions column */
+  min-width: 300px;
 }
 
-.empty-state p {
-  font-size: 1rem;
-  margin-bottom: 1.5rem;
-}
-/* Loading state */
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
+:deep(.table td:nth-child(4)) { /* Created At column */
+  min-width: 120px;
 }
 
-.loading-text {
-  margin-top: 1rem;
-  color: #6c757d;
-  font-size: 1rem;
+:deep(.table td:nth-child(5)) { /* Actions column */
+  min-width: 100px;
+  text-align: right;
 }
 
-/* Modal styles */
-.modal-content {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 1.25rem;
-}
-
-.modal-footer {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 1.25rem;
-}
-
-.modal-title {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
+/* Permissions container styles */
 .permissions-container {
   position: relative;
   min-width: 150px;
@@ -467,5 +343,53 @@ function formatPermissionAction(permission) {
 
 .permissions-list.show + .toggle-btn i {
   transform: rotate(180deg);
+}
+
+/* Action buttons */
+:deep(.btn-group) {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+:deep(.btn-group .btn) {
+  padding: 0.375rem 0.5rem;
+  line-height: 1;
+}
+
+:deep(.btn-group .btn i) {
+  font-size: 0.875rem;
+}
+
+/* Card styles */
+:deep(.card) {
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+:deep(.card-body) {
+  padding: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :deep(.table td),
+  :deep(.table th) {
+    padding: 0.75rem;
+  }
+  
+  :deep(.table td:nth-child(1)) {
+    min-width: 150px;
+  }
+  
+  :deep(.table td:nth-child(2)) {
+    min-width: 200px;
+  }
+  
+  :deep(.table td:nth-child(3)) {
+    min-width: 250px;
+  }
 }
 </style> 
