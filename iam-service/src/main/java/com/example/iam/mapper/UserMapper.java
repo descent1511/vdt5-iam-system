@@ -7,21 +7,25 @@ import com.example.iam.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
     @Mapping(source = "organization.id", target = "organization_id")
     @Mapping(source = "roles", target = "roles", qualifiedByName = "mapRoleNames")
     @Mapping(target = "permissions", expression = "java(mapPermissions(user))")
+    @Mapping(target = "password", ignore = true)
     UserDTO toDTO(User user);
 
     @Mapping(target = "organization", ignore = true)
-    @Mapping(target = "roles", ignore = true) 
+    @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "scopes", ignore = true)
+    @Mapping(target = "enabled", constant = "true")
     User toEntity(UserDTO dto);
 
     List<UserDTO> toDTOList(List<User> users);
@@ -34,7 +38,6 @@ public interface UserMapper {
             .collect(Collectors.toSet()) : null;
     }
 
-    @Named("mapPermissions")
     default Set<String> mapPermissions(User user) {
         if (user == null || user.getRoles() == null) {
             return null;

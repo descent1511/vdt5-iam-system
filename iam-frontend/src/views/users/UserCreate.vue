@@ -201,7 +201,6 @@ onMounted(async () => {
     roles.value = rolesData
     
     const  organizationsData = await organizationStore.fetchOrganizations()
-    console.log(organizationsData)
     organizations.value = organizationsData
   } catch (error) {
     console.error('Failed to load form data:', error)

@@ -137,7 +137,6 @@ onMounted(async () => {
         stock: product.stock || 0,
         status: product.status || 'ACTIVE'
       }
-      console.log('Form populated with product data:', form.value)
     } else {
       console.warn('No product data found')
     }

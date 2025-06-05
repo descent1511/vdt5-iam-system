@@ -81,7 +81,6 @@ export const useUserStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      console.log(userData)
       const data = await userService.updateUser(id, userData)
       
       // Update the user in the users array

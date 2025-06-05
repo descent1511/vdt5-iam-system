@@ -8,6 +8,10 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@SuperBuilder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseDTO {
     private Long id;
 
@@ -20,6 +24,7 @@ public class BaseDTO {
     private String createdBy;
     private String updatedBy;
 
-
-
+    public BaseDTO() {
+        // Required for deserialization
+    }
 } 

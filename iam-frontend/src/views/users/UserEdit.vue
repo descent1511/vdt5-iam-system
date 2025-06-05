@@ -443,9 +443,6 @@ async function loadUserData() {
         } else if (userData.organization_id) {
           form.organization_id = userData.organization_id
         }
-        
-        console.log('Loaded user data:', userData)
-        console.log('Set organization_id to:', form.organization_id)
       }
     } catch (error) {
       toast.error('Failed to load user data')

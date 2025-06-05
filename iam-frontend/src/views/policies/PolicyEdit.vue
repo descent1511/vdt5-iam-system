@@ -1,15 +1,5 @@
 <template>
   <div>
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-          <router-link to="/policies">Policies</router-link>
-        </li>
-        <li class="breadcrumb-item active" aria-current="page">Edit Policy</li>
-      </ol>
-    </nav>
-
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="h2 mb-0">Edit Policy</h1>
       <div>
@@ -362,17 +352,6 @@ const isFormValid = computed(() => {
          form.value.resourceId &&
          form.value.action &&
          form.value.effect
-
-  console.log('Form validation check:', {
-    name: form.value.name,
-    subjectType: form.value.subject.subjectType,
-    subjectId: form.value.subject.subjectId,
-    resourceId: form.value.resourceId,
-    action: form.value.action,
-    effect: form.value.effect,
-    isValid: valid
-  })
-  
   return valid
 })
 
@@ -408,9 +387,7 @@ const loadOrganizations = async () => {
 
 const loadPolicy = async () => {
   try {
-    console.log('Loading policy:', route.params.id)
     const policy = await policyStore.fetchPolicyById(route.params.id)
-    console.log('Loaded policy:', policy)
 
     if (!policy) {
       throw new Error('Policy not found')
@@ -432,22 +409,10 @@ const loadPolicy = async () => {
       effect: policy.effect || '',
       conditionJson: policy.conditionJson || ''
     }
-
-    console.log('Form after loading:', form.value)
-    console.log('Form validation check:', {
-      name: !!form.value.name,
-      subjectType: !!form.value.subject.subjectType,
-      subjectId: !!form.value.subject.subjectId,
-      resourceId: !!form.value.resourceId,
-      action: !!form.value.action,
-      effect: !!form.value.effect
-    })
-
     // Load condition data if exists
     if (policy.conditionJson) {
       try {
         const conditionData = JSON.parse(policy.conditionJson)
-        console.log('Parsed condition data:', conditionData)
         condition.value = {
           type: conditionData.type || '',
           operator: conditionData.operator || '',
@@ -511,11 +476,7 @@ const validateField = (field) => {
       }
       break
   }
-  
-  console.log(`Validating field ${field}:`, {
-    value: form.value[field],
-    error: errors.value[field]
-  })
+
 }
 
 const updateConditionJson = () => {

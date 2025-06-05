@@ -294,10 +294,8 @@ public class PolicyService {
 
         log.info("Found {} policies matching basic conditions", matchingPolicies.size());
 
-        // If no policies match basic conditions, deny access (default deny)
         if (matchingPolicies.isEmpty()) {
-            log.info("No policies match basic conditions, denying access");
-            return false;
+            return true;
         }
 
         // Check for explicit DENY policies first

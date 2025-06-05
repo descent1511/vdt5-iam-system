@@ -18,6 +18,8 @@ public class RoleMapper {
         dto.setId(role.getId());
         dto.setName(role.getName());
         dto.setDescription(role.getDescription());
+        dto.setCreatedAt(role.getCreatedAt());
+        dto.setUpdatedAt(role.getUpdatedAt());
         dto.setPermissions(role.getPermissions().stream()
             .map(permission -> permission.getName())
             .collect(Collectors.toSet()));

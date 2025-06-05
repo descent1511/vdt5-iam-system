@@ -3,12 +3,14 @@ package com.example.iam.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PolicyDTO {
+@SuperBuilder
+public class PolicyDTO extends BaseDTO {
     private Long id;
     private Long subjectId;
     private String subjectType;

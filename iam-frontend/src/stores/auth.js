@@ -19,21 +19,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Permission checking
   function can(permissions) {
-    console.log('Checking permission:', permissions)
-    console.log('Current user:', user.value)
-    console.log('User permissions:', user.value?.permissions)
-    
     if (!user.value?.permissions) {
-      console.log('No permissions found for user')
       return false
     }
     if (Array.isArray(permissions)) {
       const result = permissions.every(permission => user.value.permissions.includes(permission))
-      console.log('Array permission check result:', result)
       return result
     }
     const result = user.value.permissions.includes(permissions)
-    console.log('Single permission check result:', result)
     return result
   }
 
