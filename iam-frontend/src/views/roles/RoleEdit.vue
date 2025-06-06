@@ -265,50 +265,6 @@
                       </td>
                     </tr>
 
-                    <!-- Organization Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-building"></i>
-                        Organization Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasOrganizationRead"
-                          @change="togglePermission('organizations', 'read')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasOrganizationCreate"
-                          @change="togglePermission('organizations', 'create')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasOrganizationUpdate"
-                          @change="togglePermission('organizations', 'update')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasOrganizationDelete"
-                          @change="togglePermission('organizations', 'delete')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                    </tr>
-
                     <!-- Scope Management -->
                     <tr>
                       <td>

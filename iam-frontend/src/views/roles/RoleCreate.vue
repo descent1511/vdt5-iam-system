@@ -236,46 +236,6 @@
                       </td>
                     </tr>
 
-                    <!-- Organization Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-building"></i>
-                        Organization Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasOrganizationRead"
-                          @change="togglePermission('organizations', 'read')"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasOrganizationCreate"
-                          @change="togglePermission('organizations', 'create')"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasOrganizationUpdate"
-                          @change="togglePermission('organizations', 'update')"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasOrganizationDelete"
-                          @change="togglePermission('organizations', 'delete')"
-                        >
-                      </td>
-                    </tr>
-
                     <!-- Scope Management -->
                     <tr>
                       <td>

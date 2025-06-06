@@ -90,6 +90,7 @@ async function deleteOrganization() {
   try {
     await orgStore.deleteOrganization(orgStore.selectedOrganization.id)
     await loadOrganizations()
+    dataList.value.hideDeleteModal()
   } catch (error) {
     console.error('Failed to delete organization:', error)
   }
