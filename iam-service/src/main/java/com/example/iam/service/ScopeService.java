@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashSet;
+import com.example.iam.entity.Organization;
+import com.example.iam.repository.OrganizationRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,9 @@ public class ScopeService {
 
     @Autowired
     private PermissionRepository permissionRepository;
+
+    @Autowired
+    private OrganizationRepository organizationRepository;
 
     public List<Scope> getAllScopes() {
         return scopeRepository.findAll();

@@ -21,13 +21,9 @@ import java.util.Set;
 @SuperBuilder
 public class User extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
-    private Organization organization;
-
     @NotBlank
     @Size(min = 3, max = 50)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String username;
 
     @Email
@@ -63,6 +59,9 @@ public class User extends BaseEntity {
     )
     @Builder.Default
     private Set<Scope> scopes = new HashSet<>();
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     public void addRole(Role role) {
         roles.add(role);

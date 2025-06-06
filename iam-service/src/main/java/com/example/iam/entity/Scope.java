@@ -28,11 +28,15 @@ public class Scope extends BaseEntity {
 
     @NotBlank
     @Size(min = 3, max = 100)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

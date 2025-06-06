@@ -23,7 +23,7 @@ public class Role extends BaseEntity {
 
     @NotBlank
     @Size(min = 3, max = 50)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @Column(columnDefinition = "TEXT")

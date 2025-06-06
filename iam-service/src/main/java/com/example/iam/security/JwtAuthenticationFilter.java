@@ -7,17 +7,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import java.util.Set;
 import java.io.IOException;
-import java.util.stream.Collectors;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import lombok.extern.slf4j.Slf4j;
+import com.example.iam.exception.InvalidTokenException;
+import org.springframework.security.core.AuthenticationException;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -27,70 +27,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String jwt = getJwtFromRequest(request);
-        logger.info("JWT from request: " + jwt);
         
+        try {
+        String jwt = getJwtFromRequest(request);
+
         if (StringUtils.hasText(jwt)) {
-            try {
-                logger.info("Validating token...");
-                if (tokenProvider.validateToken(jwt)) {
-                    String subject = tokenProvider.getSubjectFromJWT(jwt);
-                    String subjectType = tokenProvider.getSubjectTypeFromJWT(jwt);
-                    logger.info("Token validated - Subject: " + subject + ", Type: " + subjectType);
+                // This will throw InvalidTokenException for any validation failures.
+                tokenProvider.validateToken(jwt);
+
+                // Token is valid, set up the security context
+                    Long organizationId = tokenProvider.getOrganizationIdFromJWT(jwt);
+                    OrganizationContextHolder.setOrganizationId(organizationId);
                     
-                    Set<String> authorities;
+                String subject = tokenProvider.getSubjectFromJWT(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(subject);
     
-                    if ("user".equals(subjectType)) {
-                        String username = tokenProvider.getUsernameFromJWT(jwt);
-                        logger.info("Processing user authentication for username: " + username);
-                        
-                        var userDetails = userDetailsService.loadUserByUsername(username);
-                        logger.info("UserDetails loaded: " + (userDetails != null ? "success" : "null"));
-                        
-                        authorities = userDetails.getAuthorities().stream()
-                            .map(GrantedAuthority::getAuthority)
-                            .collect(Collectors.toSet());
-                        logger.info("User authorities: " + authorities);
-                        
-                    } else if ("client".equals(subjectType)) {
-                        String client_id = tokenProvider.getClientIdFromJWT(jwt);
-                        logger.info("Processing client authentication for client_id: " + client_id);
-                        
-                        var userDetails = userDetailsService.loadUserByUsername(client_id);
-                        logger.info("Client UserDetails loaded: " + (userDetails != null ? "success" : "null"));
-                        
-                        authorities = userDetails.getAuthorities().stream()
-                            .map(GrantedAuthority::getAuthority)
-                            .collect(Collectors.toSet());
-                        logger.info("Client authorities: " + authorities);
-                    } else {
-                        logger.error("Invalid subject type: " + subjectType);
-                        throw new IllegalArgumentException("Invalid subject type: " + subjectType);
-                    }
-    
-                    logger.info("Creating authentication token with subject: " + subject + " and authorities: " + authorities);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            subject,
-                            jwt,
-                            authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
-                    );
+                        userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    logger.info("Authentication set in SecurityContext");
-                } else {
-                    logger.warn("Token validation failed");
-                }
-            } catch (Exception ex) {
-                logger.error("Token validation error: " + ex.getMessage(), ex);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid or expired token");
-                return;
+                log.info("Authentication set for subject: {}", subject);
             }
-        } else {
-            logger.debug("No JWT token found in request");
-        }
-    
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+        } catch (AuthenticationException e) {
+            log.error("Authentication error in JWT filter: {}", e.getMessage());
+            // The exception is now an AuthenticationException (or subclass like InvalidTokenException)
+            // It will be handled by the DelegatedAuthenticationEntryPoint
+            throw e;
+            } finally {
+            // Always clear the organization context after the request has been handled
+                OrganizationContextHolder.clear();
+            }
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {

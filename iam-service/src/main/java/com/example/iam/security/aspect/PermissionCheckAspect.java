@@ -34,15 +34,25 @@ public class PermissionCheckAspect {
     private final PolicyService policyService;
     private final UserService userService;
 
+    private static final String SUPER_ADMIN_ROLE = "ROLE_SUPER_ADMIN";
+
     @Around("@annotation(com.example.iam.security.annotation.RequirePermission)")
     public Object checkPermission(ProceedingJoinPoint joinPoint) throws Throwable {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Super admin bypasses all permission checks
+        if (authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(SUPER_ADMIN_ROLE))) {
+            log.info("User is a super admin, bypassing permission check.");
+            return joinPoint.proceed();
+        }
+        
         // Get the annotation from the method
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         RequirePermission requirePermission = signature.getMethod().getAnnotation(RequirePermission.class);
         String requiredPermission = requirePermission.value();
         log.info("Checking permission: {}", requiredPermission);
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             log.error("User is not authenticated");
             throw new AccessDeniedException("User is not authenticated");

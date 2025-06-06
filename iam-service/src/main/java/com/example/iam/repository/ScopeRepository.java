@@ -12,4 +12,5 @@ public interface ScopeRepository extends JpaRepository<Scope, Long> {
     Optional<Scope> findByName(String name);
     boolean existsByName(String name);
     Set<Scope> findByNameIn(Set<String> names);
+    Optional<Scope> findByIdAndOrganizationId(Long id, Long organizationId);
 } 

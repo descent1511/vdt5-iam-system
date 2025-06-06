@@ -1,19 +1,20 @@
 package com.example.iam.dto;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 import java.time.LocalDateTime;
-
+import com.example.iam.entity.Policy.Effect;
+import com.example.iam.entity.Policy.SubjectType;
+import lombok.NoArgsConstructor;
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 public class PolicyDTO extends BaseDTO {
     private Long id;
     private Long subjectId;
-    private String subjectType;
+    private SubjectType subjectType;
     private Long resourceId;
     private Long scopeId;
     private String conditionJson;
@@ -21,5 +22,5 @@ public class PolicyDTO extends BaseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String action;
-    private String effect;
+    private Effect effect;
 }
