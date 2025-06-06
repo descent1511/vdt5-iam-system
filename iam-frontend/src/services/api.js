@@ -13,10 +13,22 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    // Get organization ID from localStorage
+    const organizationId = localStorage.getItem('organizationId')
+    
+    // If organization ID exists, add it to headers
+    if (organizationId) {
+      config.headers['X-Organization-ID'] = organizationId
     }
+    
+    // Get token from localStorage
+    const token = localStorage.getItem('token')
+    
+    // If token exists, add it to headers
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`
+    }
+    
     return config
   },
   (error) => {
@@ -30,16 +42,53 @@ api.interceptors.response.use(
   (response) => {
     return response.data
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config
+
+    // If error is 401 and we haven't tried to refresh token yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+
+      try {
+        // Try to refresh token
+        const refreshToken = localStorage.getItem('refreshToken')
+        if (!refreshToken) {
+          throw new Error("No refresh token found");
+        }
+        const response = await api.post('/auth/refresh-token', { refreshToken })
+        
+        // Update tokens in localStorage
+        localStorage.setItem('token', response.accessToken)
+        localStorage.setItem('refreshToken', response.refreshToken)
+        
+        // Update authorization header
+        originalRequest.headers['Authorization'] = `Bearer ${response.accessToken}`
+        
+        // Retry the original request
+        return api(originalRequest)
+      } catch (refreshError) {
+        console.error('Failed to refresh token:', refreshError)
+        // If refresh token fails, redirect to login
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('organizationId')
+        window.location.href = '/login'
+        return Promise.reject(refreshError)
+      }
+    }
+
+    // Handle specific JWT algorithm mismatch error
+    if (error.response?.data?.message?.includes('HS256')) {
+        console.warn('Mismatched JWT algorithm. Clearing tokens and redirecting to login.')
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('organizationId')
+        window.location.href = '/login'
+        return Promise.reject(error);
+    }
+
     console.error('API Error:', error)
     console.error('Error response:', error.response)
-    
-    if (error.response?.status === 401) {
-      // Clear tokens and redirect to login
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      window.location.href = '/login'
-    }
     
     // Extract error message from response
     const errorMessage = error.response?.data?.message || error.message || 'An error occurred'

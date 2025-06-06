@@ -84,28 +84,6 @@
           </span>
         </div>
       </div>
-
-      <!-- Organization Group -->
-      <div v-if="hasOrganizationPermissions" class="permission-group mb-3">
-        <h6 class="group-title">
-          <i class="bi bi-building me-2"></i>Organizations
-        </h6>
-        <div class="permission-tags">
-          <span v-if="hasOrganizationRead" class="permission-tag bg-primary-subtle text-primary">
-            <i class="bi bi-eye me-1"></i>View
-          </span>
-          <span v-if="hasOrganizationCreate" class="permission-tag bg-success-subtle text-success">
-            <i class="bi bi-plus-lg me-1"></i>Create
-          </span>
-          <span v-if="hasOrganizationUpdate" class="permission-tag bg-warning-subtle text-warning">
-            <i class="bi bi-pencil me-1"></i>Edit
-          </span>
-          <span v-if="hasOrganizationDelete" class="permission-tag bg-danger-subtle text-danger">
-            <i class="bi bi-trash me-1"></i>Delete
-          </span>
-        </div>
-      </div>
-
       <!-- Client Group -->
       <div v-if="hasClientPermissions" class="permission-group mb-3">
         <h6 class="group-title">
@@ -210,13 +188,6 @@ const hasPolicyCreate = computed(() => props.permissions.includes('POLICY_CREATE
 const hasPolicyUpdate = computed(() => props.permissions.includes('POLICY_UPDATE'))
 const hasPolicyDelete = computed(() => props.permissions.includes('POLICY_DELETE'))
 const hasPolicyPermissions = computed(() => hasPolicyRead.value || hasPolicyCreate.value || hasPolicyUpdate.value || hasPolicyDelete.value)
-
-// Organization permissions
-const hasOrganizationRead = computed(() => props.permissions.includes('ORGANIZATION_READ'))
-const hasOrganizationCreate = computed(() => props.permissions.includes('ORGANIZATION_CREATE'))
-const hasOrganizationUpdate = computed(() => props.permissions.includes('ORGANIZATION_UPDATE'))
-const hasOrganizationDelete = computed(() => props.permissions.includes('ORGANIZATION_DELETE'))
-const hasOrganizationPermissions = computed(() => hasOrganizationRead.value || hasOrganizationCreate.value || hasOrganizationUpdate.value || hasOrganizationDelete.value)
 
 // Client permissions
 const hasClientRead = computed(() => props.permissions.includes('CLIENT_READ'))

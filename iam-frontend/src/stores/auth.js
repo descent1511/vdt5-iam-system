@@ -11,14 +11,27 @@ export const useAuthStore = defineStore('auth', () => {
   // State
   const user = ref(null)
   const token = ref(localStorage.getItem('token'))
+  const organizationId = ref(localStorage.getItem('organizationId'))
   const loading = ref(false)
   const error = ref(null)
 
   // Getters
   const isAuthenticated = computed(() => !!token.value)
+  const currentUser = computed(() => user.value)
+  const currentOrganizationId = computed(() => organizationId.value)
+  const isSuperAdmin = computed(() => {
+    const roles = user.value?.roles
+    if (!roles) return false
+    // Check for string array or object array
+    return roles.includes('ROLE_SUPER_ADMIN') || roles.some(role => role.name === 'SUPER_ADMIN')
+  })
 
   // Permission checking
   function can(permissions) {
+    if (isSuperAdmin.value) {
+      return true
+    }
+    
     if (!user.value?.permissions) {
       return false
     }
@@ -77,7 +90,9 @@ export const useAuthStore = defineStore('auth', () => {
 
       localStorage.setItem('token', response.accessToken)
       localStorage.setItem('refreshToken', response.refreshToken)
+      // Organization ID is already set in localStorage from Login.vue
       token.value = response.accessToken
+      organizationId.value = response.organizationId
 
       // Get user info after successful login
       await getCurrentUser()
@@ -88,6 +103,8 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       console.error('Login error in store:', err)
       error.value = err.message || 'Login failed'
+      // Clear organization ID on login failure
+      localStorage.removeItem('organizationId')
       toast.error(error.value)
       return false
     } finally {
@@ -124,10 +141,15 @@ export const useAuthStore = defineStore('auth', () => {
       // Clear state and storage
       user.value = null
       token.value = null
+      organizationId.value = null
       localStorage.removeItem('token')
       localStorage.removeItem('refreshToken')
+      localStorage.removeItem('organizationId')
       router.push('/login')
       toast.info('Logged out successfully')
+
+      // Clear organization ID from API headers
+      authService.setOrganizationId(null)
     }
   }
 
@@ -138,6 +160,8 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = response.accessToken
         localStorage.setItem('token', response.accessToken)
         localStorage.setItem('refreshToken', response.refreshToken)
+        localStorage.setItem('organizationId', response.organizationId)
+        organizationId.value = response.organizationId
       }
       return true
     } catch (err) {
@@ -149,11 +173,15 @@ export const useAuthStore = defineStore('auth', () => {
     // State
     user,
     token,
+    organizationId,
     loading,
     error,
 
     // Getters
     isAuthenticated,
+    currentUser,
+    currentOrganizationId,
+    isSuperAdmin,
 
     // Methods
     init,

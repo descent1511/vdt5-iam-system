@@ -75,6 +75,18 @@
           </router-link>
         </div>
 
+        <div class="nav-section" v-if="authStore.can('ORGANIZATION_READ')">
+          <h6 class="nav-section-title" v-show="isExpanded">Organization Management</h6>
+          <router-link 
+            to="/organizations" 
+            class="nav-link"
+            :class="{ 'collapsed': !isExpanded }"
+          >
+            <i class="bi bi-building"></i>
+            <span v-show="isExpanded">Organizations</span>
+          </router-link>
+        </div>
+
         <div class="nav-section" v-if="authStore.can('CLIENT_READ')">
           <h6 class="nav-section-title" v-show="isExpanded">Client Management</h6>
           <router-link 
@@ -87,17 +99,6 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('ORGANIZATION_READ')">
-          <h6 class="nav-section-title" v-show="isExpanded">Organization</h6>
-          <router-link 
-            to="/organizations" 
-            class="nav-link"
-            :class="{ 'collapsed': !isExpanded }"
-          >
-            <i class="bi bi-building"></i>
-            <span v-show="isExpanded">Organizations</span>
-          </router-link>
-        </div>
 
         <div class="nav-section" v-if="authStore.can('PRODUCT_READ')">
           <h6 class="nav-section-title" v-show="isExpanded">Product Management</h6>
@@ -160,16 +161,6 @@
           </transition>
         </router-view>
       </div>
-
-      <!-- Chat Button -->
-      <button 
-        class="chat-button" 
-        @click="toggleChat"
-        :class="{ 'active': isChatOpen }"
-      >
-        <i class="bi bi-chat-dots"></i>
-      </button>
-
     </main>
   </div>
 </template>
@@ -187,11 +178,6 @@ const isExpanded = ref(true)
 // Toggle sidebar
 function toggleSidebar() {
   isExpanded.value = !isExpanded.value
-}
-
-// Toggle chat
-function toggleChat() {
-  isChatOpen.value = !isChatOpen.value
 }
 
 // Get user initials for avatar
