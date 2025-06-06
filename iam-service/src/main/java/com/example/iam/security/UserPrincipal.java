@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @Builder
@@ -28,15 +29,27 @@ public class UserPrincipal implements UserDetails {
     private Set<Role> roles;
     private User user;
 
+    public Long getOrganizationId() {
+        return user != null ? user.getOrganization().getId() : null;
+    }
+
     public static UserPrincipal create(User user) {
-        List<GrantedAuthority> authorities = user.getRoles().stream()
+        // Collect permissions from roles
+        List<GrantedAuthority> permissionAuthorities = user.getRoles().stream()
                 .flatMap(role -> role.getPermissions().stream())
                 .map(permission -> new SimpleGrantedAuthority(permission.getName()))
                 .collect(Collectors.toList());
+        
+        // Collect role names as authorities
+        List<GrantedAuthority> roleAuthorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
+
+        // Combine both lists
+        List<GrantedAuthority> authorities = Stream.concat(permissionAuthorities.stream(), roleAuthorities.stream())
+                .collect(Collectors.toList());
 
         Set<Role> roles = user.getRoles();
-        System.out.println("UserPrincipal - User roles: " + roles.size());
-        roles.forEach(role -> System.out.println("Role: " + role.getName() + ", Permissions: " + role.getPermissions().size()));
 
         return UserPrincipal.builder()
                 .id(user.getId())

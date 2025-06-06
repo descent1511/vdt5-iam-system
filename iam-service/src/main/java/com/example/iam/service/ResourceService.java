@@ -2,6 +2,7 @@ package com.example.iam.service;
 
 import com.example.iam.entity.Resource;
 import com.example.iam.repository.ResourceRepository;
+// import com.example.iam.config.annotation.RequiresOrganizationContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

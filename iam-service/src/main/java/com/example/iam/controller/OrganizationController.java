@@ -15,7 +15,6 @@ public class OrganizationController {
     private final OrganizationService organizationService;
 
     @GetMapping
-    @RequirePermission(value = "ORGANIZATION_READ", description = "View list of organizations")
     public ResponseEntity<List<OrganizationDTO>> getAllOrganizations() {
         return ResponseEntity.ok(organizationService.getAllOrganizations());
     }

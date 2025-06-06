@@ -29,7 +29,6 @@ public class UserController {
     }
 
     @GetMapping
-    @RequirePermission(value = "USER_READ", description = "View list of users")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> users = userService.findAll();
         return ResponseEntity.ok(userMapper.toDTOList(users));

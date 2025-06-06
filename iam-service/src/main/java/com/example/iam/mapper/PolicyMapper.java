@@ -15,8 +15,8 @@ public interface PolicyMapper {
 
     @InheritInverseConfiguration
     @Mapping(target = "resource", expression = "java(mapResource(dto.getResourceId()))")
-    @Mapping(target = "subjectType", expression = "java(dto.getSubjectType() != null ? com.example.iam.entity.Policy.SubjectType.valueOf(dto.getSubjectType()) : null)")
-    @Mapping(target = "effect", expression = "java(dto.getEffect() != null ? com.example.iam.entity.Policy.Effect.valueOf(dto.getEffect()) : null)")
+    @Mapping(target = "subjectType", source = "subjectType")
+    @Mapping(target = "effect", source = "effect")
     Policy toEntity(PolicyDTO dto);
 
     default Resource mapResource(Long id) {

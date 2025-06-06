@@ -6,12 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "resources")
+@SuperBuilder
 public class Resource extends BaseEntity {
 
     @NotBlank 
@@ -29,7 +31,7 @@ public class Resource extends BaseEntity {
 
     @Column(name = "http_method", nullable = false)
     @Enumerated(EnumType.STRING)
-    private HttpMethod method; 
+    private HttpMethod method;
 
     public enum HttpMethod {
         GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS

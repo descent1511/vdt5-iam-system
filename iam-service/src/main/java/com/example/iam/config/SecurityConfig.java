@@ -2,9 +2,12 @@ package com.example.iam.config;
 
 import com.example.iam.security.JwtAuthenticationFilter;
 import com.example.iam.security.JwtTokenProvider;
+import com.example.iam.security.OrganizationContextFilter;
+import com.example.iam.security.DelegatedAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,9 +22,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -30,10 +35,16 @@ public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
     private final UserDetailsService userDetailsService;
+    private final DelegatedAuthenticationEntryPoint delegatedAuthenticationEntryPoint;
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(tokenProvider, userDetailsService);
+    }
+
+    @Bean
+    public OrganizationContextFilter organizationContextFilter() {
+        return new OrganizationContextFilter();
     }
 
     @Bean
@@ -51,9 +62,13 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(delegatedAuthenticationEntryPoint)
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/users/**","/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/oauth2/jwks.json").permitAll()
+                .requestMatchers(HttpMethod.GET, "/organizations").permitAll()
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers
@@ -62,6 +77,7 @@ public class SecurityConfig {
                 .frameOptions(frame -> frame.sameOrigin())
                 .contentTypeOptions(content -> {})
             )
+            .addFilterBefore(organizationContextFilter(), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

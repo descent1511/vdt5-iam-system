@@ -65,7 +65,7 @@ public class PolicyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + dto.getResourceId()));
                 
         if (policyRepository.existsBySubjectTypeAndSubjectIdAndResourceAndAction(
-                Policy.SubjectType.valueOf(dto.getSubjectType()),
+                dto.getSubjectType(),
                 dto.getSubjectId(),
                 resource,
                 dto.getAction())) {
@@ -89,7 +89,7 @@ public class PolicyService {
                 
         if (!existing.getId().equals(id) && 
             policyRepository.existsBySubjectTypeAndSubjectIdAndResourceAndAction(
-                Policy.SubjectType.valueOf(dto.getSubjectType()),
+                dto.getSubjectType(),
                 dto.getSubjectId(),
                 resource,
                 dto.getAction())) {
@@ -776,27 +776,19 @@ public class PolicyService {
             throw new IllegalArgumentException("Subject ID is required");
         }
         
-        if (!StringUtils.hasText(dto.getSubjectType())) {
+        if (dto.getSubjectType() == null) {
             throw new IllegalArgumentException("Subject type is required");
         }
         
-        try {
-            Policy.SubjectType subjectType = Policy.SubjectType.valueOf(dto.getSubjectType());
-            
-            // Validate subject ID based on type
-            if (subjectType == Policy.SubjectType.CLIENT) {
-                // For client, subjectId should be the clientId
-                if (!StringUtils.hasText(dto.getSubjectId().toString())) {
-                    throw new IllegalArgumentException("Client ID is required");
-                }
-            } else {
-                // For user and role, subjectId should be a valid ID
-                if (dto.getSubjectId() <= 0) {
-                    throw new IllegalArgumentException("Invalid subject ID");
-                }
+        // Validate subject ID based on type
+        if (dto.getSubjectType() == Policy.SubjectType.CLIENT) {
+            if (!StringUtils.hasText(dto.getSubjectId().toString())) {
+                throw new IllegalArgumentException("Client ID is required");
             }
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid subject type: " + dto.getSubjectType());
+        } else {
+            if (dto.getSubjectId() <= 0) {
+                throw new IllegalArgumentException("Invalid subject ID");
+            }
         }
         
         if (dto.getResourceId() == null) {
@@ -807,22 +799,14 @@ public class PolicyService {
             throw new IllegalArgumentException("Action is required");
         }
         
-        if (!StringUtils.hasText(dto.getEffect())) {
+        if (dto.getEffect() == null) {
             throw new IllegalArgumentException("Effect is required");
-        }
-        
-        try {
-            Policy.Effect.valueOf(dto.getEffect());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid effect: " + dto.getEffect());
         }
         
         // Validate condition JSON if present
         if (StringUtils.hasText(dto.getConditionJson())) {
             try {
                 // You might want to add more specific JSON validation here
-                // For example, checking if it's a valid JSON object
-                // or validating against a specific schema
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid condition JSON format");
             }

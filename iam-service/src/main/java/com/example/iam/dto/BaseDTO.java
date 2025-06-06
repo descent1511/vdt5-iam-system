@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseDTO {
     private Long id;
+    private Long organizationId;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
@@ -25,6 +26,5 @@ public class BaseDTO {
     private String updatedBy;
 
     public BaseDTO() {
-        // Required for deserialization
     }
 } 

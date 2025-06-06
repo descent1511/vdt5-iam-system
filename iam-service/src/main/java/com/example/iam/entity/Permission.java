@@ -22,7 +22,7 @@ public class Permission extends BaseEntity {
 
     @NotBlank
     @Size(min = 3, max = 100)
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @Column(columnDefinition = "TEXT")

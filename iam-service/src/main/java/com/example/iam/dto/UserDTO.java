@@ -1,17 +1,15 @@
 package com.example.iam.dto;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
+import lombok.EqualsAndHashCode;
 import java.util.Set;
-
+import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 public class UserDTO extends BaseDTO {
     private Long id;
     private Long organization_id;
