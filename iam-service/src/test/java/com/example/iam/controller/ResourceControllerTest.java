@@ -1,128 +1,145 @@
-// package com.example.iam.controller;
+package com.example.iam.controller;
 
-// import com.example.iam.dto.ResourceDTO;
-// import com.example.iam.entity.Resource;
-// import com.example.iam.mapper.ResourceMapper;
-// import com.example.iam.service.ResourceService;
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.Test;
-// import org.junit.jupiter.api.extension.ExtendWith;
-// import org.mockito.InjectMocks;
-// import org.mockito.Mock;
-// import org.mockito.junit.jupiter.MockitoExtension;
-// import org.springframework.http.ResponseEntity;
+import com.example.iam.dto.ResourceDTO;
+import com.example.iam.entity.Resource;
+import com.example.iam.mapper.ResourceMapper;
+import com.example.iam.service.ResourceService;
+import com.example.iam.service.ServiceRegistryService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
-// import java.util.Arrays;
-// import java.util.List;
+import java.util.Arrays;
+import java.util.List;
 
-// import static org.junit.jupiter.api.Assertions.*;
-// import static org.mockito.ArgumentMatchers.any;
-// import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-// @ExtendWith(MockitoExtension.class)
-// class ResourceControllerTest {
+@ExtendWith(MockitoExtension.class)
+class ResourceControllerTest {
 
-//     @Mock
-//     private ResourceService resourceService;
+    @Mock
+    private ResourceService resourceService;
 
-//     @Mock
-//     private ResourceMapper resourceMapper;
+    @Mock
+    private ResourceMapper resourceMapper;
 
-//     @InjectMocks
-//     private ResourceController resourceController;
+    @Mock
+    private ServiceRegistryService serviceRegistryService;
 
-//     private Resource resource;
-//     private ResourceDTO resourceDTO;
+    @InjectMocks
+    private ResourceController resourceController;
 
-//     @BeforeEach
-//     void setUp() {
-//         resource = new Resource();
-//         resource.setId(1L);
-//         resource.setName("USER_RESOURCE");
-//         resource.setDescription("User management resource");
+    private Resource resource;
+    private ResourceDTO resourceDTO;
 
-//         resourceDTO = new ResourceDTO();
-//         resourceDTO.setId(1L);
-//         resourceDTO.setName("USER_RESOURCE");
-//         resourceDTO.setDescription("User management resource");
-//     }
+    @BeforeEach
+    void setUp() {
+        resource = new Resource();
+        resource.setId(1L);
+        resource.setName("USER_RESOURCE");
+        resource.setDescription("User management resource");
 
-//     @Test
-//     void getAll_ShouldReturnListOfResources() {
-//         // Arrange
-//         List<Resource> resources = Arrays.asList(resource);
-//         List<ResourceDTO> resourceDTOs = Arrays.asList(resourceDTO);
-//         when(resourceService.getAll()).thenReturn(resources);
-//         when(resourceMapper.toDTOList(anyList())).thenReturn(resourceDTOs);
+        resourceDTO = new ResourceDTO();
+        resourceDTO.setId(1L);
+        resourceDTO.setName("USER_RESOURCE");
+        resourceDTO.setDescription("User management resource");
+    }
 
-//         // Act
-//         ResponseEntity<List<ResourceDTO>> response = resourceController.getAll();
+    @Test
+    void getAll_ShouldReturnListOfResources() {
+        // Arrange
+        List<Resource> resources = Arrays.asList(resource);
+        List<ResourceDTO> resourceDTOs = Arrays.asList(resourceDTO);
+        when(resourceService.getAll()).thenReturn(resources);
+        when(resourceMapper.toDTOList(anyList())).thenReturn(resourceDTOs);
 
-//         // Assert
-//         assertNotNull(response);
-//         assertEquals(200, response.getStatusCode().value());
-//         assertEquals(resourceDTOs, response.getBody());
-//         verify(resourceService).getAll();
-//     }
+        // Act
+        ResponseEntity<List<ResourceDTO>> response = resourceController.getAll();
 
-//     @Test
-//     void getById_ShouldReturnResourceById() {
-//         // Arrange
-//         when(resourceService.getById(1L)).thenReturn(resource);
-//         when(resourceMapper.toDTO(any(Resource.class))).thenReturn(resourceDTO);
+        // Assert
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(resourceDTOs, response.getBody());
+        verify(resourceService).getAll();
+        verify(resourceMapper).toDTOList(resources);
+    }
 
-//         // Act
-//         ResponseEntity<ResourceDTO> response = resourceController.getById(1L);
+    @Test
+    void getById_ShouldReturnResourceById() {
+        // Arrange
+        when(resourceService.getById(1L)).thenReturn(resource);
+        when(resourceMapper.toDTO(any(Resource.class))).thenReturn(resourceDTO);
 
-//         // Assert
-//         assertNotNull(response);
-//         assertEquals(200, response.getStatusCode().value());
-//         assertEquals(resourceDTO, response.getBody());
-//         verify(resourceService).getById(1L);
-//     }
+        // Act
+        ResponseEntity<ResourceDTO> response = resourceController.getById(1L);
 
-//     @Test
-//     void create_ShouldReturnCreatedResource() {
-//         // Arrange
-//         when(resourceMapper.toEntity(any(ResourceDTO.class))).thenReturn(resource);
-//         when(resourceService.create(any(Resource.class))).thenReturn(resource);
-//         when(resourceMapper.toDTO(any(Resource.class))).thenReturn(resourceDTO);
+        // Assert
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(resourceDTO, response.getBody());
+        verify(resourceService).getById(1L);
+        verify(resourceMapper).toDTO(resource);
+    }
 
-//         // Act
-//         ResponseEntity<ResourceDTO> response = resourceController.create(resourceDTO);
+    @Test
+    void create_ShouldReturnCreatedResource() {
+        // Arrange
+        when(resourceService.create(any(ResourceDTO.class))).thenReturn(resource);
+        when(resourceMapper.toDTO(any(Resource.class))).thenReturn(resourceDTO);
 
-//         // Assert
-//         assertNotNull(response);
-//         assertEquals(200, response.getStatusCode().value());
-//         assertEquals(resourceDTO, response.getBody());
-//         verify(resourceService).create(any(Resource.class));
-//     }
+        // Act
+        ResponseEntity<ResourceDTO> response = resourceController.create(resourceDTO);
 
-//     @Test
-//     void update_ShouldReturnUpdatedResource() {
-//         // Arrange
-//         when(resourceMapper.toEntity(any(ResourceDTO.class))).thenReturn(resource);
-//         when(resourceService.update(eq(1L), any(Resource.class))).thenReturn(resource);
-//         when(resourceMapper.toDTO(any(Resource.class))).thenReturn(resourceDTO);
+        // Assert
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(resourceDTO, response.getBody());
+        verify(resourceService).create(any(ResourceDTO.class));
+        verify(resourceMapper).toDTO(resource);
+    }
 
-//         // Act
-//         ResponseEntity<ResourceDTO> response = resourceController.update(1L, resourceDTO);
+    @Test
+    void update_ShouldReturnUpdatedResource() {
+        // Arrange
+        when(resourceService.update(eq(1L), any(ResourceDTO.class))).thenReturn(resource);
+        when(resourceMapper.toDTO(any(Resource.class))).thenReturn(resourceDTO);
 
-//         // Assert
-//         assertNotNull(response);
-//         assertEquals(200, response.getStatusCode().value());
-//         assertEquals(resourceDTO, response.getBody());
-//         verify(resourceService).update(eq(1L), any(Resource.class));
-//     }
+        // Act
+        ResponseEntity<ResourceDTO> response = resourceController.update(1L, resourceDTO);
 
-//     @Test
-//     void delete_ShouldReturnNoContent() {
-//         // Act
-//         ResponseEntity<Void> response = resourceController.delete(1L);
+        // Assert
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(resourceDTO, response.getBody());
+        verify(resourceService).update(eq(1L), any(ResourceDTO.class));
+        verify(resourceMapper).toDTO(resource);
+    }
 
-//         // Assert
-//         assertNotNull(response);
-//         assertEquals(204, response.getStatusCode().value());
-//         verify(resourceService).delete(1L);
-//     }
-// } 
+    @Test
+    void delete_ShouldReturnNoContent() {
+        // Act
+        ResponseEntity<Void> response = resourceController.delete(1L);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(204, response.getStatusCode().value());
+        verify(resourceService).delete(1L);
+    }
+
+    @Test
+    void discover_ShouldReloadAllResourcesAndReturnOk() {
+        // Act
+        ResponseEntity<Void> response = resourceController.discovery();
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(200, response.getStatusCode().value());
+        verify(serviceRegistryService).reloadAllResources();
+    }
+}
