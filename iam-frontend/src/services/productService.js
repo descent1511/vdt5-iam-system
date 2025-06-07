@@ -2,37 +2,27 @@ import api from './api'
 
 export const productService = {
   async getAll() {
-    console.log('Request: GET /products')
     const response = await api.get('/products')
-    console.log('Response:', response)
     return response
   },
 
   async getById(id) {
-    console.log('Request: GET /products/' + id)
     const response = await api.get(`/products/${id}`)
-    console.log('Response:', response)
     return response.data || response
   },
 
   async create(productData) {
-    console.log('Request: POST /products', productData)
     const response = await api.post('/products', productData)
-    console.log('Response:', response)
     return response
   },
 
   async update(id, productData) {
-    console.log('Request: PUT /products/' + id, productData)
     const response = await api.put(`/products/${id}`, productData)
-    console.log('Response:', response)
     return response
   },
 
   async delete(id) {
-    console.log('Request: DELETE /products/' + id)
     const response = await api.delete(`/products/${id}`)
-    console.log('Response:', response)
     return response
   },
 

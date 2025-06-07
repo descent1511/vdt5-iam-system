@@ -15,7 +15,7 @@
 
       <!-- Navigation Menu -->
       <nav class="sidebar-nav">
-        <div class="nav-section" v-if="authStore.can('USER_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">User Management</h6>
           <router-link 
             to="/users" 
@@ -27,7 +27,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('ROLE_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Role Management</h6>
           <router-link 
             to="/roles" 
@@ -39,7 +39,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('RESOURCE_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Resource Management</h6>
           <router-link 
             to="/resources" 
@@ -51,7 +51,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('SCOPE_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Scope Management</h6>
           <router-link 
             to="/scopes" 
@@ -63,7 +63,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('POLICY_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Policy Management</h6>
           <router-link 
             to="/policies" 
@@ -75,7 +75,19 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('CLIENT_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin">
+          <h6 class="nav-section-title" v-show="isExpanded">Organization Management</h6>
+          <router-link 
+            to="/organizations" 
+            class="nav-link"
+            :class="{ 'collapsed': !isExpanded }"
+          >
+            <i class="bi bi-building"></i>
+            <span v-show="isExpanded">Organizations</span>
+          </router-link>
+        </div>
+
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Client Management</h6>
           <router-link 
             to="/clients" 
@@ -87,15 +99,15 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('ORGANIZATION_READ')">
-          <h6 class="nav-section-title" v-show="isExpanded">Organization</h6>
-          <router-link 
-            to="/organizations" 
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
+          <h6 class="nav-section-title" v-show="isExpanded">Service Management</h6>
+          <router-link
+            to="/services"
             class="nav-link"
             :class="{ 'collapsed': !isExpanded }"
           >
-            <i class="bi bi-building"></i>
-            <span v-show="isExpanded">Organizations</span>
+            <i class="bi bi-hdd-rack"></i>
+            <span v-show="isExpanded">Services</span>
           </router-link>
         </div>
 
@@ -155,9 +167,9 @@
       
       <div class="container-fluid">
         <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
+          <transition name="fade" mode="out-in">
             <component :is="Component" />
-        </transition>
+          </transition>
         </router-view>
       </div>
     </main>
@@ -243,30 +255,34 @@ onUnmounted(() => {
 
 .sidebar-toggle {
   position: absolute;
-  top: 20px;
-  right: -15px;
-  width: 30px;
-  height: 30px;
-  background-color: var(--bs-dark);
-  border-radius: 50%;
+  top: 25px;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
   color: var(--bs-light);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1001;
   padding: 0;
-  border: 2px solid var(--bs-light);
   transition: all 0.3s ease;
   cursor: pointer;
+  opacity: 0.7;
 }
 
 .sidebar-toggle:hover {
-  background-color: var(--bs-primary);
+  opacity: 1;
   transform: scale(1.1);
 }
 
 .sidebar-toggle.collapsed {
-  right: -15px;
+  right: 0;
+}
+
+.sidebar-toggle i {
+  font-size: 1.2rem;
 }
 
 .sidebar-header {
@@ -483,5 +499,79 @@ onUnmounted(() => {
   .sidebar-toggle {
     display: none;
   }
+}
+
+.chat-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background-color: var(--bs-primary);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.chat-button:hover {
+  transform: scale(1.1);
+  background-color: var(--bs-primary-dark);
+}
+
+.chat-button.active {
+  background-color: var(--bs-danger);
+}
+
+.chat-container {
+  position: fixed;
+  bottom: 6rem;
+  right: 2rem;
+  width: 400px;
+  height: 600px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-header {
+  padding: 1rem;
+  background: var(--bs-primary);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  opacity: 0.8;
 }
 </style>

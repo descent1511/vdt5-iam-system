@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
@@ -15,6 +16,7 @@ import lombok.Setter;
 @Table(name = "policies")
 @Getter
 @Setter
+@SuperBuilder
 public class Policy extends BaseEntity  {
 
     @Column(name = "subject_id", nullable = false)

@@ -12,6 +12,7 @@ export const organizationService = {
   },
   
   async createOrganization(organizationData) {
+    console.log('Creating organization:', organizationData)
     const response = await api.post('/organizations', organizationData)
     return response
   },

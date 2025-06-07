@@ -4,7 +4,6 @@ import com.example.iam.dto.UserDTO;
 import com.example.iam.entity.User;
 import com.example.iam.mapper.UserMapper;
 import com.example.iam.service.UserService;
-import com.example.iam.security.annotation.RequirePermission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,28 +28,30 @@ public class UserController {
     }
 
     @GetMapping
-    @RequirePermission(value = "USER_READ", description = "View list of users")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<User> users = userService.findAll();
         return ResponseEntity.ok(userMapper.toDTOList(users));
     }
 
+    @PostMapping
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
+        User created = userService.createUser(userDTO);
+        return ResponseEntity.ok(userMapper.toDTO(created));
+    }
+
     @GetMapping("/{id}")
-    @RequirePermission(value = "USER_READ", description = "View user details")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         User user = userService.findById(id);
         return ResponseEntity.ok(userMapper.toDTO(user));
     }
 
     @PutMapping("/{id}")
-    @RequirePermission(value = "USER_UPDATE", description = "Update user information")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
         User updated = userService.updateUser(id, userDTO);
         return ResponseEntity.ok(userMapper.toDTO(updated));
     }
 
     @DeleteMapping("/{id}")
-    @RequirePermission(value = "USER_DELETE", description = "Delete user")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();

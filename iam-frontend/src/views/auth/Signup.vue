@@ -4,6 +4,30 @@
     
     <form @submit.prevent="handleSignup">
       <div class="mb-3">
+        <label for="organization" class="form-label">Organization</label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-building"></i>
+          </span>
+          <select 
+            class="form-select" 
+            id="organization" 
+            v-model="form.organizationId"
+            required
+            :disabled="loading || loadingOrganizations"
+          >
+            <option value="">Select Organization</option>
+            <option v-for="org in organizations" :key="org.id" :value="org.id">
+              {{ org.name }}
+            </option>
+          </select>
+        </div>
+        <div v-if="errors.organizationId" class="text-danger small mt-1">
+          {{ errors.organizationId }}
+        </div>
+      </div>
+
+      <div class="mb-3">
         <label for="username" class="form-label">Username</label>
         <input 
           type="text" 
@@ -82,7 +106,7 @@
         <button 
           type="submit" 
           class="btn btn-primary"
-          :disabled="loading"
+          :disabled="loading || loadingOrganizations"
         >
           <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
           Sign Up
@@ -97,11 +121,14 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { useOrganizationStore } from '../../stores/organizations'
 
 const authStore = useAuthStore()
+const organizationStore = useOrganizationStore()
 const loading = ref(false)
+const loadingOrganizations = ref(false)
 
 const form = reactive({
   username: '',
@@ -109,7 +136,7 @@ const form = reactive({
   fullName: '',
   password: '',
   confirmPassword: '',
-  organizationId: 1 // Default organization ID
+  organizationId: ''
 })
 
 const errors = reactive({
@@ -117,14 +144,33 @@ const errors = reactive({
   email: '',
   fullName: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  organizationId: ''
 })
+
+const organizations = ref([])
+
+async function loadOrganizations() {
+  loadingOrganizations.value = true
+  try {
+    organizations.value = await organizationStore.fetchOrganizations()
+  } catch (error) {
+    console.error('Failed to load organizations:', error)
+  } finally {
+    loadingOrganizations.value = false
+  }
+}
 
 function validateForm() {
   let isValid = true
   
   // Reset errors
   Object.keys(errors).forEach(key => errors[key] = '')
+  
+  if (!form.organizationId) {
+    errors.organizationId = 'Please select an organization'
+    isValid = false
+  }
   
   if (!form.username) {
     errors.username = 'Username is required'
@@ -168,7 +214,11 @@ async function handleSignup() {
   
   try {
     loading.value = true
-    
+    if (form.organizationId) {
+    localStorage.setItem('organizationId', form.organizationId);
+    } else {
+      localStorage.removeItem('organizationId');
+    }
     const signupData = {
       username: form.username,
       email: form.email,
@@ -182,4 +232,8 @@ async function handleSignup() {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  loadOrganizations()
+})
 </script>

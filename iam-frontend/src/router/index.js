@@ -7,6 +7,7 @@ import Signup from '../views/auth/Signup.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Profile from '../views/profile/Profile.vue'
 import NotFound from '../views/NotFound.vue'
+import AccessDenied from '../views/AccessDenied.vue'
 
 // User Management
 import UsersList from '../views/users/UsersList.vue'
@@ -18,6 +19,10 @@ import RolesList from '../views/roles/RolesList.vue'
 import RoleCreate from '../views/roles/RoleCreate.vue'
 import RoleEdit from '../views/roles/RoleEdit.vue'
 
+// Organization Management
+import OrganizationsList from '../views/organizations/OrganizationsList.vue'
+import OrganizationForm from '../views/organizations/OrganizationForm.vue'
+
 // Resource Management
 import ResourcesList from '../views/resources/ResourcesList.vue'
 import ScopesList from '../views/scopes/ScopesList.vue'
@@ -25,10 +30,6 @@ import PoliciesList from '../views/policies/PoliciesList.vue'
 import PolicyCreate from '../views/policies/PolicyCreate.vue'
 import PolicyEdit from '../views/policies/PolicyEdit.vue'
 import ResourceEdit from '../views/resources/ResourceEdit.vue'
-
-// Organization Management
-import OrganizationList from '../views/organization/OrganizationList.vue'
-import OrganizationForm from '../views/organization/OrganizationForm.vue'
 
 // Product Management
 import ProductsList from '../views/products/ProductsList.vue'
@@ -38,6 +39,11 @@ import ProductEdit from '../views/products/ProductEdit.vue'
 // New scope components
 import ScopeEdit from '../views/scopes/ScopeEdit.vue'
 import ScopeCreate from '../views/scopes/ScopeCreate.vue'
+
+// Service Registry
+import ServicesList from '../views/services/ServicesList.vue'
+import ServiceCreate from '../views/services/ServiceCreate.vue'
+import ServiceEdit from '../views/services/ServiceEdit.vue'
 
 const routes = [
   {
@@ -154,6 +160,25 @@ const routes = [
     component: ScopeEdit,
     meta: { requiresAuth: true, requiredPermissions: ['SCOPE_UPDATE'] }
   },
+  // Organization routes
+  {
+    path: '/organizations',
+    name: 'Organizations',
+    component: OrganizationsList,
+    meta: { requiresAuth: true}
+  },
+  {
+    path: '/organizations/create',
+    name: 'CreateOrganization',
+    component: OrganizationForm,
+    meta: { requiresAuth: true}
+  },
+  {
+    path: '/organizations/:id/edit',
+    name: 'EditOrganization',
+    component: OrganizationForm,
+    meta: { requiresAuth: true }
+  },
   // Policy routes
   {
     path: '/policies',
@@ -171,25 +196,6 @@ const routes = [
     path: '/policies/:id/edit',
     name: 'EditPolicy',
     component: () => import('../views/policies/PolicyEdit.vue'),
-    meta: { requiresAuth: true }
-  },
-  // Organization routes
-  {
-    path: '/organizations',
-    name: 'Organizations',
-    component: OrganizationList,
-    meta: { requiresAuth: true}
-  },
-  {
-    path: '/organizations/create',
-    name: 'CreateOrganization',
-    component: OrganizationForm,
-    meta: { requiresAuth: true}
-  },
-  {
-    path: '/organizations/:id/edit',
-    name: 'EditOrganization',
-    component: OrganizationForm,
     meta: { requiresAuth: true }
   },
   {
@@ -235,6 +241,31 @@ const routes = [
     component: () => import('../views/products/ProductEdit.vue'),
     meta: { requiresAuth: true }
   },
+  // Service Registry routes
+  {
+    path: '/services',
+    name: 'Services',
+    component: ServicesList,
+    meta: { requiresAuth: true, requiredPermissions: ['SERVICE_READ'] }
+  },
+  {
+    path: '/services/create',
+    name: 'CreateService',
+    component: ServiceCreate,
+    meta: { requiresAuth: true, requiredPermissions: ['SERVICE_CREATE', 'SERVICE_DELETE'] }
+  },
+  {
+    path: '/services/:id/edit',
+    name: 'EditService',
+    component: ServiceEdit,
+    meta: { requiresAuth: true, requiredPermissions: ['SERVICE_UPDATE'] }
+  },
+  {
+    path: '/access-denied',
+    name: 'AccessDenied',
+    component: AccessDenied,
+    meta: { requiresAuth: true }
+  },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
@@ -251,12 +282,13 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  // const requiredPermissions = to.meta.requiredPermissions || []
+  const requiredPermissions = to.meta.requiredPermissions || []
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login')
-  } 
-   else if (to.path === '/login' && authStore.isAuthenticated) {
+  } else if (requiresAuth && requiredPermissions.length > 0 && !authStore.isSuperAdmin && !authStore.can(requiredPermissions)) {
+    next({ name: 'AccessDenied' })
+  } else if (to.path === '/login' && authStore.isAuthenticated) {
     next('/')
   } else {
     next()

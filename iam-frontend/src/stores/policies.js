@@ -25,7 +25,6 @@ export const usePolicyStore = defineStore('policies', () => {
       loading.value = true
       error.value = null
       const data = await policyService.getPolicies(params)
-      console.log(data)
       // Thêm showAllResources cho mỗi policy
       policies.value = data.map(policy => ({
         ...policy,
@@ -53,10 +52,7 @@ export const usePolicyStore = defineStore('policies', () => {
     try {
       loading.value = true
       error.value = null
-      
       const data = await policyService.getPolicyById(id)
-      console.log('Policy data from API:', data)
-      
       if (!data) {
         throw new Error('Policy not found')
       }

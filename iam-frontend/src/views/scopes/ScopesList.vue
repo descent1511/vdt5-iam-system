@@ -115,7 +115,6 @@ function confirmDelete(scope) {
     console.warn('User does not have SCOPE_DELETE permission')
     return
   }
-  console.log('Confirming delete for scope:', scope)
   scopeStore.selectedScope = scope
   deletingScopeId.value = scope.id
   dataList.value.showDeleteModal()
@@ -131,10 +130,10 @@ async function deleteScope() {
     return
   }
 
-  console.log('Attempting to delete scope:', scopeStore.selectedScope)
+ 
   try {
     const result = await scopeStore.deleteScope(scopeStore.selectedScope.id)
-    console.log('Delete result:', result)
+   
     if (result) {
       await loadScopes()
       dataList.value.hideDeleteModal()

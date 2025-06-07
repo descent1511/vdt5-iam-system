@@ -65,7 +65,7 @@ public class PolicyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + dto.getResourceId()));
                 
         if (policyRepository.existsBySubjectTypeAndSubjectIdAndResourceAndAction(
-                Policy.SubjectType.valueOf(dto.getSubjectType()),
+                dto.getSubjectType(),
                 dto.getSubjectId(),
                 resource,
                 dto.getAction())) {
@@ -80,25 +80,19 @@ public class PolicyService {
     public PolicyDTO updatePolicy(Long id, PolicyDTO dto) {
         validatePolicy(dto);
         
-        Policy existing = policyRepository.findById(id)
+        Policy existingPolicy = policyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Policy not found with id: " + id));
                 
-        // Check if updating would create a duplicate
+        // The PolicyMapper will now update the existing entity, preserving the organizationId
+        policyMapper.updateEntityFromDto(dto, existingPolicy);
+        
+        // We still need to manually set the resource since it's an association
         Resource resource = resourceRepository.findById(dto.getResourceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + dto.getResourceId()));
-                
-        if (!existing.getId().equals(id) && 
-            policyRepository.existsBySubjectTypeAndSubjectIdAndResourceAndAction(
-                Policy.SubjectType.valueOf(dto.getSubjectType()),
-                dto.getSubjectId(),
-                resource,
-                dto.getAction())) {
-            throw new IllegalArgumentException("Policy already exists for this subject, resource and action");
-        }
+        existingPolicy.setResource(resource);
 
-        Policy updated = policyMapper.toEntity(dto);
-        updated.setId(id);
-        return policyMapper.toDTO(policyRepository.save(updated));
+        Policy updatedPolicy = policyRepository.save(existingPolicy);
+        return policyMapper.toDTO(updatedPolicy);
     }
 
     @Transactional
@@ -119,245 +113,6 @@ public class PolicyService {
         return policyRepository.findByEffect(effect).stream()
                 .map(policyMapper::toDTO)
                 .toList();
-    }
-
-    public boolean checkPermission(Policy.SubjectType subjectType, Long subjectId, Long resourceId, String action, String path, String method) {
-        Resource resource = resourceRepository.findById(resourceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
-
-        // Get all policies for this subject and resource
-        Set<Policy> policies = policyRepository.findBySubjectTypeAndSubjectIdAndResource(subjectType, subjectId, resource);
-
-        // If no policies found, allow access
-        if (policies.isEmpty()) {
-            log.info("No policies found, allowing access");
-            return true;
-        }
-
-        // First, find all policies that match the basic conditions (subjectType, subjectId, path, method, action)
-        Set<Policy> matchingPolicies = policies.stream()
-                .filter(policy -> {
-                    // Check if action matches
-                    if (!policy.getAction().equals(action)) {
-                        log.info("Policy {} action does not match - Expected: {}, Got: {}", 
-                                policy.getId(), action, policy.getAction());
-                        return false;
-                    }
-
-                    // Check if resource path matches
-                    String resourcePath = policy.getResource().getPath();
-                    if (!isPathMatch(path, resourcePath)) {
-                        log.info("Policy {} resource path does not match - Expected: {}, Got: {}", 
-                                policy.getId(), path, resourcePath);
-                        return false;
-                    }
-
-                    // Check if method matches
-                    Resource.HttpMethod resourceMethod = policy.getResource().getMethod();
-                    if (!method.equalsIgnoreCase(resourceMethod.name())) {
-                        log.info("Policy {} method does not match - Expected: {}, Got: {}", 
-                                policy.getId(), method, resourceMethod);
-                        return false;
-                    }
-
-                    log.info("Policy {} matches all basic conditions", policy.getId());
-                    return true;
-                })
-                .collect(Collectors.toSet());
-
-        log.info("Found {} policies matching basic conditions", matchingPolicies.size());
-
-        // If no policies match basic conditions, allow access
-        if (matchingPolicies.isEmpty()) {
-            log.info("No policies match basic conditions, allowing access");
-            return true;
-        }
-
-        // Check for explicit DENY policies first
-        boolean hasDenyPolicy = matchingPolicies.stream()
-                .filter(policy -> policy.getEffect() == Policy.Effect.DENY)
-                .anyMatch(policy -> {
-                    log.info("Checking DENY policy {}", policy.getId());
-                    
-                    // If no conditions, deny access
-                    if (policy.getConditionJson() == null || policy.getConditionJson().isEmpty()) {
-                        log.info("Policy {} has no conditions, denying access", policy.getId());
-                        return true;
-                    }
-                    
-                    // Evaluate conditions
-                    boolean conditionsMet = evaluateConditions(policy.getConditionJson());
-                    log.info("Policy {} conditions evaluation result: {}", policy.getId(), conditionsMet);
-                    return conditionsMet;
-                });
-
-        // If there's an explicit deny with matching conditions, deny access
-        if (hasDenyPolicy) {
-            log.info("Found explicit DENY policy with matching conditions, denying access");
-            return false;
-        }
-
-        // Check for explicit ALLOW policies
-        boolean hasAllowPolicy = false;
-        boolean hasAnyAllowPolicy = matchingPolicies.stream()
-                .anyMatch(policy -> policy.getEffect() == Policy.Effect.ALLOW);
-        
-        if (hasAnyAllowPolicy) {
-            // Nếu có policy ALLOW, kiểm tra điều kiện
-            hasAllowPolicy = matchingPolicies.stream()
-                    .filter(policy -> policy.getEffect() == Policy.Effect.ALLOW)
-                    .anyMatch(policy -> {
-                        log.info("Checking ALLOW policy {}", policy.getId());
-                        
-                        // If no conditions, allow access
-                        if (policy.getConditionJson() == null || policy.getConditionJson().isEmpty()) {
-                            log.info("Policy {} has no conditions, allowing access", policy.getId());
-                            return true;
-                        }
-                        
-                        // Evaluate conditions
-                        boolean conditionsMet = evaluateConditions(policy.getConditionJson());
-                        log.info("Policy {} conditions evaluation result: {}", policy.getId(), conditionsMet);
-                        return conditionsMet;
-                    });
-        } else {
-            // Nếu không có policy ALLOW nào, cho phép truy cập
-            hasAllowPolicy = true;
-            log.info("No ALLOW policies found, allowing access");
-        }
-
-        // If there's an explicit allow with matching conditions, allow access
-        // If there's an explicit allow but conditions are not met, deny access
-        log.info("Final permission check result - hasAllowPolicy: {}", hasAllowPolicy);
-        return hasAllowPolicy;
-    }
-
-    public boolean checkPermissionByPath(Policy.SubjectType subjectType, String username, 
-                                       String path, String method, String action) {
-        log.info("Checking permission for - SubjectType: {}, Username: {}, Path: {}, Method: {}, Action: {}", 
-                subjectType, username, path, method, action);
-        
-        // Get subject ID based on type
-        Long subjectId;
-        if (subjectType == Policy.SubjectType.CLIENT) {
-            // For client, username is actually the clientId
-            // Get the client application to get its ID
-            ClientApplication client = clientApplicationRepository.findByClientId(username)
-                .orElseThrow(() -> new RuntimeException("Client not found with ID: " + username));
-            subjectId = client.getId();
-            log.info("Client ID: {}", subjectId);
-        } else {
-            // For user, get ID from username
-            subjectId = userService.findByUsername(username).getId();
-            log.info("User ID: {}", subjectId);
-        }
-        
-        // Get all policies for this subject
-        Set<Policy> policies = policyRepository.findBySubjectTypeAndSubjectId(subjectType, subjectId);
-        log.info("Found {} policies for subject", policies.size());
-
-        // If no policies found, deny access (default deny)
-        if (policies.isEmpty()) {
-            return true;
-        }
-
-        // First, find all policies that match the basic conditions (subjectType, subjectId, path, method, action)
-        Set<Policy> matchingPolicies = policies.stream()
-                .filter(policy -> {
-                    // Check if action matches
-                    if (!policy.getAction().equals(action)) {
-                        log.info("Policy {} action does not match - Expected: {}, Got: {}", 
-                                policy.getId(), action, policy.getAction());
-                        return false;
-                    }
-
-                    // Check if resource path matches
-                    String resourcePath = policy.getResource().getPath();
-                    if (!isPathMatch(path, resourcePath)) {
-                        log.info("Policy {} resource path does not match - Expected: {}, Got: {}", 
-                                policy.getId(), path, resourcePath);
-                        return false;
-                    }
-
-                    // Check if method matches
-                    Resource.HttpMethod resourceMethod = policy.getResource().getMethod();
-                    if (!method.equalsIgnoreCase(resourceMethod.name())) {
-                        log.info("Policy {} method does not match - Expected: {}, Got: {}", 
-                                policy.getId(), method, resourceMethod);
-                        return false;
-                    }
-
-                    log.info("Policy {} matches all basic conditions", policy.getId());
-                    return true;
-                })
-                .collect(Collectors.toSet());
-
-        log.info("Found {} policies matching basic conditions", matchingPolicies.size());
-
-        // If no policies match basic conditions, deny access (default deny)
-        if (matchingPolicies.isEmpty()) {
-            log.info("No policies match basic conditions, denying access");
-            return false;
-        }
-
-        // Check for explicit DENY policies first
-        boolean hasDenyPolicy = false;
-        hasDenyPolicy = matchingPolicies.stream()
-                .filter(policy -> policy.getEffect() == Policy.Effect.DENY)
-                .anyMatch(policy -> {
-                    log.info("Checking DENY policy {}", policy.getId());
-                    
-                    // If no conditions, deny access
-                    if (policy.getConditionJson() == null || policy.getConditionJson().isEmpty()) {
-                        log.info("Policy {} has no conditions, denying access", policy.getId());
-                        return true;
-                    }
-                    
-                    // Evaluate conditions
-                    boolean conditionsMet = evaluateConditions(policy.getConditionJson());
-                    log.info("Policy {} conditions evaluation result: {}", policy.getId(), conditionsMet);
-                    return conditionsMet;
-                });
-
-        // If there's an explicit deny with matching conditions, deny access
-        if (hasDenyPolicy) {
-            log.info("Found explicit DENY policy with matching conditions, denying access");
-            return false;
-        }
-        
-        // Check for explicit ALLOW policies
-        boolean hasAllowPolicy = false;  // Khởi tạo là false
-        boolean hasAnyAllowPolicy = matchingPolicies.stream()
-                .anyMatch(policy -> policy.getEffect() == Policy.Effect.ALLOW);
-        
-        if (hasAnyAllowPolicy) {
-            // Nếu có policy ALLOW, kiểm tra điều kiện
-            hasAllowPolicy = matchingPolicies.stream()
-                .filter(policy -> policy.getEffect() == Policy.Effect.ALLOW)
-                .anyMatch(policy -> {
-                    log.info("Checking ALLOW policy {}", policy.getId());
-                    
-                    // If no conditions, allow access
-                    if (policy.getConditionJson() == null || policy.getConditionJson().isEmpty()) {
-                        log.info("Policy {} has no conditions, allowing access", policy.getId());
-                        return true;
-                    }
-                    
-                    // Evaluate conditions
-                    boolean conditionsMet = evaluateConditions(policy.getConditionJson());
-                    log.info("Policy {} conditions evaluation result: {}", policy.getId(), conditionsMet);
-                    return conditionsMet;
-                });
-        } else {
-            // Nếu không có policy ALLOW nào, cho phép truy cập
-            hasAllowPolicy = true;
-            log.info("No ALLOW policies found, allowing access");
-        }
-
-        // If there's an explicit allow with matching conditions, allow access
-        // If there's an explicit allow but conditions are not met, deny access
-        log.info("Final permission check result - hasAllowPolicy: {}", hasAllowPolicy);
-        return hasAllowPolicy;
     }
 
     /**
@@ -778,27 +533,19 @@ public class PolicyService {
             throw new IllegalArgumentException("Subject ID is required");
         }
         
-        if (!StringUtils.hasText(dto.getSubjectType())) {
+        if (dto.getSubjectType() == null) {
             throw new IllegalArgumentException("Subject type is required");
         }
         
-        try {
-            Policy.SubjectType subjectType = Policy.SubjectType.valueOf(dto.getSubjectType());
-            
-            // Validate subject ID based on type
-            if (subjectType == Policy.SubjectType.CLIENT) {
-                // For client, subjectId should be the clientId
-                if (!StringUtils.hasText(dto.getSubjectId().toString())) {
-                    throw new IllegalArgumentException("Client ID is required");
-                }
-            } else {
-                // For user and role, subjectId should be a valid ID
-                if (dto.getSubjectId() <= 0) {
-                    throw new IllegalArgumentException("Invalid subject ID");
-                }
+        // Validate subject ID based on type
+        if (dto.getSubjectType() == Policy.SubjectType.CLIENT) {
+            if (!StringUtils.hasText(dto.getSubjectId().toString())) {
+                throw new IllegalArgumentException("Client ID is required");
             }
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid subject type: " + dto.getSubjectType());
+        } else {
+            if (dto.getSubjectId() <= 0) {
+                throw new IllegalArgumentException("Invalid subject ID");
+            }
         }
         
         if (dto.getResourceId() == null) {
@@ -809,22 +556,14 @@ public class PolicyService {
             throw new IllegalArgumentException("Action is required");
         }
         
-        if (!StringUtils.hasText(dto.getEffect())) {
+        if (dto.getEffect() == null) {
             throw new IllegalArgumentException("Effect is required");
-        }
-        
-        try {
-            Policy.Effect.valueOf(dto.getEffect());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid effect: " + dto.getEffect());
         }
         
         // Validate condition JSON if present
         if (StringUtils.hasText(dto.getConditionJson())) {
             try {
                 // You might want to add more specific JSON validation here
-                // For example, checking if it's a valid JSON object
-                // or validating against a specific schema
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid condition JSON format");
             }

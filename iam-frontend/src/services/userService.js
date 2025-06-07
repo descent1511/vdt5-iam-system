@@ -13,9 +13,7 @@ export const userService = {
   
   async getUserById(id) {
     try {
-      console.log('Fetching user by id:', id)
       const response = await api.get(`/users/${id}`)
-      console.log('User response:', response)
       return response
     } catch (error) {
       console.error('Error fetching user:', error)
@@ -25,9 +23,7 @@ export const userService = {
   
   async createUser(userData) {
     try {
-      console.log('Creating user:', userData)
       const response = await api.post('/users', userData)
-      console.log('Create user response:', response)
       return response
     } catch (error) {
       console.error('Error creating user:', error)
@@ -37,9 +33,7 @@ export const userService = {
   
   async updateUser(id, userData) {
     try {
-      console.log('Updating user:', id, userData)
       const response = await api.put(`/users/${id}`, userData)
-      console.log('Update user response:', response)
       return response
     } catch (error) {
       console.error('Error updating user:', error)
@@ -49,9 +43,7 @@ export const userService = {
   
   async deleteUser(id) {
     try {
-      console.log('Deleting user:', id)
       const response = await api.delete(`/users/${id}`)
-      console.log('Delete user response:', response)
       return response
     } catch (error) {
       console.error('Error deleting user:', error)

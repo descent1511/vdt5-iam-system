@@ -24,6 +24,10 @@ public class Token {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+    
     @Column(name = "client_id")
     private String clientId;
 

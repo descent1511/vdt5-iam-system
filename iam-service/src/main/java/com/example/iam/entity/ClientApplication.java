@@ -8,12 +8,14 @@ import java.util.HashSet;
 import java.util.Set;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "client_applications")
+@SuperBuilder
 public class ClientApplication extends BaseEntity {
 
     @NotBlank
@@ -25,6 +27,9 @@ public class ClientApplication extends BaseEntity {
     @Column(name = "client_secret", nullable = false)
     private String clientSecret;
 
+    @Transient
+    private String rawClientSecret;
+
     @NotBlank
     @Size(min = 3, max = 100)
     @Column(nullable = false)
@@ -32,7 +37,7 @@ public class ClientApplication extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-
+    
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "client_scopes",
@@ -43,4 +48,8 @@ public class ClientApplication extends BaseEntity {
 
     @Column(name = "is_active")
     private boolean active = true;
+
+    @Column(name = "access_token", columnDefinition = "TEXT")
+    private String accessToken;
+
 } 

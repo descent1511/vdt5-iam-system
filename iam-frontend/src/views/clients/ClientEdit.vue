@@ -142,21 +142,12 @@ onMounted(async () => {
     // Load scopes
     await scopeStore.fetchScopes()
     availableScopes.value = scopeStore.scopes
-
-
-    // Load client data
-    console.log('Fetching client data for ID:', clientId)
     const client = await clientStore.fetchClientById(clientId)
-    console.log('Client data:', client)
     if (client) {
       form.name = client.name
       form.description = client.description
       form.scopes = client.scopes.map(scope => scope.id)
-      console.log('Form data after loading client:', {
-        name: form.name,
-        description: form.description,
-        scopes: form.scopes
-      })
+
     }
   } catch (error) {
     console.error('Error loading data:', error)
@@ -196,19 +187,6 @@ function validateForm() {
 
 async function handleSubmit() {
   if (!validateForm()) return
-  
-  console.log('Form data before submit:', {
-    name: form.name,
-    description: form.description,
-    scopes: form.scopes
-  })
-  
-  // Log available scopes for comparison
-  console.log('Available scopes:', availableScopes.value.map(scope => ({
-    id: scope.id,
-    name: scope.name
-  })))
-  
   try {
     await clientStore.updateClient(clientId, form)
     router.push('/clients')

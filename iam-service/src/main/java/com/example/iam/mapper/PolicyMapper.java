@@ -10,12 +10,19 @@ public interface PolicyMapper {
 
     @Mapping(source = "resource.id", target = "resourceId")
     @Mapping(source = "subjectType", target = "subjectType")
+    @Mapping(source = "effect", target = "effect")
     PolicyDTO toDTO(Policy policy);
 
     @InheritInverseConfiguration
     @Mapping(target = "resource", expression = "java(mapResource(dto.getResourceId()))")
-    @Mapping(target = "subjectType", expression = "java(dto.getSubjectType() != null ? com.example.iam.entity.Policy.SubjectType.valueOf(dto.getSubjectType()) : null)")
+    @Mapping(target = "subjectType", source = "subjectType")
+    @Mapping(target = "effect", source = "effect")
     Policy toEntity(PolicyDTO dto);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "organization", ignore = true)
+    void updateEntityFromDto(PolicyDTO dto, @MappingTarget Policy entity);
 
     default Resource mapResource(Long id) {
         if (id == null) return null;

@@ -17,15 +17,12 @@ export const scopeService = {
   },
 
   async updateScope(id, scopeData) {
-    console.log(scopeData)
     const response = await api.put(`/scopes/${id}`, scopeData)
     return response
   },
 
   async deleteScope(id) {
-    console.log('Making DELETE request to /scopes/' + id)
     const response = await api.delete(`/scopes/${id}`)
-    console.log('DELETE response:', response)
     return response
   }
 }

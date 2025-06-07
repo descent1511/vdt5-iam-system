@@ -49,6 +49,18 @@ public class UserService {
     }
 
     @Transactional
+    public User createUser(UserDTO userDTO) {
+        User user = new User();
+        user.setUsername(userDTO.getUsername());
+        user.setEmail(userDTO.getEmail());
+        user.setFullName(userDTO.getFullName());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        user.setOrganization(organizationRepository.findById(userDTO.getOrganization_id())
+                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + userDTO.getOrganization_id())));
+        return userRepository.save(user);
+    }
+
+    @Transactional
     public User updateUser(Long id, UserDTO userDTO) {
         User existingUser = findById(id);
 

@@ -30,7 +30,12 @@ class OrganizationControllerTest {
 
     @BeforeEach
     void setUp() {
-        organizationDTO = new OrganizationDTO(1L, "Test Organization", "Test Organization Description", null);
+        organizationDTO = OrganizationDTO.builder()
+            .id(1L)
+            .name("Test Organization")
+            .description("Test Organization Description")
+            .active(true)
+            .build();
     }
 
     @Test

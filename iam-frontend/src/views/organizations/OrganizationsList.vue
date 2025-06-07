@@ -22,16 +22,18 @@
     </template>
 
     <template #status="{ item }">
-      <span 
-        class="badge"
-        :class="{
-          'bg-success': item.status === 'ACTIVE',
-          'bg-danger': item.status === 'INACTIVE',
-          'bg-warning': item.status === 'PENDING'
-        }"
-      >
-        {{ item.status }}
-      </span>
+      <div class="form-check form-switch">
+        <input 
+          class="form-check-input" 
+          type="checkbox" 
+          role="switch" 
+          :checked="item.active"
+          disabled
+        >
+        <label class="form-check-label">
+          {{ item.active ? 'Active' : 'Inactive' }}
+        </label>
+      </div>
     </template>
 
     <template #memberCount="{ item }">
@@ -90,6 +92,7 @@ async function deleteOrganization() {
   try {
     await orgStore.deleteOrganization(orgStore.selectedOrganization.id)
     await loadOrganizations()
+    dataList.value.hideDeleteModal()
   } catch (error) {
     console.error('Failed to delete organization:', error)
   }

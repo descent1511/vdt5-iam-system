@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface ScopeMapper {
-    @Mapping(target = "permissions", source = "permissions")
+    @Mapping(target = "permissions", expression = "java(mapPermissions(scope.getPermissions()))")
     ScopeDTO toDTO(Scope scope);
     
     @Mapping(target = "permissions", ignore = true)

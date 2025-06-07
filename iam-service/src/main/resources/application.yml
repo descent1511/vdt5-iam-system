@@ -43,11 +43,18 @@ springdoc:
 
 app:
   jwt:
-    secret: 4b472c95dd9b5a76d664d094b55d47488cbd8d863e70979d22db2bba9d64b5a1aeb818f08b3827028c7ec48f78a1f53b3472469919bbbe4c933e9a942d75c3b12ea3c8dc6c6b0db89e3f3b058c4e46103158be6fa14e7622b2dd2e3f62b78f1619a7db8fcc1b7cf1cf0cc942cf889a0ea685ce409d09900f425f43631c350bff7a53aef695df06973f7b08d9afc99f66b9b71f8f0456e6633733fb8b47e94e3ce2db92a3b9064db0e6c635bd80220afce4083df8bde5119ea4f7a8193af2536055b12a60a8d896bfcb4cb64b8cfbb7f4f86d844055c3adcd9ca6f65701d87b16959fd71206ecf26b34b56d29523de04f578e0e812bc7aa85313bb18762f7222a
+    # secret: [REMOVED for security]
+    key:
+      private: classpath:certs/private.pem
+      public: classpath:certs/public.pem
     access-token:
-      expiration: 3600000
+      expiration: 3600000 # 1 hour
     refresh-token:
       expiration: 604800000
+
+  super-admin:
+    username: superadmin # Default superadmin username
+    password: admin # Default superadmin password. CHANGE THIS IN PRODUCTION.
 
 logging:
   level:

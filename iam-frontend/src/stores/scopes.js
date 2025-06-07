@@ -68,7 +68,6 @@ export const useScopeStore = defineStore('scopes', {
       this.error = null
       try {
         const response = await scopeService.updateScope(id, scopeData)
-        console.log(scopeData)
         if (response.data) {
           const index = this.scopes.findIndex(scope => scope.id === id)
           if (index !== -1) {

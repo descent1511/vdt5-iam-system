@@ -137,13 +137,9 @@ const availableScopes = ref([])
 
 onMounted(async () => {
   try {
-    console.log('Fetching scopes...')
     await scopeStore.fetchScopes()
     availableScopes.value = scopeStore.scopes
-    console.log('Available scopes after fetch:', availableScopes.value.map(scope => ({
-      id: scope.id,
-      name: scope.name
-    })))
+
   } catch (error) {
     console.error('Error loading scopes:', error)
     toast.error('Failed to load scopes')
@@ -181,19 +177,6 @@ function validateForm() {
 
 async function handleSubmit() {
   if (!validateForm()) return
-  
-  console.log('Form data before submit:', {
-    name: form.name,
-    description: form.description,
-    scopes: [form.scopes]
-  })
-  
-  // Log available scopes for comparison
-  console.log('Available scopes:', availableScopes.value.map(scope => ({
-    id: scope.id,
-    name: scope.name
-  })))
-  
   try {
     await clientStore.createClient(form)
     toast.success('Client created successfully')

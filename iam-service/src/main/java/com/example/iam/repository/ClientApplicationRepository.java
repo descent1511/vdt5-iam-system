@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface ClientApplicationRepository extends JpaRepository<ClientApplication, Long> {
     Optional<ClientApplication> findByClientId(String clientId);
+    Optional<ClientApplication> findByClientIdAndOrganizationId(String clientId, Long organizationId);
 } 

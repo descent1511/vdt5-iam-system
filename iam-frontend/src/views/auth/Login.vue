@@ -4,6 +4,29 @@
     
     <form @submit.prevent="handleLogin">
       <div class="mb-3">
+        <label for="organization" class="form-label">Organization</label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-building"></i>
+          </span>
+          <select 
+            class="form-select" 
+            id="organization" 
+            v-model="form.organizationId"
+            :disabled="authStore.loading || loadingOrganizations"
+          >
+            <option value="">Select Organization (optional for admin)</option>
+            <option v-for="org in organizations" :key="org.id" :value="org.id">
+              {{ org.name }}
+            </option>
+          </select>
+        </div>
+        <div v-if="errors.organizationId" class="text-danger small mt-1">
+          {{ errors.organizationId }}
+        </div>
+      </div>
+
+      <div class="mb-3">
         <label for="username" class="form-label">Username</label>
         <div class="input-group">
           <span class="input-group-text">
@@ -67,7 +90,7 @@
         <button 
           type="submit" 
           class="btn btn-primary btn-lg"
-          :disabled="authStore.loading"
+          :disabled="authStore.loading || loadingOrganizations"
         >
           <span v-if="authStore.loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
           <span>Sign In</span>
@@ -94,34 +117,52 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
+import { useOrganizationStore } from '../../stores/organizations'
 
 const authStore = useAuthStore()
+const organizationStore = useOrganizationStore()
+const loadingOrganizations = ref(false)
 
 // Form state
 const form = reactive({
   username: '',
   password: '',
-  rememberMe: false
+  rememberMe: false,
+  organizationId: ''
 })
 
 const errors = reactive({
   username: '',
-  password: ''
+  password: '',
+  organizationId: ''
 })
 
 const showPassword = ref(false)
+const organizations = ref([])
 
 // Methods
 function togglePasswordVisibility() {
   showPassword.value = !showPassword.value
 }
 
+async function loadOrganizations() {
+  loadingOrganizations.value = true
+  try {
+    organizations.value = await organizationStore.fetchOrganizations()
+  } catch (error) {
+    console.error('Failed to load organizations:', error)
+  } finally {
+    loadingOrganizations.value = false
+  }
+}
+
 async function handleLogin() {
   // Reset errors
   errors.username = ''
   errors.password = ''
+  errors.organizationId = ''
   
   // Validate
   let valid = true
@@ -136,15 +177,29 @@ async function handleLogin() {
     valid = false
   }
   
+  // Organization is now optional, so no validation for it.
+  
   if (!valid) return
+
+  // Save or remove organization ID from localStorage
+  if (form.organizationId) {
+    localStorage.setItem('organizationId', form.organizationId);
+  } else {
+    localStorage.removeItem('organizationId');
+  }
   
   // Submit login
   await authStore.login({
     username: form.username,
     password: form.password,
-    rememberMe: form.rememberMe
+    rememberMe: form.rememberMe,
+    organizationId: form.organizationId
   })
 }
+
+onMounted(() => {
+  loadOrganizations()
+})
 </script>
 
 <style scoped>

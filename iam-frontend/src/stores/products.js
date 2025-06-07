@@ -35,11 +35,8 @@ export const useProductsStore = defineStore('products', {
       this.loading = true
       this.error = null
       try {
-        console.log('Store: Starting to fetch product with ID:', id)
         const response = await productService.getById(id)
-        console.log('Store: Response from service:', response)
         this.selectedProduct = response
-        console.log('Store: Selected product set to:', this.selectedProduct)
         return response
       } catch (error) {
         this.error = error.message

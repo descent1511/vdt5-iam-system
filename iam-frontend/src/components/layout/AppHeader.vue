@@ -85,12 +85,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+// --- DEBUGGING ---
+watchEffect(() => {
+  console.log('--- Auth Store State ---');
+  console.log('User Object:', authStore.user);
+  console.log('Is Super Admin:', authStore.isSuperAdmin);
+  console.log('Can read users?:', authStore.can('USER_READ'));
+  console.log('------------------------');
+});
+// --- END DEBUGGING ---
 
 // Computed properties
 const userName = computed(() => {

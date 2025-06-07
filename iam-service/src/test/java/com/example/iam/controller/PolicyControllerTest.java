@@ -1,6 +1,7 @@
 package com.example.iam.controller;
 
 import com.example.iam.dto.PolicyDTO;
+import com.example.iam.entity.Policy;
 import com.example.iam.service.PolicyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class PolicyControllerTest {
         policyDTO = new PolicyDTO();
         policyDTO.setId(1L);
         policyDTO.setSubjectId(1L);
-        policyDTO.setSubjectType("USER");
+        policyDTO.setSubjectType(Policy.SubjectType.USER);
         policyDTO.setResourceId(1L);
         policyDTO.setScopeId(1L);
         policyDTO.setConditionJson("{\"condition\": \"value\"}");

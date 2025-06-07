@@ -18,8 +18,8 @@
       <div class="d-flex align-items-center">
         <i class="bi bi-person-badge text-primary me-2"></i>
         <div class="d-flex flex-column">
-          <span class="fw-medium text-dark">{{ item.subjectType }}</span>
-          <small class="text-muted">{{ getSubjectName(item) }}</small>
+          <span class="fw-medium text-dark"> {{ getSubjectName(item) }}</span>
+          <small class="text-muted">{{ item.subjectType }}</small>
         </div>
       </div>
     </template>
@@ -65,14 +65,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { usePolicyStore } from '../../stores/policies'
 import { useAuthStore } from '../../stores/auth'
 import DataList from '../../components/layout/DataList.vue'
+import { useUserStore } from '../../stores/users'
+import { useClientStore } from '../../stores/clients'
+import { useResourceStore } from '../../stores/resources'
 
 const policyStore = usePolicyStore()
 const authStore = useAuthStore()
+const resourceStore = useResourceStore()
 const dataList = ref(null)
+const userStore = useUserStore()
+const clientStore = useClientStore()
+
+// Add refs for user and client data
+const userData = ref({})
+const clientData = ref({})
+
+// Add ref for resource data
+const resourceData = ref({})
 
 const columns = [
   { key: 'subject', label: 'Subject' },
@@ -84,16 +97,18 @@ const columns = [
 
 function getSubjectName(item) {
   if (item.subjectType === 'USER') {
-    return item.username || `User ${item.subjectId}`
+    const user = userData.value[item.subjectId]
+    return user ? user.fullName : `User ${item.subjectId}`
   } else if (item.subjectType === 'CLIENT') {
-    return item.clientName || `Client ${item.subjectId}`
+    const client = clientData.value[item.subjectId]
+    return client ? client.clientName : `Client ${item.subjectId}`
   }
   return `ID: ${item.subjectId}`
 }
 
 function getResourcePath(resourceId) {
-  // TODO: Implement resource path lookup
-  return `/api/resources/${resourceId}`
+  const resource = resourceData.value[resourceId]
+  return resource ? resource.path : `Resource ${resourceId}`
 }
 
 function confirmDelete(policy) {
@@ -117,8 +132,65 @@ function hasPermission(permission) {
   return authStore.can(permission)
 }
 
+// Add function to load user and client data
+async function loadSubjectData(policies) {
+  const userIds = new Set()
+  const clientIds = new Set()
+  
+  policies.forEach(policy => {
+    if (policy.subjectType === 'USER') {
+      userIds.add(policy.subjectId)
+    } else if (policy.subjectType === 'CLIENT') {
+      clientIds.add(policy.subjectId)
+    }
+  })
+
+  // Load user data
+  for (const userId of userIds) {
+    try {
+      const user = await userStore.fetchUserById(userId)
+      userData.value[userId] = user
+    } catch (error) {
+      console.error(`Failed to fetch user ${userId}:`, error)
+    }
+  }
+
+  // Load client data
+  for (const clientId of clientIds) {
+    try {
+      const client = await clientStore.fetchClientById(clientId)
+      clientData.value[clientId] = client
+    } catch (error) {
+      console.error(`Failed to fetch client ${clientId}:`, error)
+    }
+  }
+}
+
+// Add function to load resource data
+async function loadResourceData(policies) {
+  const resourceIds = new Set()
+  
+  policies.forEach(policy => {
+    if (policy.resourceId) {
+      resourceIds.add(policy.resourceId)
+    }
+  })
+
+  // Load resource data
+  for (const resourceId of resourceIds) {
+    try {
+      const resource = await resourceStore.fetchResourceById(resourceId)
+      resourceData.value[resourceId] = resource
+    } catch (error) {
+      console.error(`Failed to fetch resource ${resourceId}:`, error)
+    }
+  }
+}
+
 async function loadPolicies() {
   await policyStore.fetchPolicies()
+  await loadSubjectData(policyStore.policies)
+  await loadResourceData(policyStore.policies)
 }
 
 onMounted(loadPolicies)
