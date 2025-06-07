@@ -44,6 +44,7 @@ export const useOrganizationStore = defineStore('organizations', {
       this.loading = true
       this.error = null
       try {
+        console.log('Creating organization:', organization)
         const newOrganization = await organizationService.createOrganization(organization)
         this.organizations.push(newOrganization)
         return newOrganization

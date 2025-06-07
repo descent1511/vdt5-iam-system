@@ -25,13 +25,18 @@ export const useAuthStore = defineStore('auth', () => {
     // Check for string array or object array
     return roles.includes('ROLE_SUPER_ADMIN') || roles.some(role => role.name === 'SUPER_ADMIN')
   })
+  const isAdmin = computed(() => {
+    const roles = user.value?.roles
+    if (!roles) return false
+    // Check for string array or object array
+    return roles.includes('ROLE_ADMIN') || roles.some(role => role.name === 'ADMIN')
+  })
 
   // Permission checking
   function can(permissions) {
-    if (isSuperAdmin.value) {
+    if (isSuperAdmin.value || isAdmin.value) {
       return true
     }
-    
     if (!user.value?.permissions) {
       return false
     }
@@ -182,6 +187,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser,
     currentOrganizationId,
     isSuperAdmin,
+    isAdmin,
 
     // Methods
     init,

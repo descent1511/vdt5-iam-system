@@ -68,337 +68,7 @@
             <div class="col-12 mb-3 mt-4">
               <h5 class="border-bottom pb-2">Permissions</h5>
               <p class="text-muted small">Select the permissions that will be granted to users with this role.</p>
-              
-              <div class="table-responsive">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Management Type</th>
-                      <th class="text-center">
-                        <span class="permission-type permission-read">Read</span>
-                      </th>
-                      <th class="text-center">
-                        <span class="permission-type permission-write">Create</span>
-                      </th>
-                      <th class="text-center">
-                        <span class="permission-type permission-info">Update</span>
-                      </th>
-                      <th class="text-center">
-                        <span class="permission-type permission-delete">Delete</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <!-- User Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-people"></i>
-                        User Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasUserRead"
-                          @change="togglePermission('users', 'read')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasUserCreate"
-                          @change="togglePermission('users', 'create')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                       <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasUserUpdate"
-                          @change="togglePermission('users', 'update')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasUserDelete"
-                          @change="togglePermission('users', 'delete')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                    </tr>
-                    
-                    <!-- Role Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-shield-lock"></i>
-                        Role Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasRoleRead"
-                          @change="togglePermission('roles', 'read')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasRoleCreate"
-                          @change="togglePermission('roles', 'create')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                       <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasRoleUpdate"
-                          @change="togglePermission('roles', 'update')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasRoleDelete"
-                          @change="togglePermission('roles', 'delete')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                    </tr>
-                    
-                    <!-- Resource Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-box"></i>
-                        Resource Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasResourceRead"
-                          @change="togglePermission('resources', 'read')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasResourceCreate"
-                          @change="togglePermission('resources', 'create')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                       <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasResourceUpdate"
-                          @change="togglePermission('resources', 'update')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasResourceDelete"
-                          @change="togglePermission('resources', 'delete')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                    </tr>
-                    
-                    <!-- Policy Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-file-earmark-text"></i>
-                        Policy Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasPolicyRead"
-                          @change="togglePermission('policies', 'read')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasPolicyCreate"
-                          @change="togglePermission('policies', 'create')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasPolicyUpdate"
-                          @change="togglePermission('policies', 'update')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasPolicyDelete"
-                          @change="togglePermission('policies', 'delete')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                    </tr>
-
-                    <!-- Scope Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-diagram-3"></i>
-                        Scope Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasScopeRead"
-                          @change="togglePermission('scopes', 'read')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasScopeCreate"
-                          @change="togglePermission('scopes', 'create')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasScopeUpdate"
-                          @change="togglePermission('scopes', 'update')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasScopeDelete"
-                          @change="togglePermission('scopes', 'delete')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                    </tr>
-
-                    <!-- Client Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-key"></i>
-                        Client Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasClientRead"
-                          @change="togglePermission('clients', 'read')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasClientCreate"
-                          @change="togglePermission('clients', 'create')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasClientUpdate"
-                          @change="togglePermission('clients', 'update')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasClientDelete"
-                          @change="togglePermission('clients', 'delete')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                    </tr>
-
-                    <!-- Product Management -->
-                    <tr>
-                      <td>
-                        <i class="bi bi-bag"></i>
-                        Product Management
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasProductRead"
-                          @change="togglePermission('products', 'read')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasProductCreate"
-                          @change="togglePermission('products', 'create')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasProductUpdate"
-                          @change="togglePermission('products', 'update')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          class="form-check-input" 
-                          type="checkbox" 
-                          :checked="hasProductDelete"
-                          @change="togglePermission('products', 'delete')"
-                          :disabled="form.name === 'admin'"
-                        >
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <PermissionTable v-model="form.permissions" :disabled="form.name === 'admin'" />
             </div>
             
             <!-- Submit buttons -->
@@ -423,23 +93,24 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, toRaw } from 'vue'
+import { reactive, onMounted, toRaw } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRoleStore } from '../../stores/roles'
 import { useToast } from 'vue-toastification'
-import PermissionDisplay from '../../components/PermissionDisplay.vue'
+import PermissionTable from '../../components/PermissionTable.vue'
 
 // Store
 const roleStore = useRoleStore()
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 
 // Get role ID from route params
 const roleId = route.params.id
 
 // State
 const form = reactive({
-  id: '',
+  id: null,
   name: '',
   description: '',
   permissions: []
@@ -450,123 +121,23 @@ const errors = reactive({
   description: ''
 })
 
-// Permission mapping
-const permissionMapping = {
-  users: {
-    read: 'USER_READ',
-    create: 'USER_CREATE',
-    update: 'USER_UPDATE',
-    delete: 'USER_DELETE'
-  },
-  roles: {
-    read: 'ROLE_READ',
-    create: 'ROLE_CREATE',
-    update: 'ROLE_UPDATE',
-    delete: 'ROLE_DELETE'
-  },
-  resources: {
-    read: 'RESOURCE_READ',
-    create: 'RESOURCE_CREATE',
-    update: 'RESOURCE_UPDATE',
-    delete: 'RESOURCE_DELETE'
-  },
-  policies: {
-    read: 'POLICY_READ',
-    create: 'POLICY_CREATE',
-    update: 'POLICY_UPDATE',
-    delete: 'POLICY_DELETE'
-  },
-  organizations: {
-    read: 'ORGANIZATION_READ',
-    create: 'ORGANIZATION_CREATE',
-    update: 'ORGANIZATION_UPDATE',
-    delete: 'ORGANIZATION_DELETE'
-  },
-  clients: {
-    read: 'CLIENT_READ',
-    create: 'CLIENT_CREATE',
-    update: 'CLIENT_UPDATE',
-    delete: 'CLIENT_DELETE'
-  },
-  products: {
-    read: 'PRODUCT_READ',
-    create: 'PRODUCT_CREATE',
-    update: 'PRODUCT_UPDATE',
-    delete: 'PRODUCT_DELETE'
-  },
-  scopes: {
-    read: 'SCOPE_READ',
-    create: 'SCOPE_CREATE',
-    update: 'SCOPE_UPDATE',
-    delete: 'SCOPE_DELETE'
-  }
-}
-
-// Computed properties for permission checks
-const hasUserRead = computed(() => form.permissions.includes(permissionMapping.users.read))
-const hasUserCreate = computed(() => form.permissions.includes(permissionMapping.users.create))
-const hasUserUpdate = computed(() => form.permissions.includes(permissionMapping.users.update))
-const hasUserDelete = computed(() => form.permissions.includes(permissionMapping.users.delete))
-
-const hasRoleRead = computed(() => form.permissions.includes(permissionMapping.roles.read))
-const hasRoleCreate = computed(() => form.permissions.includes(permissionMapping.roles.create))
-const hasRoleUpdate = computed(() => form.permissions.includes(permissionMapping.roles.update))
-const hasRoleDelete = computed(() => form.permissions.includes(permissionMapping.roles.delete))
-
-const hasResourceRead = computed(() => form.permissions.includes(permissionMapping.resources.read))
-const hasResourceCreate = computed(() => form.permissions.includes(permissionMapping.resources.create))
-const hasResourceUpdate = computed(() => form.permissions.includes(permissionMapping.resources.update))
-const hasResourceDelete = computed(() => form.permissions.includes(permissionMapping.resources.delete))
-
-const hasPolicyRead = computed(() => form.permissions.includes(permissionMapping.policies.read))
-const hasPolicyCreate = computed(() => form.permissions.includes(permissionMapping.policies.create))
-const hasPolicyUpdate = computed(() => form.permissions.includes(permissionMapping.policies.update))
-const hasPolicyDelete = computed(() => form.permissions.includes(permissionMapping.policies.delete))
-
-const hasOrganizationRead = computed(() => form.permissions.includes(permissionMapping.organizations.read))
-const hasOrganizationCreate = computed(() => form.permissions.includes(permissionMapping.organizations.create))
-const hasOrganizationUpdate = computed(() => form.permissions.includes(permissionMapping.organizations.update))
-const hasOrganizationDelete = computed(() => form.permissions.includes(permissionMapping.organizations.delete))
-
-const hasScopeRead = computed(() => form.permissions.includes(permissionMapping.scopes.read))
-const hasScopeCreate = computed(() => form.permissions.includes(permissionMapping.scopes.create))
-const hasScopeUpdate = computed(() => form.permissions.includes(permissionMapping.scopes.update))
-const hasScopeDelete = computed(() => form.permissions.includes(permissionMapping.scopes.delete))
-
-const hasClientRead = computed(() => form.permissions.includes(permissionMapping.clients.read))
-const hasClientCreate = computed(() => form.permissions.includes(permissionMapping.clients.create))
-const hasClientUpdate = computed(() => form.permissions.includes(permissionMapping.clients.update))
-const hasClientDelete = computed(() => form.permissions.includes(permissionMapping.clients.delete))
-
-const hasProductRead = computed(() => form.permissions.includes(permissionMapping.products.read))
-const hasProductCreate = computed(() => form.permissions.includes(permissionMapping.products.create))
-const hasProductUpdate = computed(() => form.permissions.includes(permissionMapping.products.update))
-const hasProductDelete = computed(() => form.permissions.includes(permissionMapping.products.delete))
-
-// Methods to handle permission changes
-function togglePermission(entity, action) {
-  const permission = permissionMapping[entity][action]
-  const index = form.permissions.indexOf(permission)
-  
-  if (index === -1) {
-    form.permissions.push(permission)
-  } else {
-    form.permissions.splice(index, 1)
-  }
-}
-
 // Lifecycle hooks
 onMounted(async () => {
   try {
     const roleData = await roleStore.fetchRoleById(roleId)
     
     // Populate form
-    Object.keys(form).forEach(key => {
-      if (roleData[key] !== undefined) {
-        form[key] = roleData[key]
-      }
-    })
+    form.id = roleData.id;
+    form.name = roleData.name;
+    form.description = roleData.description;
+    // This is the crucial part: extract permission names to pre-select checkboxes
+    if (roleData.permissions) {
+      form.permissions = roleData.permissions.map(p => p.name);
+    }
+    console.log("form", form);
+
   } catch (error) {
+    toast.error('Failed to load role data.');
     console.error('Failed to load role data:', error)
   }
 })
@@ -608,12 +179,13 @@ async function handleSubmit() {
     await roleStore.updateRole(roleId, {
       name: form.name,
       description: form.description,
-      // Use toRaw to get the plain JavaScript array of permissions
       permissions: toRaw(form.permissions)
     })
     
+    toast.success('Role updated successfully');
     router.push('/roles')
   } catch (error) {
+    toast.error('Failed to update role');
     console.error('Failed to update role:', error)
   }
 }
@@ -630,104 +202,14 @@ async function handleSubmit() {
   font-weight: 600;
 }
 
-.form-check-label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
+.card {
+  border: none;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
 }
 
-.form-check-label i {
-  font-size: 0.875rem;
-  opacity: 0.8;
-}
-
-.form-check-input:checked + .form-check-label {
-  color: var(--bs-primary);
+.form-label {
   font-weight: 500;
-}
-
-.form-check-input:disabled + .form-check-label {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* New table styles */
-.table {
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.table thead th {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
-  padding: 1rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
-}
-
-.table tbody td {
-  padding: 1rem;
-  vertical-align: middle;
-}
-
-.table tbody tr {
-  transition: background-color 0.2s ease;
-}
-
-.table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.table tbody td:first-child {
-  font-weight: 500;
-  color: #495057;
-}
-
-.table tbody td:first-child i {
-  color: #6c757d;
-  font-size: 1.1rem;
-  margin-right: 0.5rem;
-}
-
-.form-check-input {
-  width: 1.2rem;
-  height: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.form-check-input:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-/* Permission type colors */
-.permission-type {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.permission-read {
-  background-color: #e3f2fd;
-  color: #0d6efd;
-}
-
-.permission-write {
-  background-color: #e8f5e9;
-  color: #198754;
-}
-
-.permission-delete {
-  background-color: #fbe9e7;
-  color: #dc3545;
+  color: #2c3e50;
 }
 </style>

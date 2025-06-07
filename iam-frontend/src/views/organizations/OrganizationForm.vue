@@ -51,6 +51,24 @@
               </div>
             </div>
             
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Active Status</label>
+                <div class="form-check form-switch">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    role="switch" 
+                    id="activeStatus" 
+                    v-model="form.active"
+                  >
+                  <label class="form-check-label" for="activeStatus">
+                    {{ form.active ? 'Active' : 'Inactive' }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            
             <!-- Submit buttons -->
             <div class="col-12 mt-4 d-flex justify-content-end gap-2">
               <router-link to="/organizations" class="btn btn-outline-secondary">
@@ -90,7 +108,8 @@ const isEdit = computed(() => !!route.params.id)
 // Form state
 const form = reactive({
   name: '',
-  description: ''
+  description: '',
+  active: true
 })
 
 const errors = reactive({

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
 import lombok.NoArgsConstructor;
+import java.util.Set;
 
 @Data
 @SuperBuilder
@@ -16,4 +17,5 @@ public class ResourceDTO extends BaseDTO {
     private String description;
     private HttpMethod method;
     private String path;
+    private Set<String> permissions;
 }

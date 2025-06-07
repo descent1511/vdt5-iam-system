@@ -19,6 +19,11 @@ public interface PolicyMapper {
     @Mapping(target = "effect", source = "effect")
     Policy toEntity(PolicyDTO dto);
 
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "organization", ignore = true)
+    void updateEntityFromDto(PolicyDTO dto, @MappingTarget Policy entity);
+
     default Resource mapResource(Long id) {
         if (id == null) return null;
         Resource r = new Resource();

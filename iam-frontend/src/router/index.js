@@ -40,6 +40,11 @@ import ProductEdit from '../views/products/ProductEdit.vue'
 import ScopeEdit from '../views/scopes/ScopeEdit.vue'
 import ScopeCreate from '../views/scopes/ScopeCreate.vue'
 
+// Service Registry
+import ServicesList from '../views/services/ServicesList.vue'
+import ServiceCreate from '../views/services/ServiceCreate.vue'
+import ServiceEdit from '../views/services/ServiceEdit.vue'
+
 const routes = [
   {
     path: '/',
@@ -235,6 +240,25 @@ const routes = [
     name: 'EditProduct',
     component: () => import('../views/products/ProductEdit.vue'),
     meta: { requiresAuth: true }
+  },
+  // Service Registry routes
+  {
+    path: '/services',
+    name: 'Services',
+    component: ServicesList,
+    meta: { requiresAuth: true, requiredPermissions: ['SERVICE_READ'] }
+  },
+  {
+    path: '/services/create',
+    name: 'CreateService',
+    component: ServiceCreate,
+    meta: { requiresAuth: true, requiredPermissions: ['SERVICE_CREATE', 'SERVICE_DELETE'] }
+  },
+  {
+    path: '/services/:id/edit',
+    name: 'EditService',
+    component: ServiceEdit,
+    meta: { requiresAuth: true, requiredPermissions: ['SERVICE_UPDATE'] }
   },
   {
     path: '/access-denied',

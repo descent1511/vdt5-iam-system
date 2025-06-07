@@ -20,12 +20,15 @@ public class ClientApplication extends BaseEntity {
 
     @NotBlank
     @Size(min = 3, max = 100)
-    @Column(name = "client_id", nullable = false)
+    @Column(name = "client_id", nullable = false, unique = true)
     private String clientId;
 
     @NotBlank
     @Column(name = "client_secret", nullable = false)
     private String clientSecret;
+
+    @Transient
+    private String rawClientSecret;
 
     @NotBlank
     @Size(min = 3, max = 100)
@@ -45,4 +48,8 @@ public class ClientApplication extends BaseEntity {
 
     @Column(name = "is_active")
     private boolean active = true;
+
+    @Column(name = "access_token", columnDefinition = "TEXT")
+    private String accessToken;
+
 } 

@@ -2,6 +2,9 @@ package com.example.iam.security;
 
 import com.example.iam.entity.Token;
 import com.example.iam.entity.User;
+import com.example.iam.entity.Role;
+import com.example.iam.entity.Permission;
+import com.example.iam.entity.ClientApplication;
 import com.example.iam.exception.InvalidTokenException;
 import com.example.iam.service.TokenService;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -15,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +35,9 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.List;
+import java.util.Collection;
 
 @Slf4j
 @Component
@@ -38,7 +45,7 @@ import java.util.stream.Collectors;
 public class JwtTokenProvider {
 
     private static final String CLAIM_ORGANIZATION_ID = "organizationId";
-    private static final String CLAIM_AUTHORITIES = "authorities";
+    private static final String CLAIM_PERMISSIONS = "permissions";
     private static final String CLAIM_TYPE = "type";
     private static final String TYPE_USER = "user";
     private static final String TYPE_CLIENT = "client";
@@ -88,6 +95,14 @@ public class JwtTokenProvider {
         return generateAndSaveToken(authentication, organizationId, refreshExpirationInMs, Token.TokenType.REFRESH);
     }
 
+    public String generateClientAccessToken(ClientApplication client) {
+        ClientPrincipal clientPrincipal = ClientPrincipal.create(client);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                clientPrincipal, "", clientPrincipal.getAuthorities());
+        
+        return generateAndSaveToken(authentication, client.getOrganization().getId(), jwtExpirationInMs, Token.TokenType.ACCESS);
+    }
+
     private String generateAndSaveToken(Authentication authentication, Long organizationId, long expirationMs, Token.TokenType tokenType) {
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(expirationMs);
@@ -99,16 +114,17 @@ public class JwtTokenProvider {
 
         Object principal = authentication.getPrincipal();
 
-        if (tokenType == Token.TokenType.ACCESS) {
-            String authorities = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.joining(","));
-            tokenBuilder.claim(CLAIM_AUTHORITIES, authorities);
-        }
-
         if (principal instanceof UserPrincipal) {
             UserPrincipal userPrincipal = (UserPrincipal) principal;
             tokenBuilder.setSubject(userPrincipal.getUsername()).claim(CLAIM_TYPE, TYPE_USER);
+            
+            if (tokenType == Token.TokenType.ACCESS) {
+                Set<String> permissions = userPrincipal.getUser().getRoles().stream()
+                        .flatMap(role -> role.getPermissions().stream())
+                        .map(Permission::getName)
+                        .collect(Collectors.toSet());
+                tokenBuilder.claim(CLAIM_PERMISSIONS, permissions);
+            }
         } else if (principal instanceof ClientPrincipal) {
             ClientPrincipal clientPrincipal = (ClientPrincipal) principal;
             tokenBuilder.setSubject(clientPrincipal.getUsername()).claim(CLAIM_TYPE, TYPE_CLIENT);
@@ -144,8 +160,15 @@ public class JwtTokenProvider {
         return orgId != null ? orgId.longValue() : null;
     }
 
-    public String getAuthoritiesFromJWT(String token) {
-        return getClaims(token).get(CLAIM_AUTHORITIES, String.class);
+    public Set<String> getPermissionsFromJWT(String token) {
+        Claims claims = getClaims(token);
+        Object permissionsObject = claims.get(CLAIM_PERMISSIONS);
+        if (permissionsObject instanceof Collection) {
+            return ((Collection<?>) permissionsObject).stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.toSet());
+        }
+        return Set.of();
     }
 
     public boolean validateToken(String token) {

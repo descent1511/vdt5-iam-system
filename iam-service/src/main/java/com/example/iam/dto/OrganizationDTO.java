@@ -20,9 +20,7 @@ public class OrganizationDTO {
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
-
-    private String createdBy;
-    private String updatedBy;
+    private Boolean active;
     private String name;
     private String description;
     private Set<Long> userIds;

@@ -15,7 +15,7 @@
 
       <!-- Navigation Menu -->
       <nav class="sidebar-nav">
-        <div class="nav-section" v-if="authStore.can('USER_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">User Management</h6>
           <router-link 
             to="/users" 
@@ -27,7 +27,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('ROLE_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Role Management</h6>
           <router-link 
             to="/roles" 
@@ -39,7 +39,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('RESOURCE_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Resource Management</h6>
           <router-link 
             to="/resources" 
@@ -51,7 +51,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('SCOPE_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Scope Management</h6>
           <router-link 
             to="/scopes" 
@@ -63,7 +63,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('POLICY_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Policy Management</h6>
           <router-link 
             to="/policies" 
@@ -75,7 +75,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('ORGANIZATION_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Organization Management</h6>
           <router-link 
             to="/organizations" 
@@ -87,7 +87,7 @@
           </router-link>
         </div>
 
-        <div class="nav-section" v-if="authStore.can('CLIENT_READ')">
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <h6 class="nav-section-title" v-show="isExpanded">Client Management</h6>
           <router-link 
             to="/clients" 
@@ -99,6 +99,17 @@
           </router-link>
         </div>
 
+        <div class="nav-section" v-if="authStore.isSuperAdmin || authStore.isAdmin">
+          <h6 class="nav-section-title" v-show="isExpanded">Service Management</h6>
+          <router-link
+            to="/services"
+            class="nav-link"
+            :class="{ 'collapsed': !isExpanded }"
+          >
+            <i class="bi bi-hdd-rack"></i>
+            <span v-show="isExpanded">Services</span>
+          </router-link>
+        </div>
 
         <div class="nav-section" v-if="authStore.can('PRODUCT_READ')">
           <h6 class="nav-section-title" v-show="isExpanded">Product Management</h6>

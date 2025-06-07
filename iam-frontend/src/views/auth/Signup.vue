@@ -214,7 +214,11 @@ async function handleSignup() {
   
   try {
     loading.value = true
-    
+    if (form.organizationId) {
+    localStorage.setItem('organizationId', form.organizationId);
+    } else {
+      localStorage.removeItem('organizationId');
+    }
     const signupData = {
       username: form.username,
       email: form.email,
