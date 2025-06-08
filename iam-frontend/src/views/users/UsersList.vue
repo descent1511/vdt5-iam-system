@@ -163,6 +163,7 @@ async function deleteUser() {
   try {
     await userStore.deleteUser(userStore.selectedUser.id)
     await loadUsers()
+    dataList.value.hideDeleteModal()
   } catch (error) {
     console.error('Failed to delete user:', error)
   }

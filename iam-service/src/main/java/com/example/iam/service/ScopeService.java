@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashSet;
 import com.example.iam.entity.Organization;
 import com.example.iam.repository.OrganizationRepository;
+import com.example.iam.entity.ClientApplication;
+import com.example.iam.repository.ClientApplicationRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +31,9 @@ public class ScopeService {
 
     @Autowired
     private OrganizationRepository organizationRepository;
+
+    @Autowired
+    private ClientApplicationRepository clientApplicationRepository;
 
     public List<Scope> getAllScopes() {
         return scopeRepository.findAll();
@@ -78,6 +83,19 @@ public class ScopeService {
     @Transactional
     public void deleteScope(Long id) {
         Scope scope = getScope(id);
+        
+        // Find all clients that have this scope
+        List<ClientApplication> clientsWithScope = clientApplicationRepository.findAll().stream()
+            .filter(client -> client.getScopes().contains(scope))
+            .collect(Collectors.toList());
+            
+        // Remove the scope from all clients
+        for (ClientApplication client : clientsWithScope) {
+            client.getScopes().remove(scope);
+            clientApplicationRepository.save(client);
+        }
+        
+        // Delete the scope
         scopeRepository.delete(scope);
     }
 } 

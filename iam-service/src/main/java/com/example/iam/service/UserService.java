@@ -55,6 +55,9 @@ public class UserService {
         user.setEmail(userDTO.getEmail());
         user.setFullName(userDTO.getFullName());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        Set<Role> roles = roleRepository.findByNameIn(userDTO.getRoles())
+                    .stream().collect(Collectors.toSet());
+        user.setRoles(roles);
         user.setOrganization(organizationRepository.findById(userDTO.getOrganization_id())
                 .orElseThrow(() -> new RuntimeException("Organization not found with id: " + userDTO.getOrganization_id())));
         return userRepository.save(user);

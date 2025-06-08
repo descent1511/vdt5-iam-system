@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", imports = {Collectors.class})
 public interface ResourceMapper {
 
     @Mapping(target = "permissions", expression = "java(mapPermissions(resource.getPermissions()))")
@@ -18,8 +18,23 @@ public interface ResourceMapper {
     @Mapping(target = "permissions", ignore = true)
     Resource toEntity(ResourceDTO dto);
 
-    List<ResourceDTO> toDTOList(List<Resource> resources);
-    List<Resource> toEntityList(List<ResourceDTO> dtos);
+    default List<ResourceDTO> toDTOList(List<Resource> resources) {
+        if (resources == null) {
+            return null;
+        }
+        return resources.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    default List<Resource> toEntityList(List<ResourceDTO> dtos) {
+        if (dtos == null) {
+            return null;
+        }
+        return dtos.stream()
+                .map(this::toEntity)
+                .collect(Collectors.toList());
+    }
 
     default Set<String> mapPermissions(Set<Permission> permissions) {
         if (permissions == null) {

@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @RestController
-@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -43,7 +42,8 @@ public class AuthController {
     public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         Long organizationId = getOrganizationIdFromHeader(request);
         String username = loginRequest.getUsername();
-
+        System.out.println("organizationId: " + organizationId);
+        System.out.println("username: " + username);
         // Handle superadmin login separately
         if (organizationId == null && superAdminUsername.equals(username)) {
             Authentication authentication = authenticationManager.authenticate(

@@ -4,6 +4,8 @@ import com.example.iam.entity.Organization;
 import com.example.iam.entity.Permission;
 import com.example.iam.entity.Role;
 import com.example.iam.entity.User;
+import com.example.iam.entity.Client;
+import com.example.iam.repository.ClientRepository;
 import com.example.iam.repository.OrganizationRepository;
 import com.example.iam.repository.PermissionRepository;
 import com.example.iam.repository.RoleRepository;
@@ -13,11 +15,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -29,6 +39,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final PasswordEncoder passwordEncoder;
     private final OrganizationRepository organizationRepository;
+    private final ClientRepository clientRepository;
 
     @Value("${app.super-admin.username}")
     private String superAdminUsername;
@@ -44,16 +55,19 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("Starting data initialization...");
 
-        // Create a default organization if it doesn't exist
-        organizationRepository.findByName(DEFAULT_ORG_NAME).orElseGet(() -> {
+        // Create the default organization first
+        Organization defaultOrg = organizationRepository.findByName(DEFAULT_ORG_NAME).orElseGet(() -> {
             log.info("Creating default organization: {}", DEFAULT_ORG_NAME);
-            Organization defaultOrg = Organization.builder()
+            Organization org = Organization.builder()
                 .name(DEFAULT_ORG_NAME)
                 .description("Default organization created automatically.")
                 .active(true)
                 .build();
-            return organizationRepository.save(defaultOrg);
+            return organizationRepository.save(org);
         });
+
+        // Initialize the OAuth client for the default organization
+        initializeOAuthClient(defaultOrg);
 
         // Create a global permission for super admin
         Permission systemAdminPermission = permissionRepository.findByName("SYSTEM_ADMINISTRATION")
@@ -77,31 +91,25 @@ public class DataInitializer implements CommandLineRunner {
                     return roleRepository.save(role);
                 });
 
-        // Find or create the Super Admin user, and always ensure their details are correct.
+        // Configure the Super Admin user
         User superAdmin = userRepository.findByUsername(superAdminUsername)
                 .orElseGet(() -> {
                     log.info("Creating {} user for the first time.", superAdminUsername);
                     return User.builder()
                             .username(superAdminUsername)
-                            .email(superAdminUsername + "@system.local") // This email must be unique
+                            .email(superAdminUsername + "@system.local")
                             .fullName("System Super Admin")
                             .enabled(true)
                             .active(true)
-                            .organization(null) // Super admin does not belong to any organization
+                            .organization(defaultOrg)
                             .build();
                 });
-
-        // Always ensure the password and roles are up-to-date
         superAdmin.setPassword(passwordEncoder.encode(superAdminPassword));
         superAdmin.setRoles(new HashSet<>(Set.of(superAdminRole)));
-
         userRepository.save(superAdmin);
         log.info("Super admin user configured successfully.");
 
         // Create a default user in the default organization
-        Organization defaultOrg = organizationRepository.findByName(DEFAULT_ORG_NAME)
-            .orElseThrow(() -> new IllegalStateException("Default organization not found, cannot create default user."));
-
         if (!userRepository.existsByUsernameAndOrganizationId("user", defaultOrg.getId())) {
             log.info("Creating default user 'user' in organization '{}'", DEFAULT_ORG_NAME);
             User defaultUser = User.builder()
@@ -115,7 +123,48 @@ public class DataInitializer implements CommandLineRunner {
                 .build();
             userRepository.save(defaultUser);
         }
-        
+
         log.info("Data initialization finished.");
+    }
+
+    private void initializeOAuthClient(Organization organization) {
+        String clientId = "iam-frontend";
+        if (clientRepository.findByClientIdAndOrganizationId(clientId, organization.getId()).isEmpty()) {
+            Client client = new Client();
+            client.setId(UUID.randomUUID().toString());
+            client.setClientId(clientId);
+            client.setClientSecret(passwordEncoder.encode("secret"));
+            client.setClientName("IAM Frontend Application");
+            client.setClientIdIssuedAt(Instant.now());
+            client.setOrganization(organization);
+
+            client.setClientAuthenticationMethods(Set.of(ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue()));
+            client.setAuthorizationGrantTypes(Set.of(
+                    AuthorizationGrantType.AUTHORIZATION_CODE.getValue(),
+                    AuthorizationGrantType.REFRESH_TOKEN.getValue(),
+                    AuthorizationGrantType.CLIENT_CREDENTIALS.getValue()
+            ));
+
+            client.setRedirectUris(Set.of(
+                "http://localhost:3002/login"
+            ));
+            
+            client.setScopes(Set.of(
+                OidcScopes.OPENID,
+                OidcScopes.PROFILE,
+                "read",
+                "write"
+            ));
+
+            client.setClientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build());
+            client.setTokenSettings(TokenSettings.builder()
+                    .accessTokenTimeToLive(Duration.ofMinutes(30))
+                    .refreshTokenTimeToLive(Duration.ofDays(7))
+                    .authorizationCodeTimeToLive(Duration.ofMinutes(5))
+                    .build());
+            
+            clientRepository.save(client);
+            log.info("Initialized OAuth2 client '{}' for organization '{}'", clientId, organization.getName());
+        }
     }
 } 

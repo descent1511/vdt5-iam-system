@@ -164,7 +164,7 @@
               </div>
             </div>
             
-            <div class="col-md-6">
+            <div class="col-md-6" v-if="authStore.isSuperAdmin">
               <div class="form-group">
                 <label for="organization_id" class="form-label">Organization*</label>
                 <select 
@@ -212,8 +212,10 @@ import { useUserStore } from '../../stores/users'
 import { useRoleStore } from '../../stores/roles'
 import { useOrganizationStore } from '../../stores/organizations'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '../../stores/auth'
 
 // Stores
+const authStore = useAuthStore()
 const userStore = useUserStore()
 const roleStore = useRoleStore()
 const organizationStore = useOrganizationStore()

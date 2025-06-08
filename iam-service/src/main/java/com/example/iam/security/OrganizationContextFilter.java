@@ -21,6 +21,7 @@ public class OrganizationContextFilter implements Filter {
         // Only process if there's no Authorization header
         if (httpRequest.getHeader("Authorization") == null) {
         String orgIdStr = httpRequest.getHeader("X-Organization-Id"); 
+        System.out.println("orgIdStr: " + orgIdStr);
         if (orgIdStr != null) {
                 try {
             Long organizationId = Long.parseLong(orgIdStr);

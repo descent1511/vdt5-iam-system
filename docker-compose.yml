@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./iam-service
+      dockerfile: Dockerfile
+    container_name: iam-backend
+    restart: unless-stopped
+    environment:
+      # Spring Application
+      - SPRING_APPLICATION_NAME=iam-service
+      
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/iam_db
+      - SPRING_DATASOURCE_USERNAME=iam_user
+      - SPRING_DATASOURCE_PASSWORD=iam_password
+      
+      # JPA Configuration
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=false
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=false
+      
+      # Server Configuration
+      - SERVER_PORT=8080
+      - SERVER_SERVLET_CONTEXT_PATH=/
+      
+      # Swagger Configuration
+      - SPRINGDOC_SWAGGER_UI_ENABLED=true
+      - SPRINGDOC_API_DOCS_ENABLED=true
+      
+      # JWT Configuration
+      - APP_JWT_KEY_PRIVATE=classpath:certs/private.pem
+      - APP_JWT_KEY_PUBLIC=classpath:certs/public.pem
+      - APP_JWT_ACCESS_TOKEN_EXPIRATION=3600000
+      - APP_JWT_REFRESH_TOKEN_EXPIRATION=604800000
+      
+      # Super Admin Configuration
+      - APP_SUPER_ADMIN_USERNAME=superadmin
+      - APP_SUPER_ADMIN_PASSWORD=admin
+      
+      # Logging Configuration
+      - LOGGING_LEVEL_ROOT=INFO
+      - LOGGING_LEVEL_COM_EXAMPLE_IAM=DEBUG
+      - LOGGING_LEVEL_HIBERNATE_SQL=OFF
+      - LOGGING_LEVEL_HIBERNATE_BINDER=OFF
+      - LOGGING_LEVEL_SPRING_SECURITY=INFO
+      - LOGGING_LEVEL_SPRING_WEB=INFO
+      - LOGGING_LEVEL_HIBERNATE=ERROR
+      - LOGGING_LEVEL_SPRING_ORM=ERROR
+      - LOGGING_LEVEL_SPRING_TRANSACTION=ERROR
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - iam-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./iam-frontend
+      dockerfile: Dockerfile
+    container_name: iam-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - iam-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  db:
+    image: postgres:15-alpine
+    container_name: iam-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=iam_db
+      - POSTGRES_USER=iam_user
+      - POSTGRES_PASSWORD=iam_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - iam-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iam_user -d iam_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  iam-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local 

@@ -115,7 +115,7 @@
               </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-6" v-if="authStore.isSuperAdmin ">
               <div class="form-group">
                 <label for="organization" class="form-label">Organization*</label>
                 <select 
@@ -163,8 +163,11 @@ import { useUserStore } from '../../stores/users'
 import { useRoleStore } from '../../stores/roles'
 import { useOrganizationStore } from '../../stores/organizations'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from '../../stores/auth'
+
 
 // Stores
+const authStore = useAuthStore()
 const userStore = useUserStore()
 const roleStore = useRoleStore()
 const organizationStore = useOrganizationStore()
@@ -177,7 +180,7 @@ const form = reactive({
   email: '',
   password: '',
   fullName: '',
-  roles: [],
+  role: '',
   organization_id: null
 })
 
@@ -258,19 +261,15 @@ function validateForm() {
     errors.role = 'Role is required'
     valid = false
   }
-  
-  // Validate organization
-  if (!form.organization_id) {
-    errors.organization_id = 'Organization is required'
-    valid = false
-  }
-  
+
   return valid
 }
 
 async function handleSubmit() {
   if (!validateForm()) return
-  
+  if (form.organization_id === null) {
+    form.organization_id = authStore.currentOrganizationId
+  }
   try {
     const userData = {
       username: form.username,

@@ -27,5 +27,4 @@ public interface ScopeMapper {
             .map(Permission::getName)
             .collect(Collectors.toSet());
     }
-
 }

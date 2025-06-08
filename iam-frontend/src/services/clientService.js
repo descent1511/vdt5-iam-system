@@ -2,27 +2,52 @@ import api from './api'
 
 export const clientService = {
   async getAllClients() {
-    const response = await api.get('/clients')
-    return response
+    try {
+      const response = await api.get('/clients')
+      return response
+    } catch (error) {
+      console.error('Error fetching clients:', error)
+      throw error
+    }
   },
 
   async getClientById(id) {
-    const response = await api.get(`/clients/${id}`)
-    return response
+    try {
+      const response = await api.get(`/clients/${id}`)
+      return response
+    } catch (error) {
+      console.error('Error fetching client:', error)
+      throw error
+    }
   },
 
   async createClient(clientData) {
-    const response = await api.post('/clients', clientData)
-    return response
+    try {
+      const response = await api.post('/clients', clientData)
+      return response
+    } catch (error) {
+      console.error('Error creating client:', error)
+      throw error
+    }
   },
 
   async updateClient(id, clientData) {
-    const response = await api.put(`/clients/${id}`, clientData)
-    return response
+    try {
+      const response = await api.put(`/clients/${id}`, clientData)
+      return response
+    } catch (error) {
+      console.error('Error updating client:', error)
+      throw error
+    }
   },
 
   async deleteClient(id) {
-    const response = await api.delete(`/clients/${id}`)
-    return response
+    try {
+      const response = await api.delete(`/clients/${id}`)
+      return response
+    } catch (error) {
+      console.error('Error deleting client:', error)
+      throw error
+    }
   }
 } 
