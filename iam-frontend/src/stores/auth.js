@@ -89,6 +89,7 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = true
       error.value = null
       const response = await authService.login(credentials)
+      console.log('response', response)
       if (!response || !response.accessToken) {
         throw new Error('Invalid response format - missing access token')
       }

@@ -2,13 +2,13 @@ import api from './api'
 
 export const authService = {
   async signup(userData) {
-    const response = await api.post('/auth/signup', userData)
+    const response = await api.post('api/auth/signup', userData)
     return response
   },
 
   async login(credentials) {
     try {
-      const response = await api.post('/auth/login', credentials)
+      const response = await api.post('api/auth/login', credentials)
       return response
     } catch (error) {
       console.error('Login error:', error)
@@ -17,7 +17,7 @@ export const authService = {
   },
 
   async logout() {
-    const response = await api.post('/auth/logout')
+    const response = await api.post('api/auth/logout')
     return response
   },
   async getCurrentUser() {

@@ -21,6 +21,7 @@ public class Client {
     private String clientSecret;
     private Instant clientSecretExpiresAt;
     private String clientName;
+    private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)

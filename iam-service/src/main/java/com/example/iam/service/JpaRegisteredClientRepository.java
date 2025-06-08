@@ -1,20 +1,18 @@
 package com.example.iam.service;
 
 import com.example.iam.entity.Client;
+import com.example.iam.entity.Organization;
 import com.example.iam.repository.ClientRepository;
 import com.example.iam.security.OrganizationContextHolder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
-import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-import org.springframework.context.annotation.Primary;
 
 import java.util.stream.Collectors;
 
@@ -35,8 +33,6 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
     @Override
     public RegisteredClient findById(String id) {
         Assert.hasText(id, "id cannot be empty");
-        // Note: findById is global and does not respect tenancy.
-        // This is generally acceptable as IDs are unique UUIDs.
         return clientRepository.findById(id).map(this::toRegisteredClient).orElse(null);
     }
 
@@ -72,10 +68,6 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
     }
 
     private Client toEntity(RegisteredClient registeredClient) {
-        // ... (existing code, but needs to handle organization)
-        // This method is problematic for multitenancy as RegisteredClient doesn't have an orgId.
-        // We will address this by creating clients through our new API, not directly via this method.
-        // For now, this implementation is incomplete for a save operation without context.
         Client entity = new Client();
         entity.setId(registeredClient.getId());
         entity.setClientId(registeredClient.getClientId());
@@ -83,18 +75,22 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
         entity.setClientSecret(registeredClient.getClientSecret());
         entity.setClientSecretExpiresAt(registeredClient.getClientSecretExpiresAt());
         entity.setClientName(registeredClient.getClientName());
-        entity.setClientAuthenticationMethods(
-                registeredClient.getClientAuthenticationMethods().stream()
-                        .map(ClientAuthenticationMethod::getValue)
-                        .collect(Collectors.toSet()));
-        entity.setAuthorizationGrantTypes(
-                registeredClient.getAuthorizationGrantTypes().stream()
-                        .map(AuthorizationGrantType::getValue)
-                        .collect(Collectors.toSet()));
+        entity.setClientAuthenticationMethods(registeredClient.getClientAuthenticationMethods().stream()
+                .map(ClientAuthenticationMethod::getValue).collect(Collectors.toSet()));
+        entity.setAuthorizationGrantTypes(registeredClient.getAuthorizationGrantTypes().stream()
+                .map(AuthorizationGrantType::getValue).collect(Collectors.toSet()));
         entity.setRedirectUris(registeredClient.getRedirectUris());
         entity.setScopes(registeredClient.getScopes());
         entity.setClientSettings(registeredClient.getClientSettings());
         entity.setTokenSettings(registeredClient.getTokenSettings());
+
+        Long organizationId = OrganizationContextHolder.getOrganizationId();
+        Assert.notNull(organizationId, "Organization context is required to save a new client.");
+
+        Organization org = new Organization();
+        org.setId(organizationId);
+        entity.setOrganization(org);
+
         return entity;
     }
 } 

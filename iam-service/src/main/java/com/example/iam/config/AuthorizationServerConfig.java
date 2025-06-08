@@ -20,32 +20,46 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import com.example.iam.security.SessionSavingAuthenticationEntryPoint;
 import com.example.iam.security.JwtTokenProvider;
 import com.example.iam.service.JpaRegisteredClientRepository;
-
-import java.util.UUID;
+import com.example.iam.security.OrganizationContextFilter;
+import com.example.iam.security.OrganizationContextClearFilter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
+@RequiredArgsConstructor
 public class AuthorizationServerConfig {
 
     private final RegisteredClientRepository registeredClientRepository;
-
-    public AuthorizationServerConfig(RegisteredClientRepository registeredClientRepository) {
-        this.registeredClientRepository = registeredClientRepository;
-    }
+    private final OrganizationContextFilter organizationContextFilter;
+    private final OrganizationContextClearFilter organizationContextClearFilter;
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
+        RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
+
+        http
+            .securityMatcher(endpointsMatcher)
+            .authorizeHttpRequests(authorize -> authorize
+                .anyRequest().authenticated()
+            )
+            .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
+            .addFilterBefore(organizationContextFilter, SecurityContextHolderFilter.class)
+            .addFilterAfter(organizationContextClearFilter, SecurityContextHolderFilter.class)
+            .apply(authorizationServerConfigurer);
+
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-            .oidc(Customizer.withDefaults()); // Enable OpenID Connect 1.0
+            .oidc(Customizer.withDefaults());
 
         http
             .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                .authenticationEntryPoint(new SessionSavingAuthenticationEntryPoint("/login"))
             )
             .oauth2ResourceServer(resourceServer -> resourceServer
                 .jwt(Customizer.withDefaults()));

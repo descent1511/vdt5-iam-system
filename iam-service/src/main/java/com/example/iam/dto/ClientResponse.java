@@ -10,6 +10,7 @@ public class ClientResponse {
     private String id;
     private String clientId;
     private String clientName;
+    private String description;
     private Instant clientIdIssuedAt;
     private Set<String> redirectUris;
     private Set<String> scopes;

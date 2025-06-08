@@ -1,6 +1,7 @@
 package com.example.iam.controller;
 
 import com.example.iam.dto.LoginRequest;
+import com.example.iam.dto.LoginResponse;
 import com.example.iam.dto.SignupRequest;
 import com.example.iam.dto.TokenResponse;
 import com.example.iam.entity.User;
@@ -26,11 +27,12 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @RestController
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final JwtTokenProvider tokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
     private final AuthService authService;
     private final TokenService tokenService;
     private final OrganizationRepository organizationRepository;
@@ -39,67 +41,26 @@ public class AuthController {
     private String superAdminUsername;
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
-        Long organizationId = getOrganizationIdFromHeader(request);
-        String username = loginRequest.getUsername();
-        System.out.println("organizationId: " + organizationId);
-        System.out.println("username: " + username);
-        // Handle superadmin login separately
-        if (organizationId == null && superAdminUsername.equals(username)) {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    username,
-                    loginRequest.getPassword()
-                )
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            String accessToken = tokenProvider.generateAccessToken(authentication, null);
-            String refreshToken = tokenProvider.generateRefreshToken(authentication, null);
-            return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
-        }
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         
-        // Regular user login
+        Long organizationId = OrganizationContextHolder.getOrganizationId();
         if (organizationId == null) {
-            throw new IllegalArgumentException("Organization ID is required for non-superadmin users.");
-        }
-
-        OrganizationContextHolder.setOrganizationId(organizationId);
-
-        try {
-        Organization organization = organizationRepository.findById(organizationId)
-            .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
-            
-        if (!organization.isActive()) {
-            throw new IllegalArgumentException("Organization is not active");
+            return ResponseEntity.badRequest().body("X-Organization-Id header is required.");
         }
 
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
-                    username,
+                        loginRequest.getUsername(),
                 loginRequest.getPassword()
             )
         );
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         
-        String accessToken = tokenProvider.generateAccessToken(authentication, organizationId);
-        String refreshToken = tokenProvider.generateRefreshToken(authentication, organizationId);
+        String accessToken = jwtTokenProvider.generateAccessToken(authentication, organizationId);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(authentication, organizationId);
             
-            return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
-        } finally {
-        OrganizationContextHolder.clear();
-        }
-    }
-
-    private Long getOrganizationIdFromHeader(HttpServletRequest request) {
-        String orgIdStr = request.getHeader("X-Organization-Id");
-        if (orgIdStr == null || orgIdStr.isBlank()) {
-            return null;
-        }
-        try {
-            return Long.parseLong(orgIdStr);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid X-Organization-Id header format.", e);
-        }
+        return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken));
     }
 
     @PostMapping("/signup")
@@ -135,8 +96,8 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String token) {
         String jwt = token.substring(7); // Remove "Bearer "
-        Long organizationId = tokenProvider.getOrganizationIdFromJWT(jwt);
-        String username = tokenProvider.getSubjectFromJWT(jwt);
+        Long organizationId = jwtTokenProvider.getOrganizationIdFromJWT(jwt);
+        String username = jwtTokenProvider.getSubjectFromJWT(jwt);
         
         tokenService.revokeToken(jwt);
         return ResponseEntity.ok().build();
