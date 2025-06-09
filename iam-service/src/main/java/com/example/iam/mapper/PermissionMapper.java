@@ -18,7 +18,7 @@ public interface PermissionMapper {
     PermissionMapper INSTANCE = Mappers.getMapper(PermissionMapper.class);
 
     @Mapping(source = "roles", target = "roleIds", qualifiedByName = "rolesToRoleIds")
-    @Mapping(source = "scopes", target = "scopeIds", qualifiedByName = "scopesToScopeIds")
+    @Mapping(source = "scopes", target = "scopes", qualifiedByName = "scopesToScopes")
     PermissionDTO toDto(Permission permission);
     
     List<PermissionDTO> toDtoList(List<Permission> permissions);
@@ -33,8 +33,8 @@ public interface PermissionMapper {
                 .collect(Collectors.toSet());
     }
 
-    @Named("scopesToScopeIds")
-    default Set<Long> scopesToScopeIds(Set<Scope> scopes) {
+    @Named("scopesToScopes")
+    default Set<Long> scopesToScopes(Set<Scope> scopes) {
         if (scopes == null) {
             return null;
         }

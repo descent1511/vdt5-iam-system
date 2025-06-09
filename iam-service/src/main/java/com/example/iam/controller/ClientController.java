@@ -61,6 +61,8 @@ public class ClientController {
     public ResponseEntity<ClientResponse> createClient(
             @Valid @RequestBody ClientCreateRequest request) {
         Long orgId = OrganizationContextHolder.getOrganizationId();
+        System.out.println("orgId: " + orgId);
+        System.out.println("request: " + request);
         Client newClient = clientService.createClient(orgId, request);
         ClientResponse response = clientMapper.toClientResponse(newClient);
         

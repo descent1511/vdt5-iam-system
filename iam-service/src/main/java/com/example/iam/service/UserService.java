@@ -10,6 +10,7 @@ import com.example.iam.repository.ScopeRepository;
 import com.example.iam.repository.UserRepository;
 import com.example.iam.repository.OrganizationRepository;
 import com.example.iam.repository.ClientApplicationRepository;
+import com.example.iam.audit.Auditable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = "CREATE_USER")
     public User createUser(UserDTO userDTO) {
         User user = new User();
         user.setUsername(userDTO.getUsername());
@@ -64,6 +66,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = "UPDATE_USER")
     public User updateUser(Long id, UserDTO userDTO) {
         User existingUser = findById(id);
 
@@ -97,6 +100,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = "DELETE_USER")
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
@@ -106,6 +110,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = "ADD_ROLE_TO_USER")
     public User addRoleToUser(Long userId, Long roleId) {
         User user = findById(userId);
         Role role = roleRepository.findById(roleId)
@@ -115,6 +120,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = "REMOVE_ROLE_FROM_USER")
     public User removeRoleFromUser(Long userId, Long roleId) {
         User user = findById(userId);
         Role role = roleRepository.findById(roleId)
@@ -128,6 +134,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = "ADD_SCOPE_TO_USER")
     public User addScopeToUser(Long userId, Long scopeId) {
         User user = findById(userId);
         Scope scope = scopeRepository.findById(scopeId)
@@ -137,6 +144,7 @@ public class UserService {
     }
 
     @Transactional
+    @Auditable(action = "REMOVE_SCOPE_FROM_USER")
     public User removeScopeFromUser(Long userId, Long scopeId) {
         User user = findById(userId);
         Scope scope = scopeRepository.findById(scopeId)

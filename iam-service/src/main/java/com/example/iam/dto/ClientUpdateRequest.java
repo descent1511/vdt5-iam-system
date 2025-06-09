@@ -11,5 +11,5 @@ public class ClientUpdateRequest {
     private Set<String> redirectUris;
     private Set<String> authorizationGrantTypes;
     private Set<String> clientAuthenticationMethods;
-    private List<Long> scopeIds;
+    private List<Long> scopes;
 } 

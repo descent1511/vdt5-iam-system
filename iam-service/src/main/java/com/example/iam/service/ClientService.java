@@ -10,6 +10,7 @@ import com.example.iam.repository.ClientRepository;
 import com.example.iam.repository.OrganizationRepository;
 import com.example.iam.repository.PermissionRepository;
 import com.example.iam.security.OrganizationContextHolder;
+import com.example.iam.audit.Auditable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -49,6 +50,7 @@ public class ClientService {
     }
 
     @Transactional
+    @Auditable(action = "UPDATE_CLIENT")
     public Client updateClient(String clientId, ClientUpdateRequest request) {
         Long organizationId = OrganizationContextHolder.getOrganizationId();
         if (organizationId == null) {
@@ -71,8 +73,8 @@ public class ClientService {
         if (request.getClientAuthenticationMethods() != null) {
             client.setClientAuthenticationMethods(request.getClientAuthenticationMethods());
         }
-        if (request.getScopeIds() != null) {
-            Set<String> scopeNames = getScopeNamesFromIds(request.getScopeIds());
+        if (request.getScopes() != null) {
+            Set<String> scopeNames = getScopeNamesFromIds(request.getScopes());
             client.setScopes(scopeNames);
         }
 
@@ -80,6 +82,7 @@ public class ClientService {
     }
 
     @Transactional
+    @Auditable(action = "DELETE_CLIENT")
     public void deleteByClientId(String clientId) {
         Long organizationId = OrganizationContextHolder.getOrganizationId();
         if (organizationId == null) {
@@ -93,6 +96,7 @@ public class ClientService {
     }
 
     @Transactional
+    @Auditable(action = "CREATE_CLIENT")
     public Client createClient(Long organizationId, ClientCreateRequest request) {
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
@@ -112,7 +116,7 @@ public class ClientService {
         
         client.setRedirectUris(request.getRedirectUris());
         
-        Set<String> scopeNames = getScopeNamesFromIds(request.getScopeIds());
+        Set<String> scopeNames = getScopeNamesFromIds(request.getScopes());
         client.setScopes(scopeNames);
 
         client.setClientIdIssuedAt(Instant.now());
@@ -129,12 +133,12 @@ public class ClientService {
         return savedClient;
     }
 
-    private Set<String> getScopeNamesFromIds(List<Long> scopeIds) {
-        if (scopeIds == null || scopeIds.isEmpty()) {
+    private Set<String> getScopeNamesFromIds(List<Long> scopes) {
+        if (scopes == null || scopes.isEmpty()) {
             return Set.of();
         }
-        List<Permission> permissions = permissionRepository.findAllById(scopeIds);
-        if (permissions.size() != scopeIds.size()) {
+        List<Permission> permissions = permissionRepository.findAllById(scopes);
+        if (permissions.size() != scopes.size()) {
             // This indicates some IDs were invalid
             throw new ResourceNotFoundException("Scope", "id", "One or more provided scope IDs were not found.");
         }
