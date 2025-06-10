@@ -80,9 +80,9 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label class="form-label">Allowed Scopes*</label>
-                <div v-if="errors.scopeIds" class="text-danger small mb-2">{{ errors.scopeIds }}</div>
+                <div v-if="errors.scopes" class="text-danger small mb-2">{{ errors.scopes }}</div>
                 <div v-for="scope in availableScopes" :key="scope.id" class="form-check">
-                  <input class="form-check-input" type="checkbox" :value="scope.id" :id="'scope-' + scope.id" v-model="form.scopeIds">
+                  <input class="form-check-input" type="checkbox" :value="scope.id" :id="'scope-' + scope.id" v-model="form.scopes">
                   <label class="form-check-label" :for="'scope-' + scope.id">{{ scope.name }}</label>
                 </div>
               </div>
@@ -124,7 +124,7 @@ const form = reactive({
   redirectUris: [''],
   authorizationGrantTypes: [],
   clientAuthenticationMethods: [],
-  scopeIds: [],
+  scopes: [],
 });
 
 const errors = reactive({});
@@ -163,7 +163,7 @@ onMounted(async () => {
       form.clientAuthenticationMethods = clientData.clientAuthenticationMethods || [];
       
       const scopeNameToIdMap = new Map(availableScopes.value.map(s => [s.name, s.id]));
-      form.scopeIds = (clientData.scopes || []).map(name => scopeNameToIdMap.get(name)).filter(id => id);
+      form.scopes = (clientData.scopes || []).map(name => scopeNameToIdMap.get(name)).filter(id => id);
 
     } else {
       toast.error('Could not find client data.');
@@ -222,8 +222,8 @@ function validateForm() {
         isValid = false;
     }
 
-    if (form.scopeIds.length === 0) {
-        errors.scopeIds = 'At least one Scope must be selected.';
+    if (form.scopes.length === 0) {
+        errors.scopes = 'At least one Scope must be selected.';
         isValid = false;
     }
 

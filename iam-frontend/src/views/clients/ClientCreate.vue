@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h1 class="h2 mb-0">Create Client</h1>
       <router-link to="/clients" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-2"></i> Back to List
+        <i class="bi bi-arrow-left me-2"></i> Back to Clients
       </router-link>
     </div>
 
@@ -73,9 +73,9 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label class="form-label">Allowed Scopes*</label>
-                <div v-if="errors.scopeIds" class="text-danger small mb-2">{{ errors.scopeIds }}</div>
+                <div v-if="errors.scopes" class="text-danger small mb-2">{{ errors.scopes }}</div>
                 <div v-for="scope in availableScopes" :key="scope.id" class="form-check">
-                  <input class="form-check-input" type="checkbox" :value="scope.id" :id="'scope-' + scope.id" v-model="form.scopeIds">
+                  <input class="form-check-input" type="checkbox" :value="scope.id" :id="'scope-' + scope.id" v-model="form.scopes">
                   <label class="form-check-label" :for="'scope-' + scope.id">{{ scope.name }}</label>
                 </div>
               </div>
@@ -114,7 +114,7 @@ const form = reactive({
   redirectUris: [''],
   authorizationGrantTypes: [],
   clientAuthenticationMethods: [],
-  scopeIds: [],
+  scopes: [],
 });
 
 const errors = reactive({});
@@ -189,11 +189,10 @@ function validateForm() {
         isValid = false;
     }
 
-    if (form.scopeIds.length === 0) {
-        errors.scopeIds = 'At least one Scope must be selected.';
+    if (form.scopes.length === 0) {
+        errors.scopes = 'At least one Scope must be selected.';
         isValid = false;
     }
-
     return isValid;
 }
 
@@ -205,6 +204,7 @@ async function handleSubmit() {
 
   const payload = { ...form, redirectUris: form.redirectUris.map(uri => uri.trim()).filter(uri => uri) };
   try {
+    console.log(payload)
     await clientStore.createClient(payload);
     toast.success('Client created successfully!');
     router.push('/clients');

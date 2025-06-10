@@ -1,65 +1,59 @@
 <template>
-  <div>
-    <div v-if="serviceStore.loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-2">Loading services...</p>
-    </div>
     <DataList
-      v-else
       ref="dataList"
       title="Services"
       :items="serviceStore.services"
       :columns="columns"
+    :loading="serviceStore.loading"
+    :error="serviceStore.error"
       :can-create="authStore.can('SERVICE_CREATE')"
       create-route="/services/create"
       create-button-text="New Service"
       search-placeholder="Search by name, description, or URL..."
       :search-fields="['name', 'description', 'url']"
       empty-message="No services registered yet. Click 'New Service' to add one."
-      :error="serviceStore.error"
-      @clear-error="serviceStore.error = null"
+    @clear-error="serviceStore.clearError()"
       @delete="handleDelete"
     >
       <template #url="{ item }">
         <a :href="item.url" target="_blank" rel="noopener noreferrer">{{ item.url }}</a>
       </template>
       <template #actions="{ item }">
+      <div class="d-flex justify-content-end gap-2">
         <router-link
           v-if="authStore.can('SERVICE_UPDATE')"
           :to="`/services/${item.id}/edit`"
-          class="btn btn-sm btn-outline-primary me-2"
+          class="btn btn-action btn-edit"
+          title="Edit"
         >
-          <i class="bi bi-pencil"></i>
+          <i class="bi bi-pencil-fill"></i>
         </router-link>
         <button
           v-if="authStore.can('SERVICE_DELETE')"
-          class="btn btn-sm btn-outline-danger"
+          class="btn btn-action btn-delete"
           @click="confirmDelete(item)"
+          title="Delete"
         >
-          <i class="bi bi-trash"></i>
+          <i class="bi bi-trash-fill"></i>
         </button>
+      </div>
       </template>
     </DataList>
-  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useServiceRegistryStore } from '../../stores/serviceRegistry'
-import { useAuthStore } from '../../stores/auth'
+import { useServiceRegistryStore } from '@/stores/serviceRegistry'
+import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
-import DataList from '../../components/layout/DataList.vue'
+import DataList from '@/components/layout/DataList.vue'
 
 const serviceStore = useServiceRegistryStore()
 const authStore = useAuthStore()
 const toast = useToast()
 const dataList = ref(null)
-const itemToDelete = ref(null)
 
 const columns = ref([
-  { key: 'id', label: 'ID' },
   { key: 'name', label: 'Name' },
   { key: 'description', label: 'Description' },
   { key: 'url', label: 'URL' },
@@ -74,24 +68,22 @@ async function loadServices() {
   try {
     await serviceStore.fetchServices()
   } catch (error) {
-    console.error('Failed to load services:', error)
+    toast.error(error.message || 'Failed to load services.')
   }
 }
 
 function confirmDelete(item) {
-  itemToDelete.value = item
-  dataList.value.showDeleteModal()
+  dataList.value?.showDeleteModal(item)
 }
 
-async function handleDelete() {
-  if (itemToDelete.value) {
-    await serviceStore.deleteService(itemToDelete.value.id)
-    itemToDelete.value = null
-    dataList.value.hideDeleteModal()
+async function handleDelete(item) {
+  if (!item) return
+  try {
+    await serviceStore.deleteService(item.id)
+    toast.success(`Service "${item.name}" deleted successfully.`)
+    await loadServices()
+  } catch (error) {
+    toast.error(error.message || 'Failed to delete service.')
   }
 }
 </script>
-
-<style scoped>
-/* Scoped styles can be added here if needed */
-</style> 

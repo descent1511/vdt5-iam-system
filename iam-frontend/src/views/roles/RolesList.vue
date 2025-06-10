@@ -200,14 +200,16 @@ async function deleteRole() {
 
 <style scoped>
 .card {
-  border: none;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+  background-color: var(--bs-card-bg);
+  border: 1px solid var(--bs-border-color-translucent);
+  box-shadow: var(--bs-box-shadow);
   border-radius: 12px;
   transition: transform 0.2s ease-in-out;
 }
 
 .card:hover {
   transform: translateY(-5px);
+  box-shadow: var(--bs-box-shadow-lg);
 }
 
 .card-header {
@@ -218,7 +220,6 @@ async function deleteRole() {
 
 .card-header h5 {
   font-weight: 600;
-  color: #2c3e50;
 }
 
 .card-body {

@@ -1,19 +1,19 @@
 <template>
   <div class="sidebar-container">
-    <!-- Sidebar Toggle Button -->
-    <button 
-      class="sidebar-toggle btn btn-link" 
-      @click="toggleSidebar"
-      :class="{ 'collapsed': !isExpanded }"
-    >
-      <i class="bi" :class="isExpanded ? 'bi-chevron-left' : 'bi-chevron-right'"></i>
-    </button>
-
     <!-- Sidebar -->
     <aside 
       class="sidebar" 
       :class="{ 'collapsed': !isExpanded }"
     >
+      <!-- Sidebar Toggle Button -->
+      <button 
+        class="sidebar-toggle btn btn-link" 
+        @click="toggleSidebar"
+        :class="{ 'collapsed': !isExpanded }"
+      >
+        <i class="bi" :class="isExpanded ? 'bi-chevron-left' : 'bi-chevron-right'"></i>
+      </button>
+
       <!-- Logo Section -->
       <router-link to="/" class="sidebar-header-link">
         <div class="sidebar-header">
@@ -209,8 +209,8 @@ onUnmounted(() => {
 
 .sidebar-toggle {
   position: absolute;
-  top: 20px;
-  right: -15px;
+  top: 15px;
+  right: 15px;
   width: 30px;
   height: 30px;
   background-color: var(--bs-dark);
@@ -224,6 +224,7 @@ onUnmounted(() => {
   border: 2px solid var(--bs-light);
   transition: all 0.3s ease;
   cursor: pointer;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-toggle:hover {
@@ -232,7 +233,10 @@ onUnmounted(() => {
 }
 
 .sidebar-toggle.collapsed {
-  right: -15px;
+  right: -45px;
+  background-color: var(--bs-dark);
+  border-color: var(--bs-light);
+  color: var(--bs-light);
 }
 
 .sidebar-header {

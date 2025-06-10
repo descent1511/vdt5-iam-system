@@ -69,7 +69,7 @@ export const usePolicyStore = defineStore('policies', () => {
     try {
       loading.value = true
       error.value = null
-      
+      console.log('policyData', policyData)
       const data = await policyService.createPolicy(policyData)
       policies.value.push({ ...data, showAllResources: false }) // Thêm showAllResources
       return data

@@ -48,7 +48,7 @@
             
             <div class="mt-3">
               <h6 class="mb-2 text-muted">Path:</h6>
-              <code class="d-block p-2 bg-light rounded">{{ resource.path }}</code>
+              <code class="d-block p-2 rounded">{{ resource.path }}</code>
             </div>
 
             <div class="mt-3" v-if="resource.requiredPermissions?.length">
@@ -197,15 +197,16 @@ async function reloadResources() {
 
 <style scoped>
 .card {
-  border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background-color: var(--bs-card-bg);
+  border: 1px solid var(--bs-border-color-translucent);
+  box-shadow: var(--bs-box-shadow);
   border-radius: 12px;
   transition: all 0.3s ease;
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--bs-box-shadow-lg);
 }
 
 .card-header {
@@ -214,11 +215,6 @@ async function reloadResources() {
   padding: 1.25rem;
 }
 
-.card-header h5 {
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0;
-}
 
 .card-body {
   padding: 1.25rem;

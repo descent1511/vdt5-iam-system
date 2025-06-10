@@ -20,36 +20,41 @@
     <!-- Custom column slots -->
     <template #name="{ item }">
       <div class="d-flex align-items-center">
-        <div class="avatar me-2 d-flex align-items-center justify-content-center bg-primary text-white rounded-circle">
+        <div class="avatar-initials me-3">
           {{ getInitials(item.fullName) }}
         </div>
         <div>
-          {{ item.fullName }}
+          <div class="fw-bold">{{ item.fullName }}</div>
+          <div class="small text-muted">{{ item.email }}</div>
         </div>
       </div>
     </template>
 
     <template #roles="{ item }">
-      <div class="d-flex gap-1">
+      <div class="d-flex flex-wrap gap-1">
         <span 
           v-for="role in item.roles" 
           :key="role"
-          :class="`badge rounded-pill bg-${getRoleBadgeColor(role)}`"
+          :class="['role-badge', getRoleBadgeClass(role)]"
         >
-          {{ role.replace('ROLE_', '') }}
+          {{ formatRoleName(role) }}
         </span>
       </div>
     </template>
 
     <template #permissions="{ item }">
       <div class="permissions-container">
-        <div class="permissions-wrapper" :class="{ 'expanded': item.showAllPermissions }">
+        <div class="permissions-wrapper">
           <span class="permission-count">
             {{ item.permissions.length }} permissions
           </span>
-          <div class="permissions-list" :class="{ 'show': item.showAllPermissions }">
-            <span 
-              v-for="permission in item.permissions" 
+          <div
+            class="permissions-list"
+            :class="{ 'show': item.showAllPermissions }"
+            v-if="item.permissions.length > 0"
+          >
+            <span
+              v-for="permission in item.permissions"
               :key="permission"
               class="permission-badge"
             >
@@ -58,13 +63,14 @@
             </span>
           </div>
         </div>
-        <button 
-          class="btn btn-sm btn-link toggle-btn"
+        <button
+          v-if="item.permissions.length > 0"
+          class="btn btn-link toggle-btn"
           @click="togglePermissions(item)"
         >
           <span class="toggle-content">
             <span v-if="!item.showAllPermissions">
-              Detail
+              Show
               <i class="bi bi-chevron-down"></i>
             </span>
             <span v-else>
@@ -77,18 +83,20 @@
     </template>
 
     <template #actions="{ item }">
-      <div class="d-flex gap-2">
-        <router-link 
+      <div class="d-flex justify-content-end">
+        <router-link
           v-if="hasPermission('USER_UPDATE')"
-          :to="`/users/${item.id}/edit`" 
-          class="btn btn-sm btn-outline-primary"
+          :to="`/users/${item.id}/edit`"
+          class="btn-action btn-edit"
+          data-bs-toggle="tooltip" title="Edit User"
         >
           <i class="bi bi-pencil"></i>
         </router-link>
-        <button 
+        <button
           v-if="hasPermission('USER_DELETE')"
-          class="btn btn-sm btn-outline-danger"
+          class="btn-action btn-delete"
           @click="confirmDelete(item)"
+          data-bs-toggle="tooltip" title="Delete User"
         >
           <i class="bi bi-trash"></i>
         </button>
@@ -134,17 +142,16 @@ function getInitials(fullName) {
     .toUpperCase()
 }
 
-function getRoleBadgeColor(role) {
-  switch (role) {
-    case 'ROLE_ADMIN':
-      return 'danger'
-    case 'ROLE_MANAGER':
-      return 'info'
-    case 'ROLE_USER':
-      return 'secondary'
-    default:
-      return 'secondary'
-  }
+function getRoleBadgeClass(role) {
+  const roleName = formatRoleName(role).toLowerCase();
+  if (roleName === 'admin') return 'role-admin';
+  if (roleName === 'user') return 'role-user';
+  return 'role-guest';
+}
+
+function formatRoleName(role) {
+  if (!role) return '';
+  return role.replace('ROLE_', '');
 }
 
 function changePage(page) {
@@ -153,15 +160,14 @@ function changePage(page) {
 }
 
 function confirmDelete(user) {
-  userStore.selectedUser = user
-  dataList.value.showDeleteModal()
+  dataList.value?.showDeleteModal(user)
 }
 
-async function deleteUser() {
-  if (!userStore.selectedUser) return
+async function deleteUser(user) {
+  if (!user) return
   
   try {
-    await userStore.deleteUser(userStore.selectedUser.id)
+    await userStore.deleteUser(user.id)
     await loadUsers()
     dataList.value.hideDeleteModal()
   } catch (error) {
@@ -193,17 +199,42 @@ async function loadUsers() {
     limit: userStore.pagination.limit
   }
   await userStore.fetchUsers(params)
+
+  if (userStore.users && userStore.users.length > 0) {
+    userStore.users.forEach(user => {
+      if (typeof user.showAllPermissions === 'undefined') {
+        user.showAllPermissions = true;
+      }
+    });
+  }
 }
 
 onMounted(loadUsers)
 </script>
 
 <style scoped>
+/* Component-specific styles */
+
+/* Avatar */
 .avatar {
   width: 36px;
   height: 36px;
   font-size: 14px;
   font-weight: 600;
+}
+
+.avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #007bff; /* Example background color */
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .badge {
@@ -220,28 +251,20 @@ onMounted(loadUsers)
   color: var(--bs-info-dark);
 }
 
-/* Table styles */
-:deep(.table) {
-  margin-bottom: 0;
-}
-
-:deep(.table th) {
-  font-weight: 500;
-  color: #2c3e50;
-  border-top: none;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  white-space: nowrap;
+/* Specific alignment for Actions header - assuming it's the last column */
+:deep(.table th:last-child) {
+  text-align: right;
 }
 
 :deep(.table td) {
   padding: 1rem;
   vertical-align: middle;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #e2e8f0; /* Slightly softer border color */
+  text-align: left; /* Default left align for cells */
 }
 
 :deep(.table tr:hover) {
-  background-color: #f8f9fa;
+  background-color: #edf2f7; /* Slightly more distinct hover color */
 }
 
 /* Column specific styles */
@@ -276,11 +299,6 @@ onMounted(loadUsers)
   min-width: 150px;
 }
 
-.permissions-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
 
 .permission-count {
   font-size: 0.75rem;
@@ -312,8 +330,6 @@ onMounted(loadUsers)
   font-size: 0.7rem;
   font-weight: 500;
   color: #0c5460;
-  background-color: #d1ecf1;
-  border: 1px solid #bee5eb;
   border-radius: 50rem;
   transition: all 0.2s ease-in-out;
   gap: 0.35rem;
@@ -339,20 +355,6 @@ onMounted(loadUsers)
   }
 }
 
-.permission-type {
-  color: #0a3d42;
-  font-weight: 600;
-}
-
-.permission-action {
-  color: #0c5460;
-  opacity: 0.9;
-}
-
-.permission-badge:hover {
-  background-color: #bee5eb;
-  transform: translateY(-1px);
-}
 
 .toggle-btn {
   position: absolute;
@@ -361,7 +363,6 @@ onMounted(loadUsers)
   padding: 0;
   font-size: 0.75rem;
   color: #0c5460;
-  background: linear-gradient(90deg, transparent, #fff 30%);
   border: none;
   transition: all 0.2s ease-in-out;
 }
@@ -416,10 +417,27 @@ onMounted(loadUsers)
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   margin-bottom: 1.5rem;
+  overflow: hidden; /* Important for border-radius on table */
 }
 
 :deep(.card-body) {
   padding: 1.5rem;
+}
+
+/* DataList specific adjustments based on common UI patterns */
+:deep(.data-list-header) {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  background-color: #ffffff;
+}
+
+:deep(.data-list-footer) {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e9ecef;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Responsive adjustments */

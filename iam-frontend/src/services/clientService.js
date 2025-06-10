@@ -4,7 +4,6 @@ export const clientService = {
   async getAllClients() {
     try {
       const response = await api.get('/clients')
-      console.log(response)
       return response
     } catch (error) {
       console.error('Error fetching clients:', error)
@@ -24,6 +23,7 @@ export const clientService = {
 
   async createClient(clientData) {
     try {
+      console.log(clientData)
       const response = await api.post('/clients', clientData)
       return response
     } catch (error) {

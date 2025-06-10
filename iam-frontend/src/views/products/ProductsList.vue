@@ -13,8 +13,8 @@
     :search-fields="['name', 'description']"
     :filters="statusFilters"
     filter-placeholder="All Status"
-    @delete="deleteProduct"
-    @clear-error="clearError"
+    @delete="handleDelete"
+    @clear-error="productsStore.clearError()"
   >
     <!-- Custom column slots -->
     <template #price="{ item }">
@@ -24,7 +24,10 @@
     <template #status="{ item }">
       <span 
         class="badge"
-        :class="item.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'"
+        :class="{
+          'bg-success-subtle text-success-emphasis border border-success-subtle': item.status === 'ACTIVE',
+          'bg-danger-subtle text-danger-emphasis border border-danger-subtle': item.status === 'INACTIVE'
+        }"
       >
         {{ item.status }}
       </span>
@@ -34,19 +37,19 @@
       <div class="d-flex justify-content-end gap-2">
         <button 
           v-if="authStore.can('PRODUCT_UPDATE')"
-          class="btn btn-sm btn-outline-primary"
+          class="btn btn-action btn-edit"
           @click="editProduct(item.id)"
           title="Edit"
         >
-          <i class="bi bi-pencil"></i>
+          <i class="bi bi-pencil-fill"></i>
         </button>
         <button 
           v-if="authStore.can('PRODUCT_DELETE')"
-          class="btn btn-sm btn-outline-danger"
+          class="btn btn-action btn-delete"
           @click="confirmDelete(item)"
           title="Delete"
         >
-          <i class="bi bi-trash"></i>
+          <i class="bi bi-trash-fill"></i>
         </button>
       </div>
     </template>
@@ -56,14 +59,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
-import { useProductsStore } from '../../stores/products'
-import DataList from '../../components/layout/DataList.vue'
+import { useAuthStore } from '@/stores/auth'
+import { useProductsStore } from '@/stores/products'
+import { useToast } from 'vue-toastification'
+import DataList from '@/components/layout/DataList.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const productsStore = useProductsStore()
 const dataList = ref(null)
+const toast = useToast()
 
 const columns = [
   { key: 'name', label: 'Name' },
@@ -95,59 +100,18 @@ function editProduct(id) {
 }
 
 function confirmDelete(product) {
-  productsStore.selectedProduct = product
-  dataList.value.showDeleteModal()
+  dataList.value?.showDeleteModal(product)
 }
 
-async function deleteProduct() {
-  if (!productsStore.selectedProduct) return
+async function handleDelete(product) {
+  if (!product) return
 
   try {
-    await productsStore.deleteProduct(productsStore.selectedProduct.id)
-    productsStore.clearSelectedProduct()
-    dataList.value.hideDeleteModal()
+    await productsStore.deleteProduct(product.id)
+    toast.success(`Product "${product.name}" deleted successfully.`)
+    await productsStore.fetchProducts()
   } catch (error) {
-    console.error('Error deleting product:', error)
+    toast.error(error.message || 'Failed to delete product.')
   }
-}
-
-function clearError() {
-  productsStore.clearError()
 }
 </script>
-
-<style scoped>
-.table th {
-  font-weight: 600;
-  background-color: var(--bs-light);
-  white-space: nowrap;
-}
-
-.table td {
-  vertical-align: middle;
-}
-
-.badge {
-  font-weight: 500;
-  padding: 0.5em 0.75em;
-}
-
-.input-group-text {
-  background-color: var(--bs-light);
-}
-
-.btn-group {
-  gap: 0.5rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .table-responsive {
-    margin: 0 -1rem;
-  }
-  
-  .table th, .table td {
-    padding: 0.75rem;
-  }
-}
-</style> 

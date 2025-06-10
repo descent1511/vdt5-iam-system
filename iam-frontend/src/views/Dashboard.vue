@@ -162,7 +162,7 @@
                 <div>Active Users</div>
                 <div class="text-muted">78%</div>
               </div>
-              <div class="progress" style="height: 8px;">
+              <div class="progress progress-sm">
                 <div class="progress-bar bg-success" role="progressbar" style="width: 78%"></div>
               </div>
             </div>
@@ -172,7 +172,7 @@
                 <div>Inactive Users</div>
                 <div class="text-muted">22%</div>
               </div>
-              <div class="progress" style="height: 8px;">
+              <div class="progress progress-sm">
                 <div class="progress-bar bg-warning" role="progressbar" style="width: 22%"></div>
               </div>
             </div>
@@ -182,7 +182,7 @@
                 <div>Admin Users</div>
                 <div class="text-muted">12%</div>
               </div>
-              <div class="progress" style="height: 8px;">
+              <div class="progress progress-sm">
                 <div class="progress-bar bg-danger" role="progressbar" style="width: 12%"></div>
               </div>
             </div>
@@ -192,7 +192,7 @@
                 <div>Regular Users</div>
                 <div class="text-muted">66%</div>
               </div>
-              <div class="progress" style="height: 8px;">
+              <div class="progress progress-sm">
                 <div class="progress-bar bg-primary" role="progressbar" style="width: 66%"></div>
               </div>
             </div>
