@@ -197,53 +197,6 @@ onMounted(loadPolicies)
 </script>
 
 <style scoped>
-/* Table styles */
-:deep(.table) {
-  margin-bottom: 0;
-}
-
-:deep(.table th) {
-  font-weight: 600;
-  color: #495057;
-  border-top: none;
-  padding: 0.75rem 1rem;
-  background-color: #f8f9fa;
-  white-space: nowrap;
-}
-
-:deep(.table td) {
-  padding: 0.75rem 1rem;
-  vertical-align: middle;
-  border-bottom: 1px solid #e9ecef;
-}
-
-:deep(.table tr:hover) {
-  background-color: #f8f9fa;
-}
-
-/* Column specific styles */
-:deep(.table td:nth-child(1)) { /* Subject column */
-  min-width: 200px;
-}
-
-:deep(.table td:nth-child(2)) { /* Effect column */
-  min-width: 80px;
-
-}
-
-:deep(.table td:nth-child(3)) { /* Action column */
-  min-width: 120px;
-}
-
-:deep(.table td:nth-child(4)) { /* Resource column */
-  min-width: 200px;
-}
-
-:deep(.table td:nth-child(5)) { /* Actions column */
-  min-width: 80px;
- 
-  text-align: right;
-}
 
 /* Badge styles */
 .badge {

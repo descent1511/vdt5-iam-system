@@ -290,7 +290,7 @@ const savePolicy = async () => {
       effect: form.value.effect,
       conditionJson: form.value.conditionJson
     }
-
+    console.log('policyData', policyData)
     await policyService.createPolicy(policyData)
     toast.success('Policy created successfully')
     router.push('/policies')

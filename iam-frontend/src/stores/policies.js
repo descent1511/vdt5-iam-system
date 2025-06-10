@@ -26,10 +26,6 @@ export const usePolicyStore = defineStore('policies', () => {
       error.value = null
       const data = await policyService.getPolicies(params)
       // Thêm showAllResources cho mỗi policy
-      policies.value = data.map(policy => ({
-        ...policy,
-        showAllResources: false // Khởi tạo thuộc tính
-      }))
       totalPolicies.value = data.length 
       pagination.value = {
         page: params.page || 1,
@@ -73,7 +69,7 @@ export const usePolicyStore = defineStore('policies', () => {
     try {
       loading.value = true
       error.value = null
-      
+      console.log('policyData', policyData)
       const data = await policyService.createPolicy(policyData)
       policies.value.push({ ...data, showAllResources: false }) // Thêm showAllResources
       return data

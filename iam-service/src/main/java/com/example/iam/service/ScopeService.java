@@ -16,6 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashSet;
 import com.example.iam.entity.Organization;
 import com.example.iam.repository.OrganizationRepository;
+import com.example.iam.entity.ClientApplication;
+import com.example.iam.repository.ClientApplicationRepository;
+import com.example.iam.audit.Auditable;
 
 @Service
 @RequiredArgsConstructor
@@ -30,12 +33,16 @@ public class ScopeService {
     @Autowired
     private OrganizationRepository organizationRepository;
 
+    @Autowired
+    private ClientApplicationRepository clientApplicationRepository;
+
     public List<Scope> getAllScopes() {
         return scopeRepository.findAll();
     }
 
 
     @Transactional
+    @Auditable(action = "CREATE_SCOPE")
     public Scope createScope(ScopeDTO dto) {
         Scope scope = new Scope();
         scope.setName(dto.getName());
@@ -55,6 +62,7 @@ public class ScopeService {
     }
 
     @Transactional
+    @Auditable(action = "UPDATE_SCOPE")
     public Scope updateScope(Long id, ScopeDTO scopeDTO) {
         Scope existingScope = getScope(id);
         if (scopeDTO.getName() != null && !scopeDTO.getName().trim().isEmpty()) {
@@ -76,8 +84,22 @@ public class ScopeService {
     }
 
     @Transactional
+    @Auditable(action = "DELETE_SCOPE")
     public void deleteScope(Long id) {
         Scope scope = getScope(id);
+        
+        // Find all clients that have this scope
+        List<ClientApplication> clientsWithScope = clientApplicationRepository.findAll().stream()
+            .filter(client -> client.getScopes().contains(scope))
+            .collect(Collectors.toList());
+            
+        // Remove the scope from all clients
+        for (ClientApplication client : clientsWithScope) {
+            client.getScopes().remove(scope);
+            clientApplicationRepository.save(client);
+        }
+        
+        // Delete the scope
         scopeRepository.delete(scope);
     }
 } 

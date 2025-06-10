@@ -28,9 +28,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional
     public UserDetails loadUserByUsername(String usernameOrClientId) throws UsernameNotFoundException {
         // Handle superadmin separately, as they don't belong to any organization
+        System.out.println("usernameOrClientId: " + usernameOrClientId);
+        System.out.println("superAdminUsername: " + superAdminUsername);
         if (superAdminUsername.equals(usernameOrClientId)) {
+            System.out.println("superAdminUsername: " + superAdminUsername);
             User superAdmin = userRepository.findByUsername(usernameOrClientId)
                     .orElseThrow(() -> new UsernameNotFoundException("Super admin user not found: " + usernameOrClientId));
+            System.out.println("superAdmin: " + superAdmin);
             return UserPrincipal.create(superAdmin);
         }
 
@@ -42,6 +46,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // Try to find a user first
         User user = userRepository.findByUsernameAndOrganizationIdWithRoles(usernameOrClientId, organizationId).orElse(null);
+        System.out.println("user: " + user);
         if (user != null) {
             return UserPrincipal.create(user);
         }

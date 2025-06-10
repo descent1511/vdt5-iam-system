@@ -16,7 +16,7 @@
           <tr>
             <th>Management Type</th>
             <th v-for="action in permissionStore.actions" :key="action" class="text-center">
-              <span class="permission-type" :class="`permission-${action.toLowerCase()}`">{{ action }}</span>
+              <span class="permission-action-badge" :class="`action-${action.toLowerCase()}`">{{ action }}</span>
             </th>
           </tr>
         </thead>
@@ -85,73 +85,3 @@ const togglePermission = (entityKey, action) => {
   emit('update:modelValue', newPermissions);
 };
 </script>
-
-<style scoped>
-.table {
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.table thead th {
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
-  padding: 1rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
-}
-
-.table tbody td {
-  padding: 1rem;
-  vertical-align: middle;
-}
-
-.table tbody tr {
-  transition: background-color 0.2s ease;
-}
-
-.table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.table tbody td:first-child {
-  font-weight: 500;
-  color: #495057;
-}
-
-.table tbody td:first-child i {
-  color: #6c757d;
-  font-size: 1.1rem;
-  margin-right: 0.5rem;
-}
-
-.form-check-input {
-  width: 1.2rem;
-  height: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.form-check-input:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-.permission-type {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.permission-read { background-color: #e3f2fd; color: #0d6efd; }
-.permission-create { background-color: #e8f5e9; color: #198754; }
-.permission-update { background-color: #fff3e0; color: #fd7e14; }
-.permission-delete { background-color: #fbe9e7; color: #dc3545; }
-</style> 

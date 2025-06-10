@@ -1,12 +1,19 @@
 package com.example.iam.dto;
-import lombok.AllArgsConstructor;
+
 import lombok.Data;
 
+import java.time.Instant;
+import java.util.Set;
+
 @Data
-@AllArgsConstructor
 public class ClientResponse {
-    private Long id;
-    private String accessToken;
-    private String name;
+    private String id;
+    private String clientId;
+    private String clientName;
     private String description;
+    private Instant clientIdIssuedAt;
+    private Set<String> redirectUris;
+    private Set<String> scopes;
+    private Set<String> authorizationGrantTypes;
+    private Set<String> clientAuthenticationMethods;
 } 

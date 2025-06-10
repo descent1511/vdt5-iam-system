@@ -16,5 +16,5 @@ public class PermissionDTO extends BaseDTO {
     private String name;
     private String description;
     private Set<Long> roleIds;
-    private Set<Long> scopeIds;
+    private Set<Long> scopess;
 } 

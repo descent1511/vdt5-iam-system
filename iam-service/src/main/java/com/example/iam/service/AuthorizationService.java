@@ -55,6 +55,7 @@ public class AuthorizationService {
         if (token == null || !tokenProvider.validateToken(token)) {
             return false;
         }
+        log.info("All resources: {}", resourceRepository.findAll());
 
         List<Resource> matchedResources = resourceRepository.findAll().stream()
                 .filter(r -> isPathMatch(path, r.getPath()) && r.getMethod().name().equalsIgnoreCase(method))

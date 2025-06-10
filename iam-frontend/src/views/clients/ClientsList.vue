@@ -7,66 +7,69 @@
     :can-create="hasPermission('CLIENT_CREATE')"
     create-route="/clients/create"
     create-button-text="New Client"
-    search-placeholder="Search clients..."
-    :search-fields="['name', 'clientId', 'description']"
+    search-placeholder="Search by name or client ID..."
+    :search-fields="['clientName', 'clientId']"
     :loading="clientStore.loading"
     :error="clientStore.error"
-    @delete="deleteClient"
+    @delete="handleDelete"
+    @clear-error="clientStore.clearError()"
   >
     <!-- Custom column slots -->
-    <template #name="{ item }">
+    <template #clientName="{ item }">
       <div class="d-flex align-items-center">
-        <i class="bi bi-box text-primary me-2"></i>
-        <span class="fw-medium">{{ item.name }}</span>
+        <div class="avatar-initial me-3">
+          <i class="bi bi-box"></i>
+        </div>
+        <span class="fw-bold">{{ item.clientName }}</span>
       </div>
     </template>
 
     <template #clientId="{ item }">
-      <div class="client-id-container">
-        <code class="client-id" :title="item.accessToken || 'No access token'">
-          {{ item.accessToken ? truncateToken(item.accessToken) : 'No access token' }}
-        </code>
+      <div class="d-flex align-items-center gap-2">
+        <code class="font-monospace text-body-secondary">{{ item.clientId }}</code>
         <button 
-          v-if="item.accessToken"
-          class="btn btn-sm btn-link copy-btn"
-          @click="copyToClipboard(item.accessToken)"
-          title="Copy access token"
+          class="btn btn-sm btn-action"
+          @click="copyToClipboard(item.clientId)"
+          title="Copy Client ID"
         >
           <i class="bi bi-clipboard"></i>
         </button>
       </div>
     </template>
 
-    <template #status="{ item }">
-      <span 
-        class="badge"
-        :class="{
-          'bg-success': item.status === 'ACTIVE',
-          'bg-danger': item.status === 'INACTIVE',
-          'bg-warning': item.status === 'PENDING'
-        }"
-      >
-        {{ item.status }}
+    <template #scopes="{ item }">
+      <div class="d-flex flex-wrap gap-1">
+        <span v-for="scope in item.scopes" :key="scope" class="badge bg-info-subtle text-info-emphasis border border-info-subtle">
+          {{ scope }}
+        </span>
+      </div>
+    </template>
+
+     <template #redirectUris="{ item }">
+      <div class="d-flex flex-wrap gap-1">
+        <span v-for="uri in item.redirectUris" :key="uri" class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">
+          {{ uri }}
       </span>
+      </div>
     </template>
 
     <template #actions="{ item }">
-      <div class="action-btns">
+      <div class="d-flex gap-2 justify-content-end">
         <router-link 
-          v-if="hasPermission('CLIENT_UPDATE')"
-          :to="`/clients/${item.id}/edit`" 
-          class="btn btn-sm btn-outline-primary"
+          :to="`/clients/${item.clientId}/edit`"
+          class="btn btn-action btn-edit"
           title="Edit"
+          v-if="hasPermission('CLIENT_UPDATE')"
         >
-          <i class="bi bi-pencil"></i>
+          <i class="bi bi-pencil-fill"></i>
         </router-link>
         <button 
-          v-if="hasPermission('CLIENT_DELETE')"
-          class="btn btn-sm btn-outline-danger"
+          class="btn btn-action btn-delete"
           @click="confirmDelete(item)"
           title="Delete"
+          v-if="hasPermission('CLIENT_DELETE')"
         >
-          <i class="bi bi-trash"></i>
+          <i class="bi bi-trash-fill"></i>
         </button>
       </div>
     </template>
@@ -75,10 +78,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useClientStore } from '../../stores/clients'
-import { useAuthStore } from '../../stores/auth'
+import { useClientStore } from '@/stores/clients'
+import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
-import DataList from '../../components/layout/DataList.vue'
+import DataList from '@/components/layout/DataList.vue'
 
 const clientStore = useClientStore()
 const authStore = useAuthStore()
@@ -86,27 +89,25 @@ const toast = useToast()
 const dataList = ref(null)
 
 const columns = [
-  { key: 'name', label: 'Name' },
-  { key: 'clientId', label: 'Access Token' },
-  { key: 'description', label: 'Description' },
-  { key: 'status', label: 'Status' },
+  { key: 'clientName', label: 'Name', class: 'w-25' },
+  { key: 'clientId', label: 'Client ID', class: 'w-25' },
+  { key: 'scopes', label: 'Scopes' },
+  { key: 'redirectUris', label: 'Redirect URIs' },
   { key: 'actions', label: 'Actions', class: 'text-end' }
 ]
 
 function confirmDelete(client) {
-  clientStore.selectedClient = client
-  dataList.value.showDeleteModal()
+  dataList.value?.showDeleteModal(client)
 }
 
-async function deleteClient() {
-  if (!clientStore.selectedClient) return
-
+async function handleDelete(client) {
+  if (!client) return
   try {
-    await clientStore.deleteClient(clientStore.selectedClient.id)
+    await clientStore.deleteClient(client.clientId)
+    toast.success(`Client "${client.clientName}" deleted successfully.`)
     await loadClients()
-    dataList.value.hideDeleteModal()
   } catch (error) {
-    console.error('Failed to delete client:', error)
+    toast.error(error.message || 'Failed to delete client.')
   }
 }
 
@@ -117,17 +118,10 @@ function hasPermission(permission) {
 async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text)
-    toast.success('Access token copied to clipboard')
-  } catch (error) {
-    console.error('Failed to copy:', error)
-    toast.error('Failed to copy to clipboard')
+    toast.success('Client ID copied to clipboard')
+  } catch (err) {
+    toast.error('Failed to copy Client ID.')
   }
-}
-
-function truncateToken(token) {
-  if (!token) return 'No access token'
-  if (token.length <= 20) return token
-  return token.substring(0, 10) + '...' + token.substring(token.length - 10)
 }
 
 async function loadClients() {
@@ -136,140 +130,3 @@ async function loadClients() {
 
 onMounted(loadClients)
 </script>
-
-<style scoped>
-/* Table styles */
-:deep(.table) {
-  margin-bottom: 0;
-}
-
-:deep(.table th) {
-  font-weight: 500;
-  color: #2c3e50;
-  border-top: none;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  white-space: nowrap;
-}
-
-:deep(.table td) {
-  padding: 1rem;
-  vertical-align: middle;
-  border-bottom: 1px solid #e9ecef;
-}
-
-:deep(.table tr:hover) {
-  background-color: #f8f9fa;
-}
-
-/* Column specific styles */
-:deep(.table td:nth-child(1)) { /* Name column */
-  min-width: 200px;
-}
-
-:deep(.table td:nth-child(2)) { /* Client ID column */
-  min-width: 250px;
-}
-
-:deep(.table td:nth-child(3)) { /* Description column */
-  min-width: 300px;
-}
-
-:deep(.table td:nth-child(4)) { /* Status column */
-  min-width: 100px;
-}
-
-:deep(.table td:nth-child(5)) { /* Actions column */
-  min-width: 100px;
-  text-align: right;
-}
-
-/* Client ID container styles */
-.client-id-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  max-width: 100%;
-}
-
-.client-id {
-  font-size: 0.875rem;
-  color: #0c5460;
-  background-color: #f8f9fa;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #e9ecef;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: help;
-}
-
-.copy-btn {
-  padding: 0;
-  color: #6c757d;
-  transition: all 0.2s ease-in-out;
-}
-
-.copy-btn:hover {
-  color: #0c5460;
-}
-
-/* Badge styles */
-.badge {
-  font-size: 0.75rem;
-  padding: 0.35em 0.65em;
-  font-weight: 500;
-}
-
-/* Action buttons */
-.action-btns {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  align-items: center;
-  height: 32px; /* Đảm bảo cùng chiều cao với các dòng khác */
-}
-
-.action-btns .btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  width: 32px;
-  padding: 0;
-}
-
-/* Card styles */
-:deep(.card) {
-  border: none;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-}
-
-:deep(.card-body) {
-  padding: 1.5rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  :deep(.table td),
-  :deep(.table th) {
-    padding: 0.75rem;
-  }
-  
-  :deep(.table td:nth-child(1)) {
-    min-width: 150px;
-  }
-  
-  :deep(.table td:nth-child(2)) {
-    min-width: 200px;
-  }
-  
-  :deep(.table td:nth-child(3)) {
-    min-width: 250px;
-  }
-}
-</style> 

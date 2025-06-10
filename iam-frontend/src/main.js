@@ -4,9 +4,8 @@ import router from './router'
 import App from './App.vue'
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
-import 'bootstrap/dist/css/bootstrap.min.css'
+import './assets/scss/main.scss'
 import 'bootstrap-icons/font/bootstrap-icons.css'
-import './assets/css/main.css'
 import { useAuthStore } from './stores/auth'
 
 // Import all Bootstrap JS

@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationToken;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -128,8 +129,21 @@ public class JwtTokenProvider {
         } else if (principal instanceof ClientPrincipal) {
             ClientPrincipal clientPrincipal = (ClientPrincipal) principal;
             tokenBuilder.setSubject(clientPrincipal.getUsername()).claim(CLAIM_TYPE, TYPE_CLIENT);
+        } else if (authentication.getPrincipal() instanceof UserPrincipal) {
+            // This case handles the authentication object from the authorization server flow
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            tokenBuilder.setSubject(userPrincipal.getUsername()).claim(CLAIM_TYPE, TYPE_USER);
+            if (tokenType == Token.TokenType.ACCESS) {
+                Set<String> permissions = userPrincipal.getUser().getRoles().stream()
+                        .flatMap(role -> role.getPermissions().stream())
+                        .map(Permission::getName)
+                        .collect(Collectors.toSet());
+                tokenBuilder.claim(CLAIM_PERMISSIONS, permissions);
+            }
         } else {
-            throw new IllegalArgumentException("Unsupported authentication principal type for token generation: " + principal.getClass().getName());
+            // Fallback for other authentication types if needed, or throw error
+            // For now, we assume the principal is the subject name (e.g., client_id for client_credentials)
+            tokenBuilder.setSubject(authentication.getName());
         }
 
         String token = tokenBuilder.signWith(privateKey, SignatureAlgorithm.RS256).compact();

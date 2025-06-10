@@ -5,7 +5,7 @@ import com.example.iam.entity.ServiceRegistry;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface ServiceRegistryMapper {
     ServiceRegistryMapper INSTANCE = Mappers.getMapper(ServiceRegistryMapper.class);
 

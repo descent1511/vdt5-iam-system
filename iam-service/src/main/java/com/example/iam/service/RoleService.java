@@ -13,6 +13,7 @@ import com.example.iam.dto.RoleDTO;
 import com.example.iam.repository.PermissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashSet;
+import com.example.iam.audit.Auditable;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class RoleService {
 
 
     @Transactional
+    @Auditable(action = "CREATE_ROLE")
     public Role createRole(RoleDTO dto) {
         Role role = new Role();
         role.setName(dto.getName());
@@ -55,6 +57,7 @@ public class RoleService {
     }
 
     @Transactional
+    @Auditable(action = "UPDATE_ROLE")
     public Role updateRole(Long id, RoleDTO roleDTO) {
         Role existingRole = getRole(id);
         existingRole.setName(roleDTO.getName());
@@ -70,6 +73,7 @@ public class RoleService {
     }
 
     @Transactional
+    @Auditable(action = "DELETE_ROLE")
     public void deleteRole(Long id) {
         Role role = getRole(id);
         roleRepository.delete(role);

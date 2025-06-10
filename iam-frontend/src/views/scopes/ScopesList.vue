@@ -174,52 +174,6 @@ onMounted(loadScopes)
 </script>
 
 <style scoped>
-/* Table styles */
-:deep(.table) {
-  margin-bottom: 0;
-}
-
-:deep(.table th) {
-  font-weight: 500;
-  color: #2c3e50;
-  border-top: none;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  white-space: nowrap;
-}
-
-:deep(.table td) {
-  padding: 1rem;
-  vertical-align: middle;
-  border-bottom: 1px solid #e9ecef;
-}
-
-:deep(.table tr:hover) {
-  background-color: #f8f9fa;
-}
-
-/* Column specific styles */
-:deep(.table td:nth-child(1)) { /* Name column */
-  min-width: 200px;
-}
-
-:deep(.table td:nth-child(2)) { /* Description column */
-  min-width: 250px;
-}
-
-:deep(.table td:nth-child(3)) { /* Permissions column */
-  min-width: 300px;
-}
-
-:deep(.table td:nth-child(4)) { /* Created At column */
-  min-width: 120px;
-}
-
-:deep(.table td:nth-child(5)) { /* Actions column */
-  min-width: 100px;
-  text-align: right;
-}
-
 /* Permissions container styles */
 .permissions-container {
   position: relative;

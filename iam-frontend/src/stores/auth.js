@@ -73,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       // If getting user info fails, try to refresh token
       try {
+        console.log('Refreshing token')
         await refreshToken()
         // After refreshing token, get user info again
         await getCurrentUser()
@@ -89,6 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = true
       error.value = null
       const response = await authService.login(credentials)
+      console.log('response', response)
       if (!response || !response.accessToken) {
         throw new Error('Invalid response format - missing access token')
       }

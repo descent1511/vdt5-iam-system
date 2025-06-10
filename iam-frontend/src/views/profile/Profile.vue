@@ -10,8 +10,7 @@
         <div class="card">
           <div class="card-body text-center">
             <div 
-              class="avatar mx-auto mb-3 d-flex align-items-center justify-content-center bg-primary text-white rounded-circle"
-              style="width: 100px; height: 100px; font-size: 2.5rem;"
+              class="avatar-initials avatar-lg mx-auto mb-3"
             >
               {{ userInitials }}
             </div>
