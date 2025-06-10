@@ -115,9 +115,8 @@ public class ClientService {
         client.setAuthorizationGrantTypes(request.getAuthorizationGrantTypes());
         
         client.setRedirectUris(request.getRedirectUris());
-        
-        Set<String> scopeNames = getScopeNamesFromIds(request.getScopes());
-        client.setScopes(scopeNames);
+    
+        client.setScopes(new java.util.HashSet<>(request.getScopes()));
 
         client.setClientIdIssuedAt(Instant.now());
         client.setClientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build());

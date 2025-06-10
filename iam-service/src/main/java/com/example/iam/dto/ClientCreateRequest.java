@@ -25,5 +25,5 @@ public class ClientCreateRequest {
     private Set<String> clientAuthenticationMethods;
 
     @NotEmpty(message = "At least one scope is required")
-    private List<Long> scopes;
+    private List<String> scopes;
 }
