@@ -4,7 +4,7 @@ Dự án này là một Hệ thống Quản lý Danh tính và Truy cập (Ident
 
 ## Video Demo
 
-[![IAM Video](https://cyscale.com/static/efb95d84a5f1a4760ffb7bb47eeaadba/888e2/iam-services-in-aws-azure-and-gcp-a-cloud-industry-overview.webp)](https://www.youtube.com/watch?v=9NWvPFrLA2s&t=68s)
+[![IAM Video](./architecture.png)](https://www.youtube.com/watch?v=9NWvPFrLA2s&t=68s)
 
 > 📺 *Nhấn vào hình để xem video 
 
