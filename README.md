@@ -2,6 +2,12 @@
 
 Dự án này là một Hệ thống Quản lý Danh tính và Truy cập (Identity and Access Management - IAM) toàn diện, được thiết kế để cung cấp khả năng xác thực, ủy quyền mạnh mẽ và quản lý đa tổ chức (multi-tenancy). Hệ thống này bao gồm một API RESTful backend được xây dựng bằng Spring Boot và một giao diện người dùng frontend được phát triển bằng Vue.js.
 
+## Video Demo
+
+[![IAM Video](https://cyscale.com/static/efb95d84a5f1a4760ffb7bb47eeaadba/888e2/iam-services-in-aws-azure-and-gcp-a-cloud-industry-overview.webp)](https://www.youtube.com/watch?v=9NWvPFrLA2s&t=68s)
+
+> 📺 *Nhấn vào hình để xem video 
+
 ## Kiến trúc
 
 ### Backend (`iam-service`)
@@ -54,7 +60,7 @@ Dự án này là một Hệ thống Quản lý Danh tính và Truy cập (Ident
 
 1.  **Clone repository:**
     ```bash
-    git clone https://github.com/your-username/vdt5-iam-system.git
+    git clone https://github.com/descent1511/vdt5-iam-system.git
     cd vdt5-iam-system/iam-service
     ```
 
