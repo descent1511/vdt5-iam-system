@@ -4,7 +4,7 @@ Dự án này là một Hệ thống Quản lý Danh tính và Truy cập (Ident
 
 ## Video Demo
 
-[![IAM Video](./architecture.png)](https://www.youtube.com/watch?v=9NWvPFrLA2s&t=68s)
+[![IAM Video](./architecture.png)](https://youtu.be/sTKb7p9hZNY)
 
 > 📺 *Nhấn vào hình để xem video 
 
